@@ -1,0 +1,6 @@
+{
+  "name": "GATE Prep AI",
+  "description": "A modern AI-powered preparation system for GATE aspirants providing syllabus-oriented topics, PYQs, quizzes, and an AI doubt support solver.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
