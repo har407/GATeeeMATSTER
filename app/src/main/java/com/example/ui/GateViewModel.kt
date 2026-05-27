@@ -16,6 +16,24 @@ class GateViewModel(application: Application) : AndroidViewModel(application) {
     private var timerJob: Job? = null
     private var chatMessageJob: Job? = null
 
+    // --- SharedPreferences Authentication Support ---
+    private val sharedPrefs = application.getSharedPreferences("gate_prep_prefs", android.content.Context.MODE_PRIVATE)
+
+    private val _isAuthenticated = MutableStateFlow(sharedPrefs.getBoolean("is_authenticated", false))
+    val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
+
+    private val _aspirantName = MutableStateFlow(sharedPrefs.getString("aspirant_name", "GATE Aspirant") ?: "GATE Aspirant")
+    val aspirantName: StateFlow<String> = _aspirantName.asStateFlow()
+
+    fun authenticateUser(name: String) {
+        sharedPrefs.edit()
+            .putBoolean("is_authenticated", true)
+            .putString("aspirant_name", name)
+            .apply()
+        _isAuthenticated.value = true
+        _aspirantName.value = name
+    }
+
     // --- Core State Flows from Database ---
     val userStats: StateFlow<UserStatsEntity> = repository.userStats
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserStatsEntity())
@@ -572,6 +590,28 @@ class GateViewModel(application: Application) : AndroidViewModel(application) {
             }
         } catch (e: Exception) {
             false
+        }
+    }
+
+    // --- AI Question Auditor & Deduplicator Space ---
+    private val _isAuditing = MutableStateFlow(false)
+    val isAuditing: StateFlow<Boolean> = _isAuditing.asStateFlow()
+
+    private val _auditedQuestions = MutableStateFlow<List<QuestionItem>>(emptyList())
+    val auditedQuestions: StateFlow<List<QuestionItem>> = _auditedQuestions.asStateFlow()
+
+    fun auditAndFilterQuestions(subtopicName: String, rawQuestions: List<QuestionItem>) {
+        _isAuditing.value = true
+        _auditedQuestions.value = emptyList() // Reset previous audited questions
+        viewModelScope.launch {
+            try {
+                val cleanList = QuestionDeduplicator.filterAndDeduplicateQuestions(subtopicName, rawQuestions)
+                _auditedQuestions.value = cleanList
+            } catch (ex: Exception) {
+                android.util.Log.e("GateViewModel", "Auditor failed to filter questions", ex)
+            } finally {
+                _isAuditing.value = false
+            }
         }
     }
 }

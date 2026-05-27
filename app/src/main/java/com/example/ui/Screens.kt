@@ -1,5 +1,7 @@
 package com.example.ui
 
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -44,17 +46,19 @@ fun GateDashboardScreen(
     onSubjectClick: (Subject) -> Unit,
     onNavigateToBookmarks: () -> Unit,
     onNavigateToMistakes: () -> Unit,
-    onStartMockTest: () -> Unit
+    onStartMockTest: () -> Unit,
+    onNavigateToAuditor: () -> Unit
 ) {
     val stats by viewModel.userStats.collectAsState()
     val progressList by viewModel.allProgress.collectAsState()
+    val aspirantName by viewModel.aspirantName.collectAsState()
 
     // Interactive mock badges
     val badges = listOf(
         Pair("Gate Starter", Icons.Default.ThumbUp),
         Pair("Streak Master", Icons.Default.Whatshot),
         Pair("Formula Pro", Icons.Default.Calculate),
-        Pair("Doubt Solver", Icons.Default.QuestionAnswer)
+        Pair("Practice Hero", Icons.Default.CheckCircle)
     )
 
     LazyColumn(
@@ -68,69 +72,76 @@ fun GateDashboardScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(16.dp)
+                    )
                     .testTag("welcome_streak_hud"),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp)
+                    modifier = Modifier.padding(18.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Welcome, GATE Aspirant!",
+                                text = "Welcome, $aspirantName! Let's crack GATE EEE.",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Crush your targets today ⚡",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        // Streak Indicator
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Streak Indicator (Compact & Low-Profile)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .background(
-                                    Color.Black.copy(alpha = 0.15f),
+                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                                     CircleShape
                                 )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Whatshot,
                                 contentDescription = "Streak Flame",
-                                tint = TechGoldXP,
-                                modifier = Modifier.size(24.dp)
+                                tint = Color(0xFFFF6D00), // Pure aesthetic orange flame
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "${stats.streak} Days",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = TechGoldXP
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // XP system HUD
+                    // XP system HUD (Clean & Compact)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Stars,
-                            contentDescription = "XP Stars",
-                            tint = TechGoldXP,
-                            modifier = Modifier.size(28.dp)
+                             imageVector = Icons.Default.Stars,
+                             contentDescription = "XP Stars",
+                             tint = TechGoldXP,
+                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -143,14 +154,14 @@ fun GateDashboardScreen(
                                 val timeText = if (hours > 0) "Time Spent: ${hours}h ${mins}m" else "Time Spent: ${mins}m"
                                 Text(
                                     text = timeText,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "${stats.totalXp % 100}/100 XP to next level",
+                                    text = "${stats.totalXp % 100}/100 XP",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -159,10 +170,10 @@ fun GateDashboardScreen(
                                 progress = { (stats.totalXp % 100) / 100f },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(10.dp)
+                                    .height(6.dp)
                                     .clip(CircleShape),
                                 color = TechGoldXP,
-                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
+                                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
                             )
                         }
                     }
@@ -303,6 +314,8 @@ fun GateDashboardScreen(
                 }
             }
         }
+
+
 
         // Subject Tracker Cards
         item {
@@ -607,7 +620,7 @@ fun ActiveStudyWorkspaceScreen(
     val sub = subtopicState ?: return
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Theory", "Formulas", "Practice PYQs", "AI Assistant")
+    val tabs = listOf("Theory", "Formulas", "Practice PYQs")
 
     Scaffold(
         topBar = {
@@ -672,7 +685,6 @@ fun ActiveStudyWorkspaceScreen(
                     0 -> TheoryTabContent(sub.theory)
                     1 -> FormulaSheetTabContent(sub.formulaSheet)
                     2 -> PracticeQuestionsTabContent(sub, viewModel)
-                    3 -> AiDoubtSupportTabContent(sub.id, viewModel)
                 }
             }
         }
@@ -1516,6 +1528,11 @@ fun PracticeQuestionsTabContent(sub: Subtopic, viewModel: GateViewModel) {
                             style = MaterialTheme.typography.bodyLarge,
                             lineHeight = 22.sp
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        AIAssistantButton(
+                            questionText = activeQuestion.questionText,
+                            modifier = Modifier.align(Alignment.End)
+                        )
                     }
                 }
             }
@@ -1579,13 +1596,19 @@ fun PracticeQuestionsTabContent(sub: Subtopic, viewModel: GateViewModel) {
                         OutlinedTextField(
                             value = natInput,
                             onValueChange = { if (!isSubmitted) viewModel.setNatAnswerInput(it) },
-                            label = { Text("Enter Numeric Answer") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            label = { Text("Numeric Answer Value") },
+                            readOnly = true,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("nat_input_field"),
                             enabled = !isSubmitted,
                             singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        GateVirtualKeyboard(
+                            value = natInput,
+                            onValueChange = { if (!isSubmitted) viewModel.setNatAnswerInput(it) },
+                            enabled = !isSubmitted
                         )
                     }
                 }
@@ -2022,6 +2045,11 @@ fun BookmarksListScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = item.questionText, style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            AIAssistantButton(
+                                questionText = item.questionText,
+                                modifier = Modifier.align(Alignment.End)
+                            )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "Correct Method Strategy:",
@@ -2115,6 +2143,11 @@ fun MistakesNotebookScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = item.questionText, style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            AIAssistantButton(
+                                questionText = item.questionText,
+                                modifier = Modifier.align(Alignment.End)
+                            )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "How to patch concept:",
@@ -2652,7 +2685,14 @@ fun CbtMockTestPlatformScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = curQ.questionText, style = MaterialTheme.typography.bodyLarge)
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            AIAssistantButton(questionText = curQ.questionText)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
 
                     if (curQ.questionType == QuestionType.MCQ || curQ.questionType == QuestionType.MSQ) {
@@ -2694,9 +2734,17 @@ fun CbtMockTestPlatformScreen(
                             OutlinedTextField(
                                 value = chosenOptionRep,
                                 onValueChange = { viewModel.setCbtAnswer(curQ.id, it) },
-                                label = { Text("Student Numerical Answer Representation") },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                label = { Text("Enter Numeric Answer") },
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            GateVirtualKeyboard(
+                                value = chosenOptionRep,
+                                onValueChange = { viewModel.setCbtAnswer(curQ.id, it) },
+                                enabled = true
                             )
                         }
                     }
@@ -3157,3 +3205,178 @@ fun ReviewedQuestionCard(
         }
     }
 }
+
+@Composable
+fun AIAssistantButton(
+    questionText: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    OutlinedButton(
+        onClick = {
+            val formattedText = "Please provide a clear, detailed answer to the following question:\n\n$questionText"
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, formattedText)
+                type = "text/plain"
+            }
+            val chooserIntent = Intent.createChooser(sendIntent, "Select an AI to solve this question")
+            context.startActivity(chooserIntent)
+        },
+        modifier = modifier.testTag("ai_assistant_button"),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
+        border = BorderStroke(
+            width = 1.6.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        ),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.SmartToy,
+            contentDescription = "Ask External AI",
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "Ask External AI",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun GateVirtualKeyboard(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    if (!enabled) return
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "CBT OFFICIAL VIRTUAL KEYBOARD",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "Use for NAT Type Questions",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+        }
+        
+        val keys = listOf(
+            listOf("1", "2", "3", "⌫"),
+            listOf("4", "5", "6", "C"),
+            listOf("7", "8", "9", "-"),
+            listOf("", "0", ".", "")
+        )
+        
+        keys.forEach { rowKeys ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowKeys.forEach { key ->
+                    if (key.isEmpty()) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    } else {
+                        val isAction = key == "⌫" || key == "C" || key == "-" || key == "."
+                        val buttonBg = if (isAction) {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        }
+                        val buttonTextCol = if (isAction) {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                        
+                        Card(
+                            onClick = {
+                                when (key) {
+                                    "⌫" -> {
+                                        if (value.isNotEmpty()) {
+                                            onValueChange(value.dropLast(1))
+                                        }
+                                    }
+                                    "C" -> {
+                                        onValueChange("")
+                                    }
+                                    "-" -> {
+                                        if (value.isEmpty()) {
+                                            onValueChange("-")
+                                        } else if (value == "-") {
+                                            onValueChange("")
+                                        } else if (!value.startsWith("-")) {
+                                            onValueChange("-" + value)
+                                        } else {
+                                            onValueChange(value.substring(1))
+                                        }
+                                    }
+                                    "." -> {
+                                        if (!value.contains(".")) {
+                                            onValueChange(if (value.isEmpty() || value == "-") value + "0." else value + ".")
+                                        }
+                                    }
+                                    else -> {
+                                        if (value == "0" && key == "0") {
+                                            // do nothing
+                                        } else if (value == "0" && key != "0") {
+                                            onValueChange(key)
+                                        } else {
+                                            onValueChange(value + key)
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = buttonBg),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = key,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = buttonTextCol
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

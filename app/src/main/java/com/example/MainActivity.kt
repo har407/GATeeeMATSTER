@@ -30,12 +30,14 @@ import com.example.ui.*
 import com.example.ui.theme.*
 
 sealed class Screen {
+    object Login : Screen()
     object Dashboard : Screen()
     data class SubjectDetail(val subject: Subject) : Screen()
     data class ActiveStudy(val subjectId: String, val topicId: String, val subtopicId: String) : Screen()
     object Bookmarks : Screen()
     object Mistakes : Screen()
     object MockCbt : Screen()
+    object QuestionAuditor : Screen()
 }
 
 class MainActivity : ComponentActivity() {
@@ -52,10 +54,15 @@ class MainActivity : ComponentActivity() {
                 val config = LocalConfiguration.current
                 val isTablet = config.screenWidthDp >= 600
 
-                var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
+                val isUserAuthenticated by viewModel.isAuthenticated.collectAsState()
+                var currentScreen by remember(isUserAuthenticated) {
+                    mutableStateOf<Screen>(
+                        if (isUserAuthenticated) Screen.Dashboard else Screen.Login
+                    )
+                }
 
                 // Gracefully handle hardware & system gesture back presses
-                BackHandler(enabled = currentScreen != Screen.Dashboard) {
+                BackHandler(enabled = currentScreen != Screen.Dashboard && currentScreen != Screen.Login) {
                     when (val screen = currentScreen) {
                         is Screen.SubjectDetail -> {
                             currentScreen = Screen.Dashboard
@@ -68,10 +75,10 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = Screen.Dashboard
                             }
                         }
-                        Screen.Bookmarks, Screen.Mistakes, Screen.MockCbt -> {
+                        Screen.Bookmarks, Screen.Mistakes, Screen.MockCbt, Screen.QuestionAuditor -> {
                             currentScreen = Screen.Dashboard
                         }
-                        Screen.Dashboard -> {
+                        Screen.Dashboard, Screen.Login -> {
                             // Let the system handle default exit action
                         }
                     }
@@ -130,7 +137,7 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = innerPadding.calculateBottomPadding())
                     ) {
                         // On Expanded Tablet screen canonical layout, display Navigation Rail on left!
-                        if (isTablet) {
+                        if (isTablet && currentScreen != Screen.Login) {
                             NavigationRail(
                                 containerColor = MaterialTheme.colorScheme.surface,
                                 header = {
@@ -199,13 +206,22 @@ class MainActivity : ComponentActivity() {
                                 label = "ScreenTransition"
                             ) { target ->
                                 when (target) {
+                                    is Screen.Login -> {
+                                        LoginScreen(
+                                            onAuthenticateSuccess = { name ->
+                                                viewModel.authenticateUser(name)
+                                                currentScreen = Screen.Dashboard
+                                            }
+                                        )
+                                    }
                                     is Screen.Dashboard -> {
                                         GateDashboardScreen(
                                             viewModel = viewModel,
                                             onSubjectClick = { currentScreen = Screen.SubjectDetail(it) },
                                             onNavigateToBookmarks = { currentScreen = Screen.Bookmarks },
                                             onNavigateToMistakes = { currentScreen = Screen.Mistakes },
-                                            onStartMockTest = { currentScreen = Screen.MockCbt }
+                                            onStartMockTest = { currentScreen = Screen.MockCbt },
+                                            onNavigateToAuditor = { currentScreen = Screen.QuestionAuditor }
                                         )
                                     }
                                     is Screen.SubjectDetail -> {
@@ -253,6 +269,12 @@ class MainActivity : ComponentActivity() {
                                     }
                                     is Screen.MockCbt -> {
                                         CbtMockTestPlatformScreen(
+                                            viewModel = viewModel,
+                                            onBack = { currentScreen = Screen.Dashboard }
+                                        )
+                                    }
+                                    is Screen.QuestionAuditor -> {
+                                        QuestionAuditorScreen(
                                             viewModel = viewModel,
                                             onBack = { currentScreen = Screen.Dashboard }
                                         )

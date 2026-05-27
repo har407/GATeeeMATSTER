@@ -458,11 +458,235 @@ object GateSyllabus {
                 ),
                 keyInsight = keyInsight
             ),
-            formulaSheet = emptyList(),
+            formulaSheet = getFormulasForSubtopicId(id),
             pyqs = emptyList(),
             practiceQuestions = emptyList(),
             mockQuiz = emptyList()
         )
+    }
+
+    private fun getFormulasForSubtopicId(subtopicId: String): List<FormulaItem> {
+        return when (subtopicId) {
+            "apt_quant_ratios" -> listOf(
+                FormulaItem(
+                    name = "Direct Ratio Representation",
+                    expression = "a : b = a / b",
+                    description = "Relation of comparison between two quantities of the same class.",
+                    applicationTrick = "Multiply both values by a common multiplier k (e.g. ak and bk) to set up simple algebraic equations."
+                ),
+                FormulaItem(
+                    name = "Law of Proportion",
+                    expression = "If a:b = c:d, then a * d = b * c",
+                    description = "Equivalence of two ratios where a and d are extremes, b and c are means.",
+                    applicationTrick = "Solve for an unknown element x directly using basic cross-multiplication."
+                ),
+                FormulaItem(
+                    name = "Rule of Alligations (Mixtures)",
+                    expression = "(Qty of Cheaper) / (Qty of Dearer) = (CP of Dearer - Mean Price) / (Mean Price - CP of Cheaper)",
+                    description = "Allows finding the proportion in which two ingredients of different prices are mixed to produce a specific average price.",
+                    applicationTrick = "Draw a crossed line matching CP of Dearer, CP of Cheaper, and Mean to avoid sign errors."
+                )
+            )
+            "apt_quant_percentages" -> listOf(
+                FormulaItem(
+                    name = "Percentage Increase/Decrease",
+                    expression = "% Change = ((Final - Initial) / Initial) * 100",
+                    description = "Measures proportional change relative to the initial value base.",
+                    applicationTrick = "Use multipliers: a 15% increase is multiplying by 1.15; a 15% decrease is multiplying by 0.85."
+                ),
+                FormulaItem(
+                    name = "Successive Percentage Changes",
+                    expression = "Net % Change = x + y + (x * y) / 100",
+                    description = "Calculates total rate update after two sequential percentage trends.",
+                    applicationTrick = "Substitute negative values for percent decreases. For equal increase & decrease x, net change is always -x^2/100 %."
+                )
+            )
+            "apt_quant_profit_loss" -> listOf(
+                FormulaItem(
+                    name = "Profit and Loss Percent",
+                    expression = "Profit % = (P / CP) * 100, Loss % = (L / CP) * 100",
+                    description = "Calculates absolute financial outcomes normalized on the purchase base (CP).",
+                    applicationTrick = "Never calculate profit/loss percent based on SP unless explicitly requested."
+                ),
+                FormulaItem(
+                    name = "Marked Price & Discount Rule",
+                    expression = "SP = MP * (1 - Discount/100)",
+                    description = "Relates selling price to list marked price after subtracting a trade discount rate.",
+                    applicationTrick = "MP * (1 - d%) = CP * (1 + g%) is an incredibly useful shortcut that links markup and gain ratios."
+                )
+            )
+            "apt_quant_time_work" -> listOf(
+                FormulaItem(
+                    name = "Daily Work Rate Relation",
+                    expression = "Rate = 1 / Days",
+                    description = "Specifies that the quantity of work completed in 1 day is inversely proportional to time to complete.",
+                    applicationTrick = "Add individual daily rates directly: Rate_total = Rate_A + Rate_B."
+                ),
+                FormulaItem(
+                    name = "Chain Rule of Work Force",
+                    expression = "(M1 * D1 * H1) / W1 = (M2 * D2 * H2) / W2",
+                    description = "Relates manpower (M), duration days (D), hourly shifts (H), and absolute output volume (W).",
+                    applicationTrick = "Keep work rates W1 and W2 in the denominator, all other timing parameters in the numerator."
+                )
+            )
+            "apt_quant_permutation_combination" -> listOf(
+                FormulaItem(
+                    name = "Permutation Formula (Arrangements)",
+                    expression = "nPr = n! / (n - r)!",
+                    description = "Determines unique arrangements of r items chosen from a distinct set of n items.",
+                    applicationTrick = "Use permutations when order is significant (e.g., forming secret code numbers)."
+                ),
+                FormulaItem(
+                    name = "Combination Formula (Selections)",
+                    expression = "nCr = n! / (r! * (n - r)!) = nPr / r!",
+                    description = "Count of unique ways to select r elements from n distinct items regardless of arrangement sequence.",
+                    applicationTrick = "Remember nCr is always smaller or equal to nPr. Note that nCr = nC(n-r)."
+                ),
+                FormulaItem(
+                    name = "Circular Permutations",
+                    expression = "Arrangements = (n - 1)!",
+                    description = "Counts ways to arrange n items around an symmetrical circular loop.",
+                    applicationTrick = "If a key/necklace loop is flip-symmetric, divide the result by 2 to yield (n - 1)! / 2."
+                )
+            )
+            "apt_quant_probability" -> listOf(
+                FormulaItem(
+                    name = "Classical Probability Formula",
+                    expression = "P(A) = n(A) / n(S)",
+                    description = "Ratio of favorable outcomes n(A) to total sample space outcomes n(S).",
+                    applicationTrick = "Calculate sample space first to set up the boundary of valid outcomes."
+                ),
+                FormulaItem(
+                    name = "Conditional Probability Statement",
+                    expression = "P(A | B) = P(A ∩ B) / P(B)",
+                    description = "Returns probability of event A occurring given that event B has occurred.",
+                    applicationTrick = "Think of it as restricting the total sample space strictly to outcomes belonging inside event B."
+                )
+            )
+            "apt_quant_logarithms" -> listOf(
+                FormulaItem(
+                    name = "Logarithmic Expansion Properties",
+                    expression = "log(xy) = log x + log y, log(x/y) = log x - log y",
+                    description = "Translates multiplication and division into simple addition or subtraction under matching base criteria.",
+                    applicationTrick = "Use log_b(x^n) = n * log_b(x) to bring exponents down for easy linear differentiation or division."
+                ),
+                FormulaItem(
+                    name = "Change of Base Property",
+                    expression = "log_b(a) = log_c(a) / log_c(b)",
+                    description = "Transforms any arbitrary log base b into standard convenient bases (like natural e or standard base 10).",
+                    applicationTrick = "Remember log_b(a) * log_a(b) = 1. Reciprocating a logarithm swaps the base and argument."
+                )
+            )
+            "apt_quant_data_interpretation" -> listOf(
+                FormulaItem(
+                    name = "Compound Growth Rate",
+                    expression = "CAGR = [(Value_End / Value_Start)^(1/n) - 1] * 100",
+                    description = "Expresses geometric year-on-year growth rate over a discrete time span.",
+                    applicationTrick = "Use logarithmic scaling or estimation if exact fractional powers are tedious to compute manually."
+                ),
+                FormulaItem(
+                    name = "Degree-to-Percentage Scaling",
+                    expression = "% value = (Degrees / 360) * 100",
+                    description = "Converts angular sector spans in pie charts to relative decimal metric values.",
+                    applicationTrick = "Utilize 10% = 36 degrees and 1% = 3.6 degrees as standard rapid mental converters."
+                )
+            )
+            "apt_quant_geometry" -> listOf(
+                FormulaItem(
+                    name = "Internal Angles of Polygons",
+                    expression = "Sum of Angles = (n - 2) * 180°",
+                    description = "Computes accumulated degrees inside any regular or irregular closed flat n-sided polygon.",
+                    applicationTrick = "Divide by n to compute a single angle of a perfectly regular polygon."
+                ),
+                FormulaItem(
+                    name = "Heron's Triangle Area",
+                    expression = "Area = √[s(s - a)(s - b)(s - c)] where s = (a + b + c)/2",
+                    description = "Returns complete surface area of any triangle utilizing only its three bounding lengths.",
+                    applicationTrick = "Check if the triangle is right-angled first (a^2+b^2=c^2) to see if simple 0.5*b*h applies instead."
+                )
+            )
+            "apt_quant_mensuration" -> listOf(
+                FormulaItem(
+                    name = "Surface Area & Volume of a Sphere",
+                    expression = "Volume = (4/3) * π * r^3, Area = 4 * π * r^2",
+                    description = "Spherically symmetric volume bounds and curved surface boundaries.",
+                    applicationTrick = "Differentiating Volume with respect to r gives Area (d/dr [4/3 * pi * r^3] = 4 * pi * r^2)."
+                ),
+                FormulaItem(
+                    name = "Cone Parameters",
+                    expression = "Volume = (1/3) * π * r^2 * h, Slant length (l) = √(r^2 + h^2)",
+                    description = "Formulations of right circular cones.",
+                    applicationTrick = "The curved surface area is exactly π*r*l, excluding the flat base area of π*r^2."
+                )
+            )
+            "apt_verb_completion", "apt_verb_vocab", "apt_verb_reading", "apt_verb_analogies",
+            "apt_verb_word_groups", "apt_verb_critical", "apt_verb_narrative_seq" -> listOf(
+                FormulaItem(
+                    name = "Structural Semantic Relation",
+                    expression = "Clue + Transition Indicator -> Output Context",
+                    description = "Identifies direction of argument flow (positive/agreement vs negative/contradiction).",
+                    applicationTrick = "Look first for contrast markers like 'however', 'although', 'nonetheless' to reverse semantic polarity."
+                ),
+                FormulaItem(
+                    name = "Grammatical Agreement Constraint",
+                    expression = "Singular Subject -> Singular Verb / Plural Subject -> Plural Verb",
+                    description = "Maintains concord alignment across clauses.",
+                    applicationTrick = "Cross out secondary prepositional phrases (e.g. 'as well as the teachers') to isolate the singular main subject."
+                )
+            )
+            "apt_anal_deduction_induction", "apt_anal_analogies" -> listOf(
+                FormulaItem(
+                    name = "Syllogistic Venn Intersection",
+                    expression = "A ⊂ B, B ∩ C ≠ ∅ -> A ∩ C may or may not be non-empty",
+                    description = "Translates logical premises to set theory inequalities.",
+                    applicationTrick = "Draw maximum intersection and minimal overlap cases. A conclusion is valid only if true in BOTH."
+                )
+            )
+            "apt_anal_number_series" -> listOf(
+                FormulaItem(
+                    name = "Arithmetic & Geometric Progressions",
+                    expression = "AP Term: T_n = a + (n-1)d, GP Term: T_n = a * r^(n-1)",
+                    description = "Predictive coordinates for standard sequences of terms.",
+                    applicationTrick = "If first-order differences form an AP, the original series represents a quadratic sequence."
+                ),
+                FormulaItem(
+                    name = "Second-Order Difference Resolve",
+                    expression = "D_2 = Diff(Diff(T_n))",
+                    description = "Evaluates progressive differences of first differences to identify polynomial progressions.",
+                    applicationTrick = "Most difficult series questions in GATE reduce to constant values in the second or third subtraction layer."
+                )
+            )
+            "apt_anal_numerical_reasoning" -> listOf(
+                FormulaItem(
+                    name = "Linear Equation Modeling",
+                    expression = "a*x + b*y = c",
+                    description = "Translates descriptive word constraints into solvable coordinate variables.",
+                    applicationTrick = "Always count equations to match variables. N independent variables require N independent equations."
+                )
+            )
+            "apt_spatial_rotation", "apt_spatial_paper_folding", "apt_spatial_pattern_recognition", "apt_spatial_shape_transformation" -> listOf(
+                FormulaItem(
+                    name = "Planar Reflection Matrix",
+                    expression = "x' = -x (for Y-axis mirror), y' = -y (for X-axis mirror)",
+                    description = "Reflects planar points or shapes symmetrically across central boundary axes.",
+                    applicationTrick = "For paper folding, treat folds as mirrors and reflect existing holes directly across the fold line."
+                ),
+                FormulaItem(
+                    name = "Spatial Symmetry Scaling",
+                    expression = "Area ∝ (Scale Factor)^2, Volume ∝ (Scale Factor)^3",
+                    description = "Calculates geometric area/volume changes when relative sizes scale.",
+                    applicationTrick = "If length doubles (k=2), volume multiplies by 2^3 = 8, while surface area multiplies by 2^2 = 4."
+                )
+            )
+            else -> listOf(
+                FormulaItem(
+                    name = "Fundamental Subject Concept Formulation",
+                    expression = "V_output = f(Inputs, Parameters)",
+                    description = "Relates theoretical concepts with corresponding mathematical dependencies.",
+                    applicationTrick = "Check boundary constraints and source limits to confirm active equations."
+                )
+            )
+        }
     }
 
     private fun createReasoning(): Subject {
@@ -492,7 +716,20 @@ object GateSyllabus {
                                 ),
                                 keyInsight = "Do not rely on real-world factual correctness of statements. Analyze validity strictly based on the relational rules stated in the given premises."
                             ),
-                            formulaSheet = emptyList(),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Intersection & Subset Formulation",
+                                    expression = "All A are B <=> A ⊂ B, Some A are B <=> A ∩ B ≠ ∅",
+                                    description = "Sets up subset, intersection, and disjoint definitions for categorical syllogism evaluations.",
+                                    applicationTrick = "Draw both the minimal overlap diagram and maximum subset overlap diagrams to trace absolute logical truths."
+                                ),
+                                FormulaItem(
+                                    name = "Number Series Progression Step",
+                                    expression = "D_1(n) = T(n+1) - T(n), D_2(n) = D_1(n+1) - D_1(n)",
+                                    description = "Evaluates difference mappings of sequence items to discover quadratic or geometric patterns.",
+                                    applicationTrick = "If first differences are in AP, second differences are constant, highlighting a quadratic T(n) equation."
+                                )
+                            ),
                             pyqs = listOf(
                                 GateQuestion(
                                     id = "pyq_re_syll_1",
@@ -818,7 +1055,26 @@ object GateSyllabus {
                                 ),
                                 keyInsight = "An ideal voltage source has exactly zero series internal resistance, whereas an ideal current source has infinite parallel internal resistance."
                             ),
-                            formulaSheet = emptyList(),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Kirchhoff's Current Law (KCL)",
+                                    expression = "Σ I_inbound = Σ I_outbound (or Σ I_node = 0)",
+                                    description = "Algebraic sum of all currents meeting at a node is zero, deriving directly from conservation of charge.",
+                                    applicationTrick = "Choose one node as ground reference (0V) and state nodal potential voltages to solve quickly."
+                                ),
+                                FormulaItem(
+                                    name = "Kirchhoff's Voltage Law (KVL)",
+                                    expression = "Σ V_around_loop = 0 (or Σ V_rise = Σ V_drop)",
+                                    description = "Algebraic sum of all electrical potential differences across elements around any closed loop is zero.",
+                                    applicationTrick = "Follow a consistent clockwise or counterclockwise loop direction, aligning signs with entry terminals (+ to - represents drop)."
+                                ),
+                                FormulaItem(
+                                    name = "Ohm's Law & Dissipated Power",
+                                    expression = "V = I * R, P = V * I = I^2 * R = V^2 / R",
+                                    description = "Voltage drop matches current scaled by resistance. Governs simple linear active resistor lines.",
+                                    applicationTrick = "Use V^2/R for parallel connections where voltage is shared, and I^2*R for series connections where current is shared."
+                                )
+                            ),
                             pyqs = emptyList(),
                             practiceQuestions = emptyList(),
                             mockQuiz = emptyList()
@@ -2081,7 +2337,20 @@ object GateSyllabus {
                                 ),
                                 keyInsight = "While a Thyristor is a latching device, a MOSFET is fully controlled, meaning conduction ceases as soon as the gate drive potential drops to zero."
                             ),
-                            formulaSheet = emptyList(),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "SCR Latching & Holding Condition",
+                                    expression = "I_anode > I_latching (To turn ON), I_anode < I_holding (To turn OFF)",
+                                    description = "Latching current is the minimum anode current to sustain the ON-state after removing the gate drive pulse. Holding current is the limit below which SCR drops back to forward blocking state.",
+                                    applicationTrick = "Latching current (I_L) is always larger than holding current (I_H); typically, I_L ≈ 2 to 3 times I_H."
+                                ),
+                                FormulaItem(
+                                    name = "Power Loss Formulation",
+                                    expression = "P_conduction = V_on * I_avg, P_switching = (V_off * I_on) / 2 * (t_on + t_off) * f_sw",
+                                    description = "Conduction loss matches static on-state characteristics. Switching loss scales linearly with transition speed durations (t_on, t_off) and frequency.",
+                                    applicationTrick = "High frequencies cause switching loss to dominate, making MOSFET superior to SCR for high frequency operation."
+                                )
+                            ),
                             pyqs = emptyList(),
                             practiceQuestions = emptyList(),
                             mockQuiz = emptyList()
@@ -2210,7 +2479,26 @@ object GateSyllabus {
                                 ),
                                 keyInsight = "To ensure a stable operating point (Q-point) in BJT circuits, use self-bias (voltage divider bias) configuration to minimize thermal runaway risks."
                             ),
-                            formulaSheet = emptyList(),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Shockley Diode Equation",
+                                    expression = "I_D = I_S * [exp(V_D / (η * V_T)) - 1]",
+                                    description = "Models the current of a PN junction diode under forward or reverse voltage drops. V_T is thermal voltage, η is the ideality factor.",
+                                    applicationTrick = "At room temperature (300 K), the thermal voltage V_T = k * T / q is approximately 25.86 mV (often rounded to 25 mV or 26 mV in exam papers)."
+                                ),
+                                FormulaItem(
+                                    name = "BJT Bias Relationship",
+                                    expression = "I_C = β * I_B + I_CEO, I_E = I_C + I_B = (1 + β) * I_B",
+                                    description = "Relates base current (I_B), collector current (I_C), and emitter current (I_E).",
+                                    applicationTrick = "For high β (β >> 1), we assume collector current is approximately equal to emitter current: I_C ≈ I_E."
+                                ),
+                                FormulaItem(
+                                    name = "Collector-to-Emitter Voltage",
+                                    expression = "V_CE = V_CC - I_C * R_C - I_E * R_E",
+                                    description = "The DC bias voltage across the collector and emitter terminals of the transistor.",
+                                    applicationTrick = "For saturation detection, check if V_CE is less than V_CE_sat (typically around 0.2V)."
+                                )
+                            ),
                             pyqs = emptyList(),
                             practiceQuestions = emptyList(),
                             mockQuiz = emptyList()
@@ -2340,7 +2628,20 @@ object GateSyllabus {
                                 ),
                                 keyInsight = "K-Map groupings must always be powers of 2 (1, 2, 4, 8, 16) to eliminate redundant terms successfully."
                             ),
-                            formulaSheet = emptyList(),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "De Morgan's Laws",
+                                    expression = "NOT(A AND B) = NOT A OR NOT B, NOT(A OR B) = NOT A AND NOT B",
+                                    description = "Provides mathematical logic equivalence to invert product or sum groupings cleanly.",
+                                    applicationTrick = "Break the line and change the sign (e.g., from + to · or from · to +) when resolving compliments."
+                                ),
+                                FormulaItem(
+                                    name = "Boole's Absorption & Consensus Theorem",
+                                    expression = "A + A * B = A, A * B + NOT A * C + B * C = A * B + NOT A * C",
+                                    description = "Allows absorption and deletion of redundant term groups in complex Boolean equations.",
+                                    applicationTrick = "The variable that appears with and without complement (A and NOT A) in separate terms can absorb the third term containing their partners."
+                                )
+                            ),
                             pyqs = emptyList(),
                             practiceQuestions = emptyList(),
                             mockQuiz = emptyList()
@@ -2400,7 +2701,20 @@ object GateSyllabus {
                                 ),
                                 keyInsight = "To build a modulo-N down/up counter, you require at least Ceil(log2 N) flip-flop items."
                             ),
-                            formulaSheet = emptyList(),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Flip-Flop Characteristic Equations",
+                                    expression = "SR: Q_next = S + R_bar * Q, JK: Q_next = J * Q_bar + K_bar * Q, D: Q_next = D, T: Q_next = T ⊕ Q",
+                                    description = "Predictive mathematical models of state updates for major memory latch configurations on clock triggering.",
+                                    applicationTrick = "Use JK flip flop for toggle state: setting J = K = 1 always yields Q_next = Q_bar."
+                                ),
+                                FormulaItem(
+                                    name = "Counter State Boundary Condition",
+                                    expression = "MOD <= 2^N",
+                                    description = "Specifies that N flip-flops can represent up to 2^N unique binary state sequences.",
+                                    applicationTrick = "To build a MOD-10 counter, you need a minimum of 4 flip-flops (since 2^3 = 8 < 10 <= 16 = 2^4)."
+                                )
+                            ),
                             pyqs = emptyList(),
                             practiceQuestions = emptyList(),
                             mockQuiz = emptyList()

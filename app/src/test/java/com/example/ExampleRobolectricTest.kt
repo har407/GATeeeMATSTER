@@ -21,6 +21,16 @@ class ExampleRobolectricTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+  @org.junit.Before
+  fun setup() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val sharedPrefs = context.getSharedPreferences("gate_prep_prefs", Context.MODE_PRIVATE)
+    sharedPrefs.edit()
+      .putBoolean("is_authenticated", true)
+      .putString("aspirant_name", "Test Aspirant")
+      .commit()
+  }
+
   @Test
   fun testE2EPracticeCustomizationFlow() {
     // 1. Verify we are on general dashboard

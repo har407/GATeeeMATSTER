@@ -2,29 +2,28 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// --- Cosmic Slate Premium Palette ---
-val SlateBackgroundDark = Color(0xFF0F111A)
-val SlateSurfaceDark = Color(0xFF161924)
-val SlateSurfaceLight = Color(0xFFF0F2F9)
-val SlateBackgroundLight = Color(0xFFF7F8FC)
+// --- Cosmic Slate Premium Palette & Vibrant Theme ---
+val SlateBackgroundDark = Color(0xFF090616) // Deep cosmic purple/black
+val SlateSurfaceDark = Color(0xFF140E2D)    // Neon-tinged dark surface
+val SlateSurfaceLight = Color(0xFFF9FDFB)   // Off-white warm green-tinged surface
+val SlateBackgroundLight = Color(0xFFF1F8F4) // Minty sage light background
 
-val TechElectricNavy = Color(0xFF2F54EB) // Electric Indigo Primary
-val TechTealAccent = Color(0xFF13C2C2)   // Playful Cyan/Teal ACCENT
-val TechGoldXP = Color(0xFFFAAD14)       // Golden amber for streaks and XP
+val PrimaryLight = Color(0xFF2E7D32)        // Vibrant Forest Green
+val SecondaryLight = Color(0xFF00B0FF)      // Electric Ocean Blue
+val TertiaryLight = Color(0xFF00C853)       // Vibrant Electric Green
 
-val CorrectGreenBg = Color(0xFFF6FFED)
-val CorrectGreenBorder = Color(0xFFB7EB8F)
-val CorrectGreenText = Color(0xFF389E0D)
+val PrimaryDark = Color(0xFF00E676)         // Bright Green highlight
+val SecondaryDark = Color(0xFF18FFFF)        // Cyan highlight
+val TertiaryDark = Color(0xFF00C853)         // Sunny Gold highlight
 
-val WrongRedBg = Color(0xFFFFF1F0)
-val WrongRedBorder = Color(0xFFFFA39E)
-val WrongRedText = Color(0xFFCF1322)
+val TechElectricNavy = Color(0xFF2E7D32)
+val TechTealAccent = Color(0xFF00E5FF)
+val TechGoldXP = Color(0xFF00C853)
 
-// M3 standard mapping colors
-val PrimaryLight = Color(0xFF1B53F4)
-val SecondaryLight = Color(0xFF535C72)
-val TertiaryLight = Color(0xFF097E8B)
+val CorrectGreenBg = Color(0xFFE8F5E9)
+val CorrectGreenBorder = Color(0xFFA5D6A7)
+val CorrectGreenText = Color(0xFF2E7D32)
 
-val PrimaryDark = Color(0xFF90B0FF)
-val SecondaryDark = Color(0xFFB5C4E5)
-val TertiaryDark = Color(0xFF86D2E0)
+val WrongRedBg = Color(0xFFFFEBEE)
+val WrongRedBorder = Color(0xFFEF9A9A)
+val WrongRedText = Color(0xFFC62828)

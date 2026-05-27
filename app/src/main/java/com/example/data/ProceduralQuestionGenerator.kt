@@ -42,6 +42,9 @@ object ProceduralQuestionGenerator {
                 subjectId == "general_aptitude" -> {
                     generateAptitudeQuestion(subjectId, topicId, subtopicId, subtopicName, i, year, questionType, difficulty, rand)
                 }
+                subjectId == "reasoning" -> {
+                    generateReasoningQuestion(subjectId, topicId, subtopicId, subtopicName, i, year, questionType, difficulty, rand)
+                }
                 subjectId == "engineering_math" -> {
                     generateMathQuestion(subjectId, topicId, subtopicId, subtopicName, i, year, questionType, difficulty, rand)
                 }
@@ -70,458 +73,721 @@ object ProceduralQuestionGenerator {
         difficulty: String,
         rand: Random
     ): GateQuestion {
-        val qId = "proc_apt_${subtopicId}_$index"
+        return when {
+            subtopicId == "apt_verb_grammar_usage" || subtopicId.startsWith("apt_verb_") -> {
+                generateVerbalAptitudeQuestion(subjectId, topicId, subtopicId, subtopicName, index, year, type, difficulty, rand)
+            }
+            subtopicId == "apt_numerical_computation" || subtopicId.startsWith("apt_quant_") -> {
+                generateQuantAptitudeQuestion(subjectId, topicId, subtopicId, subtopicName, index, year, type, difficulty, rand)
+            }
+            subtopicId == "apt_analytical_reasoning" || subtopicId.startsWith("apt_anal_") -> {
+                generateAnalyticalAptitudeQuestion(subjectId, topicId, subtopicId, subtopicName, index, year, type, difficulty, rand)
+            }
+            subtopicId == "apt_spatial_mirroring" || subtopicId.startsWith("apt_spatial_") -> {
+                generateSpatialAptitudeQuestion(subjectId, topicId, subtopicId, subtopicName, index, year, type, difficulty, rand)
+            }
+            else -> {
+                generateDefaultAptitudeQuestion(subjectId, topicId, subtopicId, subtopicName, index, year, type, difficulty, rand)
+            }
+        }
+    }
 
+    private fun generateVerbalAptitudeQuestion(
+        subjectId: String, topicId: String, subtopicId: String, subtopicName: String,
+        idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
+    ): GateQuestion {
+        val qId = "proc_apt_${subtopicId}_$idx"
         return when (subtopicId) {
-            "apt_verb_grammar_usage" -> {
-                when (type) {
-                    QuestionType.MCQ -> {
-                        val wordList = listOf(
-                            Pair("benevolent", "generous and kind"),
-                            Pair("capricious", "unpredictable and impulsive"),
-                            Pair("ephemeral", "short-lived and fleeting"),
-                            Pair("obdurate", "stubborn and unyielding")
-                        )
-                        val select = wordList[index % wordList.size]
-                        val qText = """
-                            Select the option that represents the closest synonym for the word "${select.first}" under modern formal sentence usage.
-                            Sentence: "The CEO was known for her ${select.first} actions during structural reorganizations."
-                        """.trimIndent()
-
-                        val optA = select.second
-                        val optB = "unreliable and slow"
-                        val optC = "strictly professional and formal"
-                        val optD = "aggressive and profit-focused"
-
-                        val options = listOf(optA, optB, optC, optD).shuffled(rand)
-                        val correctIndex = options.indexOf(optA)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = options,
-                            correctOptions = listOf(correctIndex),
-                            correctNumericalRange = null,
-                            explanation = "The word '${select.first}' is defined as being ${select.second}, which fits the contextual synonym usage in formal business writing.",
-                            formulasUsed = "Verbal Lexicon rules",
-                            shortcutTricks = "Examine the word root and replace other options in the sentence to test semantic consistency.",
-                            relatedConcepts = "Vocabulary, Synonyms, Grammar usage",
-                            difficulty = difficulty
-                        )
+            "apt_verb_vocab", "apt_verb_completion" -> {
+                val words = listOf(
+                    Triple("benevolent", "generous and kind", "malicious"),
+                    Triple("capricious", "unpredictable and impulsive", "stable"),
+                    Triple("ephemeral", "short-lived and fleeting", "perpetual"),
+                    Triple("obdurate", "stubborn and unyielding", "flexible")
+                )
+                val sel = words[idx % words.size]
+                if (type == QuestionType.MCQ) {
+                    val qText = if (subtopicId == "apt_verb_vocab") {
+                        "Determine the closest synonym for the word \"${sel.first}\" in standard academic writing."
+                    } else {
+                        "Complete the sentence contextually: \"The philanthropist's ________ actions were celebrated by the entire community.\""
                     }
-                    QuestionType.MSQ -> {
-                        val qText = """
-                            Identify which of the following English sentences are grammatically correct in formal writing: (Select all that apply)
-                        """.trimIndent()
-
-                        val optA = "Neither the principal nor the teachers are attending the annual summit."
-                        val optB = "If she had registered on time, she would have received the confirmation code."
-                        val optC = "Each of the candidates has submitted their reference statement."
-                        val optD = "In spite of his fatigue, he continued to compile the simulation data."
-
-                        val listOpts = listOf(optA, optB, optC, optD)
-                        val correctIdx = listOf(0, 1, 3)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = listOpts,
-                            correctOptions = correctIdx,
-                            correctNumericalRange = null,
-                            explanation = "Option A is correct because when singular and plural subjects are connected by 'neither/nor', the verb matches the closer noun ('teachers' is plural, so 'are' is used). Option B is a perfect third conditional frame. Option D uses a correct prepositional phrase. Option C traditionally prefers his/her reference in highly formal writing, though 'their' is widely accepted, making A, B, and D the most strictly flawless standard.",
-                            formulasUsed = "English grammar concord, Conditional frames",
-                            shortcutTricks = "Check conditional agreements: 'If + had + V3' matches 'would + have + V3'. Test nearest noun agreements in neither/nor.",
-                            relatedConcepts = "Subject-verb agreement, Verbal logic",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.NAT -> {
-                        val length = 8 + rand.nextInt(8) // 8 to 15
-                        val slots = 2
-                        val answer = length.toDouble()
-
-                        val qText = """
-                            Read the sentence: "To write code efficiently requires focus and strict discipline."
-                            Let N represent the total number of words in this sentence (excluding any punctuation).
-                            Compute the exact numerical value of N.
-                        """.trimIndent()
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = null,
-                            correctOptions = null,
-                            correctNumericalRange = (answer - 0.01)..(answer + 0.01),
-                            explanation = "Counting the words in the sentence: 'To' (1), 'write' (2), 'code' (3), 'efficiently' (4), 'requires' (5), 'focus' (6), 'and' (7), 'strict' (8), 'discipline' (9). There are exactly 9 words in this sentence.",
-                            formulasUsed = "Sentence parsing count",
-                            shortcutTricks = "Read through and count each token carefully. Double-check small functional words like 'and', 'to'.",
-                            relatedConcepts = "Verbal Comprehension, Textual parsing",
-                            difficulty = difficulty
-                        )
-                    }
+                    val correct = if (subtopicId == "apt_verb_vocab") sel.second else "benevolent"
+                    val wrongOpt = if (subtopicId == "apt_verb_vocab") sel.third else "capricious"
+                    val options = listOf(correct, wrongOpt, "strictly professional", "aggressive").shuffled(rand)
+                    val correctIdx = options.indexOf(correct)
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "By vocabulary definition, '${sel.first}' means '${sel.second}'. Thus the correct answer is '$correct'.",
+                        formulasUsed = "Verbal semantics", shortcutTricks = "Analyze word prefix/suffix context.",
+                        relatedConcepts = "Vocabulary, Syllogistic logic", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all of the options that are synonyms or related words of \"${sel.first}\":"
+                    val options = listOf(sel.second.split(" and ")[0], sel.second.split(" and ")[1], "altruistic", sel.third)
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "The words are synonyms of '${sel.first}', whereas '${sel.third}' is an antonym.",
+                        formulasUsed = "Semantic matching", shortcutTricks = "Identify related conceptual terms.",
+                        relatedConcepts = "Synonyms matching", difficulty = difficulty
+                    )
+                } else {
+                    val ans = sel.first.length.toDouble()
+                    val qText = "In the sentence completion task, how many letters are there in the word \"${sel.first.uppercase()}\"?"
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Counting the characters in '${sel.first.uppercase()}' yields exactly ${sel.first.length} characters.",
+                        formulasUsed = "Character mapping count", shortcutTricks = "Examine spelling and count precisely.",
+                        relatedConcepts = "Grammar lexicon rules", difficulty = difficulty
+                    )
                 }
             }
-            "apt_analytical_reasoning" -> {
-                when (type) {
-                    QuestionType.MCQ -> {
-                        val numA = 3 + rand.nextInt(4) // 3 to 6
-                        val numB = numA + 1
-                        val qText = """
-                            In a study environment representing "$subtopicName", $numB software developers are seated in a row. 
-                            If Dev A must sit exactly adjacent to Dev B, and Dev C cannot sit adjacent to Dev A. 
-                            How many distinct seating arrangements exist?
-                        """.trimIndent()
-
-                        val ansVal = 24 * numA
-                        val optA = "$ansVal arrangements"
-                        val optB = "${ansVal + 12} arrangements"
-                        val optC = "${ansVal / 2} arrangements"
-                        val optD = "${ansVal * 2} arrangements"
-
-                        val options = listOf(optA, optB, optC, optD).shuffled(rand)
-                        val correctIndex = options.indexOf(optA)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = options,
-                            correctOptions = listOf(correctIndex),
-                            correctNumericalRange = null,
-                            explanation = "Using standard permutation under restriction rule, treating Dev A and Dev B as a single unit yields a specific group permutation factor multiplied by relative exclusions, calculating exactly to $ansVal valid arrangements.",
-                            formulasUsed = "P(n, r) with constraints",
-                            shortcutTricks = "Formulate a block unit for adjacent items first, then subtract cases violating the second constraint.",
-                            relatedConcepts = "Permutations, Restricted seating, Syllogistic logic",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.MSQ -> {
-                        val qText = """
-                            Evaluate the truth value of the statements under "$subtopicName" logic rules: (Select all that apply)
-                        """.trimIndent()
-
-                        val optA = "If all algorithms are processes, and some processes are efficient, all algorithms must be efficient."
-                        val optB = "If all networks are graphs, and no graphs are trees, then no networks are trees."
-                        val optC = "If some models are valid, then some models are not valid is a logical statement depending on set intersection."
-                        val optD = "The negation of 'All compilers are software' is 'At least one compiler is not software'."
-
-                        val listOpts = listOf(optA, optB, optC, optD)
-                        val correctIdx = listOf(1, 2, 3)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = listOpts,
-                            correctOptions = correctIdx,
-                            correctNumericalRange = null,
-                            explanation = "Option A is a classical syllogism error (all algorithms are not necessarily efficient). Option B is completely correct by Venn set exclusion. Option C is a standard set theory truth. Option D represents the correct categorical logical negation of a universal statement.",
-                            formulasUsed = "Syllogistic logic boundaries",
-                            shortcutTricks = "Use Venn diagrams to verify categorical assertions. Universal statements are negated by existential statements.",
-                            relatedConcepts = "Truth Tables, Venn Sets, Deductive Syllogisms",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.NAT -> {
-                        val valInputs = listOf(Pair(3, 1), Pair(4, 1), Pair(5, 1))
-                        val select = valInputs[index % valInputs.size]
-                        val ans = select.first.toDouble()
-
-                        val qText = """
-                            A logical puzzle involves placing elements under "$subtopicName". 
-                            If Statement P implies Statement Q, and we are told that Q is False. 
-                            Let P's truth state be a real number: 1.0 representing True, and 0.0 representing False.
-                            What is the logical truth state of Statement P?
-                        """.trimIndent()
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = null,
-                            correctOptions = null,
-                            correctNumericalRange = 0.0..0.0,
-                            explanation = "By Modus Tollens rule of classical inference, if P -> Q is True, and Q is False, then P MUST be False. Therefore, its truth value is exactly 0.0.",
-                            formulasUsed = "Modus Tollens: ((P -> Q) ∧ ¬Q) -> ¬P",
-                            shortcutTricks = "Contrapositive is logically equivalent to the conditional. If Q is false, then P is immediately false.",
-                            relatedConcepts = "Analytical deductions, Logic gates, Implication rules",
-                            difficulty = difficulty
-                        )
-                    }
+            "apt_verb_reading", "apt_verb_critical" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = """
+                        Read the technical excerpt:
+                        "Although parallel computing provides high throughput for matrix multiplications, power dissipation limits the deployment scale."
+                        Which statement represents the main thesis or logical conclusion?
+                    """.trimIndent()
+                    val options = listOf(
+                        "Deployment scale is limited by power dissipation despite superior parallel computing speedups.",
+                        "Matrix multiplications cannot be processed concurrently.",
+                        "Power dissipation is completely irrelevant to high throughput operations.",
+                        "Parallel computing guarantees zero thermal limits."
+                    ).shuffled(rand)
+                    val correctIdx = options.indexOf("Deployment scale is limited by power dissipation despite superior parallel computing speedups.")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "The passage contrasts the high-throughput benefits of parallel computing against physical limitations in power dissipation.",
+                        formulasUsed = "Logical thesis parsing", shortcutTricks = "Look for contrast markers such as 'Although' or 'But' to locate main arguments.",
+                        relatedConcepts = "Critical reading, theme extraction", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all of the logically valid deductions supported by the premises: \"All compilers translate source files. Some compilers optimize loops.\""
+                    val options = listOf(
+                        "There exists a translation tool that optimizes loops.",
+                        "All tools that optimize loops are translators.",
+                        "Some compilers that translate source files do not optimize loops is possible.",
+                        "No compiler translates source files."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Since all compilers translate, any compiler that optimizes loops must also be a translator.",
+                        formulasUsed = "Syllogistic logic parsing", shortcutTricks = "Use containment: loop optimizers are a subset of compilers or intersect. Compilers are subset of translators.",
+                        relatedConcepts = "Deductive validity", difficulty = difficulty
+                    )
+                } else {
+                    val qText = """
+                        Let Statement A be "All compilers optimize loops" and Statement B be "Some compilers optimize loops".
+                        If Statement A is True, what is the logical truth value of Statement B (1.0 for True, 0.0 for False)?
+                    """.trimIndent()
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = 0.99..1.01,
+                        explanation = "By subalternation rules in standard categorical logic, if the universal affirmative is true, the particular affirmative must also be true.",
+                        formulasUsed = "Categorical subalternation", shortcutTricks = "If all items of a set possess a trait, any non-empty subpart also possesses it.",
+                        relatedConcepts = "Syllogisms, Boolean states", difficulty = difficulty
+                    )
                 }
             }
-            "apt_spatial_mirroring" -> {
-                when (type) {
-                    QuestionType.MCQ -> {
-                        val qText = """
-                            Under spatial mirroring rules representing design components of "$subtopicName", 
-                            a flat asymmetric pattern is rotated 180 degrees counter-clockwise and then mirrored horizontally.
-                            Which of the following operations describes the single-step equivalent transformation?
-                        """.trimIndent()
-
-                        val optA = "A simple vertical mirror reflection"
-                        val optB = "A simple horizontal mirror reflection"
-                        val optC = "A simple 90 degrees clockwise rotation"
-                        val optD = "No transformation (returns to exact initial state)"
-
-                        val options = listOf(optA, optB, optC, optD).shuffled(rand)
-                        val correctIndex = options.indexOf(optA)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = options,
-                            correctOptions = listOf(correctIndex),
-                            correctNumericalRange = null,
-                            explanation = "A 180-degree rotation is equivalent to both horizontal and vertical mirroring combined. If you rotate 180 and then mirror horizontally again, the horizontal mirroring is negated, leaving a single vertical mirror reflection.",
-                            formulasUsed = "Spatial Matrix transformations",
-                            shortcutTricks = "Draw a simple asymmetric shape (like 'L') on paper, rotate it, and flip it to trace the visual result instantly.",
-                            relatedConcepts = "Spatial symmetry, Matrix rotation, Mirror mappings",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.MSQ -> {
-                        val qText = """
-                            Which of the following assertions about spatial properties of multi-dimensional shapes is/are correct? (Select all that apply)
-                        """.trimIndent()
-
-                        val optA = "A standard regular 3D tetrahedron has exactly 4 vertices and 6 linear edges."
-                        val optB = "Rotating a 3D object along its principal axis preserves all relative volume and edge metrics."
-                        val optC = "Reflecting an asymmetric 3D shape across any plane alters its chirality (handedness)."
-                        val optD = "Every regular polyhedron must have an equal number of faces and vertices."
-
-                        val listOpts = listOf(optA, optB, optC, optD)
-                        val correctIdx = listOf(0, 1, 2)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = listOpts,
-                            correctOptions = correctIdx,
-                            correctNumericalRange = null,
-                            explanation = "Euler's formula for polyhedra is F + V = E + 2. Not all regular polyhedra have F = V (e.g. cube has 6 faces and 8 vertices), making Option D false. Ratios and structures follow rigorous geometric theorems.",
-                            formulasUsed = "Euler's Polyhedral Theorem: F + V = E + 2",
-                            shortcutTricks = "Analyse a standard cube to verify if faces equal vertices. Instant rejection of Option D.",
-                            relatedConcepts = "Polyhedrons, Spatial dimensions, Chirality symmetry",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.NAT -> {
-                        val s = 3 + rand.nextInt(4) // 3, 4, 5, 6
-                        val answer = 12 * (s - 2)
-                        val formattedAns = answer.toDouble()
-
-                        val qText = """
-                            A solid cube of side $s cm is painted completely red on its outer faces. 
-                            It is then cut into uniform $s^3 unit cubes of side 1 cm.
-                            Determine the number of unit cubes that have exactly TWO faces painted red.
-                        """.trimIndent()
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = null,
-                            correctOptions = null,
-                            correctNumericalRange = (formattedAns - 0.01)..(formattedAns + 0.01),
-                            explanation = "In a painted cube of side 's', the unit cubes with exactly 2 painted faces lie along the edges of the original cube (excluding the corners). There are 12 edges on a cube, and each edge has (s - 2) such cubes. Hence, Total = 12 * ($s - 2) = 12 * ${s - 2} = $answer cubes.",
-                            formulasUsed = "Count(2-painted) = 12 * (s - 2)",
-                            shortcutTricks = "Two-sided painted cubes always lie on edges. Since a cube has 12 edges, the formula is always 12 multiplied by (side - 2).",
-                            relatedConcepts = "Spatial geometry, Painted cubes division, Edges counts",
-                            difficulty = difficulty
-                        )
-                    }
-                }
-            }
-            "apt_numerical_computation" -> {
-                when (type) {
-                    QuestionType.MCQ -> {
-                        val speed1 = 40 + rand.nextInt(20) // 40 to 60
-                        val speed2 = 60 + rand.nextInt(30) // 60 to 90
-                        val avgSpeed = (2.0 * speed1 * speed2) / (speed1 + speed2)
-                        val formattedAvg = String.format(Locale.US, "%.2f", avgSpeed)
-
-                        val qText = """
-                            An engineer drives from home to an analytical workstation at an average speed of $speed1 km/h, 
-                            and immediately returns along the exact same path driving at an average speed of $speed2 km/h. 
-                            Compute the overall average speed (in km/h) for the entire round trip.
-                        """.trimIndent()
-
-                        val optA = "$formattedAvg km/h"
-                        val optB = String.format(Locale.US, "%.2f km/h", (speed1 + speed2) / 2.0)
-                        val optC = String.format(Locale.US, "%.2f km/h", avgSpeed - 5.0)
-                        val optD = String.format(Locale.US, "%.2f km/h", avgSpeed + 3.5)
-
-                        val options = listOf(optA, optB, optC, optD).shuffled(rand)
-                        val correctIndex = options.indexOf(optA)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = options,
-                            correctOptions = listOf(correctIndex),
-                            correctNumericalRange = null,
-                            explanation = "The average speed for a round trip with constant distance segments is the harmonic mean of the speeds: V_avg = 2 * V1 * V2 / (V1 + V2) = 2 * $speed1 * $speed2 / ($speed1 + $speed2) = ${2 * speed1 * speed2} / ${speed1 + speed2} = $formattedAvg km/h.",
-                            formulasUsed = "Harmonic Mean = 2 * v1 * v2 / (v1 + v2)",
-                            shortcutTricks = "The average speed for equal-distance segments is ALWAYS strictly less than the simple arithmetic mean. This rules out simple average calculations instantly.",
-                            relatedConcepts = "Quantitative aptitude, Speed rate formulas, Average calculations",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.MSQ -> {
-                        val qText = """
-                            Identify which of the following quantitative relationships is/are mathematically correct: (Select all that apply)
-                        """.trimIndent()
-
-                        val optA = "If a sum of money doubles itself in 10 years under simple interest, the annual interest rate is exactly 10%."
-                        val optB = "The compound interest on any principal is always strictly greater than or equal to the simple interest for any positive duration."
-                        val optC = "If three values are in ratio 2:3:5, their sum must always be an even integer."
-                        val optD = "For any two positive numbers, the Arithmetic Mean is always greater than or equal to the Geometric Mean."
-
-                        val listOpts = listOf(optA, optB, optC, optD)
-                        val correctIdx = listOf(0, 1, 3)
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = listOpts,
-                            correctOptions = correctIdx,
-                            correctNumericalRange = null,
-                            explanation = "Option A is correct: Sum doubles implies Interest = Principal, so PRT/100 = P => R * 10 / 100 = 1 => R = 10%. Option B is correct since compound interest gains interest-on-interest after year 1 (and equals SI for year 1). Option D is the standard AM-GM inequality. Option C is false because values could be decimals (e.g. 0.2, 0.3, 0.5 sum to 1.0 which is odd), so AM-GM holds.",
-                            formulasUsed = "Simple Interest: I = P*R*T/100; AM >= GM",
-                            shortcutTricks = "Always assume arbitrary variables to test ratios. Decimals break constraints of Option C instantly.",
-                            relatedConcepts = "Interest rates, AM-GM inequality, Ratio properties",
-                            difficulty = difficulty
-                        )
-                    }
-                    QuestionType.NAT -> {
-                        // Work combinations
-                        val workCombos = listOf(
-                            Pair(12, 6),   // Product/Sum = 72/18 = 4.0
-                            Pair(12, 24),  // Product/Sum = 288/36 = 8.0
-                            Pair(10, 15)   // Product/Sum = 150/25 = 6.0
-                        )
-                        val pair = workCombos[index % workCombos.size]
-                        val x = pair.first
-                        val y = pair.second
-                        val ans = (x * y).toDouble() / (x + y).toDouble()
-
-                        val qText = """
-                            Working alone, analyst A takes exactly $x hours to compile a statistical summary.
-                            Analyst B takes exactly $y hours to complete the identical task. 
-                            How many hours will they require to complete the task if they work together concurrently?
-                        """.trimIndent()
-
-                        GateQuestion(
-                            id = qId,
-                            subjectId = subjectId,
-                            topicId = topicId,
-                            subtopicId = subtopicId,
-                            year = year,
-                            questionText = qText,
-                            questionType = type,
-                            options = null,
-                            correctOptions = null,
-                            correctNumericalRange = (ans - 0.05)..(ans + 0.05),
-                            explanation = "Working together, their total rate is 1/x + 1/y = (x + y) / (x * y). Thus, the time needed is the reciprocal: T = (x * y) / (x + y) = ($x * $y) / ($x + $y) = ${x * y} / ${x + y} = $ans hours.",
-                            formulasUsed = "Combined time T = (x * y) / (x + y)",
-                            shortcutTricks = "Compute the product divided by the sum of their individual speeds to instantly find combined time.",
-                            relatedConcepts = "Work ratios, Rate analysis, Quantitative computations",
-                            difficulty = difficulty
-                        )
-                    }
+            "apt_verb_analogies", "apt_verb_word_groups", "apt_verb_narrative_seq" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "Identify the analogical relationship: COAL : LOCOMOTIVE :: ________ : ________"
+                    val options = listOf("ELECTRICITY : MOTOR", "WIND : SAIL", "WATER : PIPELINE", "FUEL : FILTER").shuffled(rand)
+                    val correctIdx = options.indexOf("ELECTRICITY : MOTOR")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "Coal acts as the primary energy source powering locomotives, and electricity acts as the energy source powering motors.",
+                        formulasUsed = "Analogy relations", shortcutTricks = "Map the functional relation: '[EnergySource] powers the [Device]'.",
+                        relatedConcepts = "Analogical arguments, matching relations", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all of the options containing word groups representing mechanical parts of a macroscopic whole (PART : WHOLE relation):"
+                    val options = listOf("SPOKE : WHEEL", "LEAF : TREE", "ENGINE : CAR", "WATER : PIPELINE")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "A spoke is part of a wheel, leaf is part of a tree, and engine is part of a car.",
+                        formulasUsed = "Semantic taxonomy", shortcutTricks = "Identify physical components vs containers.",
+                        relatedConcepts = "Analogy associations", difficulty = difficulty
+                    )
+                } else {
+                    val qText = """
+                        In the analogy LIGHT : BLIND :: SOUND : [?], 
+                        count the number of characters in the 4-letter response representing the corresponding sensory impairment.
+                    """.trimIndent()
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = 3.99..4.01,
+                        explanation = "The response is 'DEAF', which has exactly 4 characters.",
+                        formulasUsed = "Analogy spelling mapping", shortcutTricks = "Compute the 4-letter synonym length.",
+                        relatedConcepts = "Verbal Analogies", difficulty = difficulty
+                    )
                 }
             }
             else -> {
-                // Return default general aptitude question
-                val varA = 10 + rand.nextInt(30)
-                val varB = 20 + rand.nextInt(40)
-                val total = varA + varB
-                val ratio = String.format(Locale.US, "%.2f", (varA.toDouble() / total.toDouble()) * 100)
-
-                val qText = """
-                    An analysis of structural metrics in "$subtopicName" shows that out of $total trial conditions, exactly $varA satisfy primary criteria A and $varB satisfy criteria B. 
-                    If a single random trial is observed, what is the exact percentage probability (rounded to two decimal places) that it falls under criteria A?
-                """.trimIndent()
-
-                val optA = "$ratio%"
-                val optB = String.format(Locale.US, "%.2f%%", ((varA + 5).toDouble() / total * 100))
-                val optC = String.format(Locale.US, "%.2f%%", ((varA - 3).toDouble() / total * 100))
-                val optD = String.format(Locale.US, "%.2f%%", (varB.toDouble() / total * 100))
-
-                val options = listOf(optA, optB, optC, optD).shuffled(rand)
-                val correctIndex = options.indexOf(optA)
-
-                GateQuestion(
-                    id = qId,
-                    subjectId = subjectId,
-                    topicId = topicId,
-                    subtopicId = subtopicId,
-                    year = year,
-                    questionText = qText,
-                    questionType = type,
-                    options = options,
-                    correctOptions = listOf(correctIndex),
-                    correctNumericalRange = null,
-                    explanation = "We compute the probability by dividing the subset count ($varA) by the total outcomes ($total) and multiplying by 100: ($varA / $total) * 100 = $ratio%.",
-                    formulasUsed = "P(A) = n(A) / N(total)",
-                    shortcutTricks = "Always build the ratio directly. Check that the final percentage correlates directly with the magnitude of parts.",
-                    relatedConcepts = "Probability, Ratio analysis, Quantitative Aptitude",
-                    difficulty = difficulty
+                val wordList = listOf(
+                    Pair("benevolent", "generous and kind"),
+                    Pair("capricious", "unpredictable and impulsive"),
+                    Pair("ephemeral", "short-lived and fleeting"),
+                    Pair("obdurate", "stubborn and unyielding")
                 )
+                val select = wordList[idx % wordList.size]
+                if (type == QuestionType.MCQ) {
+                    val qText = """
+                        Select the option that represents the closest synonym for the word "${select.first}" under modern formal sentence usage.
+                        Sentence: "The CEO was known for her ${select.first} actions during structural reorganizations."
+                    """.trimIndent()
+                    val options = listOf(select.second, "unreliable and slow", "strictly professional and formal", "aggressive and profit-focused").shuffled(rand)
+                    val correctIndex = options.indexOf(select.second)
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIndex),
+                        explanation = "The word '${select.first}' is defined as being ${select.second}, which fits the contextual synonym usage in formal business writing.",
+                        formulasUsed = "Verbal Lexicon rules", shortcutTricks = "Replace other options in the sentence.",
+                        relatedConcepts = "Vocabulary, Grammar usage", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Identify which of the following English sentences are grammatically correct in formal writing: (Select all that apply)"
+                    val options = listOf(
+                        "Neither the principal nor the teachers are attending the annual summit.",
+                        "If she had registered on time, she would have received the confirmation code.",
+                        "Each of the candidates has submitted their reference statement.",
+                        "In spite of his fatigue, he continued to compile the simulation data."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 3),
+                        explanation = "Option A is correct ('teachers are'). Option B is a valid third conditional frame. Option D is a valid phrase.",
+                        formulasUsed = "English grammar concord", shortcutTricks = "Verify nearest noun subject-verb agreement.",
+                        relatedConcepts = "Subject-verb agreement", difficulty = difficulty
+                    )
+                } else {
+                    val qText = """
+                        Read the sentence: "To write code efficiently requires focus and strict discipline."
+                        Let N represent the total number of words in this sentence (excluding any punctuation).
+                        Compute the exact numerical value of N.
+                    """.trimIndent()
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = 8.99..9.01,
+                        explanation = "Counting the words in the sentence yields exactly 9 words.",
+                        formulasUsed = "Sentence parsing count", shortcutTricks = "Identify each word unit precisely.",
+                        relatedConcepts = "Textual parsing", difficulty = difficulty
+                    )
+                }
             }
         }
+    }
+
+    private fun generateQuantAptitudeQuestion(
+        subjectId: String, topicId: String, subtopicId: String, subtopicName: String,
+        idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
+    ): GateQuestion {
+        val qId = "proc_apt_${subtopicId}_$idx"
+        return when (subtopicId) {
+            "apt_quant_ratios", "apt_quant_percentages", "apt_quant_profit_loss" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "Under \"$subtopicName\", if the price of a component is increased by 25%, by what percentage must a factory reduce utilization of the component to keep its overall budget unchanged?"
+                    val options = listOf("20%", "25%", "15%", "33.33%").shuffled(rand)
+                    val correctIdx = options.indexOf("20%")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "If price becomes 1.25, utilization must become 1/1.25 = 0.8 to keep budget identical. This is a 20% reduction.",
+                        formulasUsed = "P * U = Total budget", shortcutTricks = "+1/4 price increase -> -1/5 utilization change.",
+                        relatedConcepts = "Ratios, percentage margins", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all mathematically correct percentage/ratio statements under \"$subtopicName\":"
+                    val options = listOf(
+                        "An increase of 50% followed by a decrease of 50% result in a net decrease of 25%.",
+                        "If a:b = 2:3 and b:c = 4:5, the compounded ratio a:b:c is 8:12:15.",
+                        "If cost price is 100, and it is marked up by 30%, then sold with a 10% discount, profit is 17%.",
+                        "If selling price is less than cost price, a net profit is obtained directly."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Statement 1: 1.5 * 0.5 = 0.75 (25% decrease). Statement 2: LCM of 3 and 4 is 12 (8:12:15). Statement 3: Profit is 130 * 0.9 - 100 = 17.",
+                        formulasUsed = "Profit & Ratio identities", shortcutTricks = "Substitute base 100 to quickly confirm assertions.",
+                        relatedConcepts = "Profit CP SP ratios", difficulty = difficulty
+                    )
+                } else {
+                    val cost = 80.0 + (idx % 3) * 10
+                    val sp = cost * 1.25
+                    val qText = "If a component's manufacturing cost is $$cost and we sell it to obtain exactly 25% profit margin, what is the selling price in dollars?"
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (sp - 0.01)..(sp + 0.01),
+                        explanation = "Selling Price = Cost * 1.25 = $sp.",
+                        formulasUsed = "SP = CP * (1 + P%/100)", shortcutTricks = "Add one-quarter of CP to CP directly.",
+                        relatedConcepts = "Percentages and profit", difficulty = difficulty
+                    )
+                }
+            }
+            "apt_quant_time_work", "apt_quant_permutation_combination", "apt_quant_probability" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "In \"$subtopicName\", how many distinct ways can the letters of the word \"GATE\" be rearranged?"
+                    val options = listOf("24", "12", "6", "48").shuffled(rand)
+                    val correctIdx = options.indexOf("24")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "'GATE' contains 4 distinct letters. Permutations = 4! = 24.",
+                        formulasUsed = "n! permutations", shortcutTricks = "Compute standard permutations with non-repeating terms.",
+                        relatedConcepts = "Combinatorics, factorials", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all of the valid probabilitic and combinatorial formulas under \"$subtopicName\":"
+                    val options = listOf(
+                        "C(5, 2) is exactly 10.",
+                        "P(5, 2) is exactly 20.",
+                        "If two fair coins are tossed, the probability of obtaining at least one head is 3/4.",
+                        "C(4, 4) is exactly 4."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "C(5,2)=10, P(5,2)=20, Coin toss at least one head = {HH, HT, TH} = 3/4. C(4,4) is 1, not 4.",
+                        formulasUsed = "C(n, r) and P(n, r) formulations", shortcutTricks = "Manually check small factorials.",
+                        relatedConcepts = "Probability & arrangements", difficulty = difficulty
+                    )
+                } else {
+                    val ans = 15.0 // C(6, 2)
+                    val qText = "Determine the exact value of combinatorial selections represented by C(6, 2) under \"$subtopicName\" rules."
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "C(6, 2) = (6 * 5) / 2 = 15.",
+                        formulasUsed = "C(n, r) = n! / (r! * (n-r)!)", shortcutTricks = "Compute small coefficients systematically.",
+                        relatedConcepts = "Permutations & Selections", difficulty = difficulty
+                    )
+                }
+            }
+            "apt_quant_logarithms", "apt_quant_data_interpretation", "apt_quant_geometry", "apt_quant_mensuration" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "Under \"$subtopicName\" properties, if the linear radius of a solid 3D sphere is doubled, its volume increases by what factor?"
+                    val options = listOf("8", "4", "2", "6").shuffled(rand)
+                    val correctIdx = options.indexOf("8")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "Volume is proportional to the third power of linear scale: 2^3 = 8.",
+                        formulasUsed = "V = 4/3 * pi * r^3", shortcutTricks = "Volume is proportional to k^3.",
+                        relatedConcepts = "Mensuration geometry", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all mathematically sound geometric relationships for circular or regular boundaries in \"$subtopicName\":"
+                    val options = listOf(
+                        "Each interior angle of a regular hexagon is exactly 120 degrees.",
+                        "In a right triangle with sides 6 cm and 8 cm, the hypotenuse is exactly 10 cm.",
+                        "For any real numbers, log(ab) = log(a) + log(b) is a valid logarithm identity.",
+                        "The volume of a cone is half the volume of a cylinder of identical radius and height."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Hexagon angle is 120 deg. Triangle 6-8-10 is Pythagorean triple. log(ab) = log(a)+log(b). Cone is 1/3 of cylinder, not half.",
+                        formulasUsed = "Symmetry & logarithm properties", shortcutTricks = "Double check standard conic and cylinder formulas.",
+                        relatedConcepts = "Geometry, logarithms, shape scaling", difficulty = difficulty
+                    )
+                } else {
+                    val ans = 150.0 // 6 * s^2 where s = 5
+                    val qText = "A regular 3D cube representing structural elements in \"$subtopicName\" has an edge length of 5.0 cm. Find the total surface area in sq cm."
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Area of a cube has 6 faces: 6 * s^2 = 6 * 25 = 150.0.",
+                        formulasUsed = "Area = 6 * s^2", shortcutTricks = "Compute basic face area and scale by face counts.",
+                        relatedConcepts = "Mensuration scaling", difficulty = difficulty
+                    )
+                }
+            }
+            else -> {
+                val workCombos = listOf(Pair(12, 6), Pair(12, 24), Pair(10, 15))
+                val pair = workCombos[idx % workCombos.size]
+                val x = pair.first
+                val y = pair.second
+                val ans = (x * y).toDouble() / (x + y).toDouble()
+                if (type == QuestionType.MCQ) {
+                    val qText = """
+                        An engineer drives from home at an average speed of 40 km/h and immediately returns along the exact same path driving at 60 km/h.
+                        Compute the overall average speed (in km/h) for the entire round trip.
+                    """.trimIndent()
+                    val options = listOf("48.00 km/h", "50.00 km/h", "45.00 km/h", "52.50 km/h").shuffled(rand)
+                    val correctIdx = options.indexOf("48.00 km/h")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "V_avg = 2 * V1 * V2 / (V1 + V2) = 2 * 40 * 60 / 100 = 48 km/h.",
+                        formulasUsed = "Harmonic Mean = 2 * v1 * v2 / (v1 + v2)", shortcutTricks = "Round trip average is harmonic mean, strictly less than modern arithmetic mean.",
+                        relatedConcepts = "Speed rates computations", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Identify which of the following quantitative relationships is/are mathematically correct: (Select all that apply)"
+                    val options = listOf(
+                        "If a sum doubles itself in 10 years simple interest, interest rate is exactly 10%.",
+                        "The compound interest on any principal is always strictly greater than or equal to simple interest for positive durations.",
+                        "If three values are in ratio 2:3:5, their sum must always be an even integer.",
+                        "For any two positive numbers, the Arithmetic Mean is always greater than or equal to Geometric Mean."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 3),
+                        explanation = "Option A is correct. Option B holds since interest compounds. Option D is standard AM-GM inequality. C is false because values can be decimals.",
+                        formulasUsed = "Simple/Compound interest rules", shortcutTricks = "Use simple decimal offsets to test ratio properties.",
+                        relatedConcepts = "In equalities, percentages", difficulty = difficulty
+                    )
+                } else {
+                    val qText = """
+                        Working alone, analyst A takes exactly $x hours to compile a statistical summary.
+                        Analyst B takes exactly $y hours to complete the identical task. 
+                        How many hours will they require to complete the task if they work together concurrently?
+                    """.trimIndent()
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.05)..(ans + 0.05),
+                        explanation = "Combined working rate yields: T = (x * y) / (x + y) = ($x * $y) / ($x + $y) = $ans.",
+                        formulasUsed = "Rate equations: 1/T = 1/x + 1/y", shortcutTricks = "Product divided by sum.",
+                        relatedConcepts = "Concurrent rates", difficulty = difficulty
+                    )
+                }
+            }
+        }
+    }
+
+    private fun generateAnalyticalAptitudeQuestion(
+        subjectId: String, topicId: String, subtopicId: String, subtopicName: String,
+        idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
+    ): GateQuestion {
+        val qId = "proc_apt_${subtopicId}_$idx"
+        return when (subtopicId) {
+            "apt_anal_number_series", "apt_anal_numerical_reasoning" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "Determine the next term in the logical number series under \"$subtopicName\": 2, 5, 10, 17, 26, ?"
+                    val options = listOf("37", "35", "41", "39").shuffled(rand)
+                    val correctIdx = options.indexOf("37")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "Pattern is n^2 + 1. For n = 6, 6^2 + 1 = 37.",
+                        formulasUsed = "T_n = n^2 + 1", shortcutTricks = "Identify first-order differences: 3, 5, 7, 9, 11...",
+                        relatedConcepts = "Progressions, sequences", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all of the option sequences that represent quadratic progression growth under \"$subtopicName\":"
+                    val options = listOf(
+                        "2, 5, 10, 17, 26, 37",
+                        "1, 4, 9, 16, 25, 36",
+                        "3, 6, 11, 18, 27, 38",
+                        "2, 4, 8, 16, 32, 64"
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "A, B, and C grow quadratically (second difference is 2). D grows exponentially (powers of 2).",
+                        formulasUsed = "Sequence difference tracking", shortcutTricks = "Evaluate adjacent difference progressions.",
+                        relatedConcepts = "Number Series structures", difficulty = difficulty
+                    )
+                } else {
+                    val ans = 125.0 // n^3 for n=5
+                    val qText = "Solve for the next term in the cubic sequence under \"$subtopicName\": 1, 8, 27, 64, ?"
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Cubes: 1^3, 2^3, 3^3, 4^3, 5^3=125.",
+                        formulasUsed = "T_n = n^3", shortcutTricks = "Perfect cubes recognition.",
+                        relatedConcepts = "Cubic progressions", difficulty = difficulty
+                    )
+                }
+            }
+            "apt_anal_deduction_induction", "apt_anal_analogies" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "Analyze the numerical analogy under \"$subtopicName\" and solve for the missing term: 4 : 16 :: 5 : ?"
+                    val options = listOf("25", "20", "30", "125").shuffled(rand)
+                    val correctIdx = options.indexOf("25")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "The relationship is square mapping: x : x^2. Since 4 is mapped to 16, 5 maps to 25.",
+                        formulasUsed = "Analogy square function f(x) = x^2", shortcutTricks = "Identify square mapping values on both sides.",
+                        relatedConcepts = "Analogies", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all option pairs displaying the squaring function relation \"x : x^2\" under \"$subtopicName\":"
+                    val options = listOf("3 : 9", "4 : 16", "5 : 25", "6 : 30")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "3^2=9, 4^2=16, 5^2=25 are correct. 6^2 is 36, not 30.",
+                        formulasUsed = "x : x^2", shortcutTricks = "Square left term and cross-check right term.",
+                        relatedConcepts = "Symmetric analogies", difficulty = difficulty
+                    )
+                } else {
+                    val ans = 27.0
+                    val qText = "Determine the missing term in the cubic analogic relation under \"$subtopicName\": 2 : 8 :: 3 : ?"
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Cubic: 2^3=8, so 3^3=27.",
+                        formulasUsed = "f(x) = x^3", shortcutTricks = "Cube of base 3.",
+                        relatedConcepts = "Cubic analogical mappings", difficulty = difficulty
+                    )
+                }
+            }
+            else -> {
+                if (type == QuestionType.MCQ) {
+                    val stepsList = listOf(3, 4, 5, 6)
+                    val step = stepsList[idx % stepsList.size]
+                    val start = 2 + rand.nextInt(10)
+                    val val1 = start
+                    val val2 = val1 + step
+                    val val3 = val2 + step + 1
+                    val val4 = val3 + step + 2
+                    val val5 = val4 + step + 3
+                    val expected = val5 + step + 4
+                    val qText = """
+                        Find the missing number in the following analytical number series:
+                        $val1, $val2, $val3, $val4, $val5, ?
+                        This series represents an increasing difference sequence under logical analysis for "$subtopicName".
+                    """.trimIndent()
+                    val optCorrect = "$expected"
+                    val optWrong1 = "${expected - 2}"
+                    val optWrong2 = "${expected + 2}"
+                    val optWrong3 = "${expected + step}"
+                    val options = listOf(optCorrect, optWrong1, optWrong2, optWrong3).shuffled(rand)
+                    val correctIdx = options.indexOf(optCorrect)
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "The differences increase by 1 at each step. Next value is $val5 + ${step + 4} = $expected.",
+                        formulasUsed = "Progression of differences", shortcutTricks = "Examine consecutive differences.",
+                        relatedConcepts = "Logical pattern analysis", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Consider Statement A: \"All algorithm steps are clear.\" and Statement B: \"Some clear steps are fast.\" Which of the following statements logically follows or matches Venn principles under \"$subtopicName\"?"
+                    val options = listOf(
+                        "Some algorithm steps might be fast.",
+                        "It is possible for no algorithm steps to be fast.",
+                        "Universal assertions are represented as subsets under Venn logic models.",
+                        "No algorithm steps are clear."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "A Venn overlap shows algorithm steps are inside clear steps, and clear steps overlap with fast steps. Hence, some algorithms *might* be fast, or none *might* be fast.",
+                        formulasUsed = "Categorical logic representations", shortcutTricks = "Draw Venn circles.",
+                        relatedConcepts = "Euler overlays", difficulty = difficulty
+                    )
+                } else {
+                    val base = 4.0 + (idx % 4)
+                    val ans = base * base
+                    val qText = "A logical grid has $base rows and $base columns. Find the total number of basic single-grid cell locations representing \"$subtopicName\" vertices."
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "A $base x $base grid has exactly $base * $base = $ans single-cell locations.",
+                        formulasUsed = "Rows * Columns cells", shortcutTricks = "Multiply dimensions directly.",
+                        relatedConcepts = "Analytical grid structures", difficulty = difficulty
+                    )
+                }
+            }
+        }
+    }
+
+    private fun generateSpatialAptitudeQuestion(
+        subjectId: String, topicId: String, subtopicId: String, subtopicName: String,
+        idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
+    ): GateQuestion {
+        val qId = "proc_apt_${subtopicId}_$idx"
+        return when (subtopicId) {
+            "apt_spatial_rotation", "apt_spatial_shape_transformation" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "Under \"$subtopicName\", if a 2D shape is rotated 90 degrees clockwise, then rotated 180 degrees counter-clockwise, what single-step rotation is identical?"
+                    val options = listOf("90 degrees counter-clockwise", "90 degrees clockwise", "180 degrees clockwise", "270 degrees clockwise").shuffled(rand)
+                    val correctIdx = options.indexOf("90 degrees counter-clockwise")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "-90 + 180 = +90 degrees (which is 90 degrees counter-clockwise).",
+                        formulasUsed = "Angular summation θ = θ1 + θ2", shortcutTricks = "Assign signs/directions to rotation angles.",
+                        relatedConcepts = "Symmetry and rotation", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all geometric transformations that preserve the interior angles of any polygon under \"$subtopicName\":"
+                    val options = listOf("Translation (Shift)", "Rotation", "Uniform scaling (Dilation)", "Shearing (Distortion)")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Translation, rotation, and scaling preserve shape similarity (angles). Shearing skews angles.",
+                        formulasUsed = "Conformal transformations", shortcutTricks = "Preserving shape form preserves angles.",
+                        relatedConcepts = "Symmetry coordinate mappings", difficulty = difficulty
+                    )
+                } else {
+                    val ans = 8.0 // scale^3
+                    val qText = "If a 3D solid sphere is uniformly dilated by a linear scale factor of 2.0 under \"$subtopicName\", by what factor does its volume increase?"
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Volume scale of dilation is linear scale ^ 3: 2^3 = 8.",
+                        formulasUsed = "Dilation factor = scale^3", shortcutTricks = "Take cube of linear magnification.",
+                        relatedConcepts = "Mensuration & dilation scaling", difficulty = difficulty
+                    )
+                }
+            }
+            "apt_spatial_paper_folding", "apt_spatial_pattern_recognition" -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = "A square paper is folded in half once horizontally, and folded in half again vertically. If you make a single punch hole in the center, how many total punch holes appear when unfolded under \"$subtopicName\"?"
+                    val options = listOf("4", "2", "1", "8").shuffled(rand)
+                    val correctIdx = options.indexOf("4")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
+                        explanation = "Folding twice yields 2^2 = 4 layers. Punching once goes through all 4 layers, yielding 4 holes.",
+                        formulasUsed = "Layers = 2^f folds", shortcutTricks = "Each fold doubles sheet layers.",
+                        relatedConcepts = "Symmetry folding logic", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Select all shapes displaying at least one reflective line of symmetry under \"$subtopicName\":"
+                    val options = listOf("Square", "Rectangle", "Regular Hexagon", "Scalene Triangle")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Square, rectangle, and hexagon are highly symmetric. Scalene triangles possess no equal sides or angles.",
+                        formulasUsed = "Reflective symmetry planes", shortcutTricks = "Identify if mirror reflection maps the shape back onto itself.",
+                        relatedConcepts = "Symmetry of polygons", difficulty = difficulty
+                    )
+                } else {
+                    val ans = 5.0
+                    val qText = "Compute the exact count of lines of reflective symmetry possessed by a standard regular pentagon under \"$subtopicName\" rules."
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Regular n-sided polygon has n lines of reflective symmetry. A pentagon has 5 lines.",
+                        formulasUsed = "Symmetry count = n", shortcutTricks = "Pass lines from each point to opposite midpoints.",
+                        relatedConcepts = "Visual patterns", difficulty = difficulty
+                    )
+                }
+            }
+            else -> {
+                if (type == QuestionType.MCQ) {
+                    val qText = """
+                        Under spatial mirroring rules representing design components of "$subtopicName", 
+                        a flat asymmetric pattern is rotated 180 degrees counter-clockwise and then mirrored horizontally.
+                        Which of the following operations describes the single-step equivalent transformation?
+                    """.trimIndent()
+                    val options = listOf("A simple vertical mirror reflection", "A simple horizontal mirror reflection", "A simple 90 degrees clockwise rotation", "No transformation (returns to exact initial state)").shuffled(rand)
+                    val correctIndex = options.indexOf("A simple vertical mirror reflection")
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIndex),
+                        explanation = "A 180-degree rotation is equivalent to both horizontal and vertical mirroring. Rotating and then mirroring horizontally cancels the horizontal flip, leaving only a vertical mirror reflection.",
+                        formulasUsed = "Spatial Matrix transformations", shortcutTricks = "Analyse an asymmetric 'L' shape trace.",
+                        relatedConcepts = "Chirality, coordinate transformations", difficulty = difficulty
+                    )
+                } else if (type == QuestionType.MSQ) {
+                    val qText = "Which of the following assertions about spatial properties of multi-dimensional shapes is/are correct? (Select all that apply)"
+                    val options = listOf(
+                        "A standard regular 3D tetrahedron has exactly 4 vertices and 6 linear edges.",
+                        "Rotating a 3D object along its principal axis preserves all relative volume and edge metrics.",
+                        "Reflecting an asymmetric 3D shape across any plane alters its chirality (handedness).",
+                        "Every regular polyhedron must have an equal number of faces and vertices."
+                    )
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Faces F and vertices V are not always equal under Euler's formula (e.g. cube has 6 faces and 8 vertices).",
+                        formulasUsed = "Euler's Polyhedral Theorem: F + V = E + 2", shortcutTricks = "Check with a simple cube to disprove face and vertex identity.",
+                        relatedConcepts = "Polyhedrons bounds", difficulty = difficulty
+                    )
+                } else {
+                    val s = 3 + (idx % 3)
+                    val answer = 12 * (s - 2)
+                    val qText = """
+                        A solid cube of side $s cm is painted completely red on its outer faces. 
+                        It is then cut into uniform $s^3 unit cubes of side 1 cm.
+                        Determine the number of unit cubes that have exactly TWO faces painted red under "$subtopicName".
+                    """.trimIndent()
+                    GateQuestion(
+                        id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
+                        questionText = qText, questionType = type, options = null, correctOptions = null,
+                        correctNumericalRange = (answer.toDouble() - 0.01)..(answer.toDouble() + 0.01),
+                        explanation = "Two-sided painted cubes always lie on edges (not corners). There are 12 edges, each having s-2 middle cubes. Total = 12 * ($s - 2) = $answer.",
+                        formulasUsed = "Count(2-painted) = 12 * (s - 2)", shortcutTricks = "Multiply 12 by (side - 2) directly.",
+                        relatedConcepts = "Geometric division", difficulty = difficulty
+                    )
+                }
+            }
+        }
+    }
+
+    private fun generateDefaultAptitudeQuestion(
+        subjectId: String,
+        topicId: String,
+        subtopicId: String,
+        subtopicName: String,
+        index: Int,
+        year: Int,
+        type: QuestionType,
+        difficulty: String,
+        rand: Random
+    ): GateQuestion {
+        val qId = "proc_apt_${subtopicId}_$index"
+        val varA = 10 + rand.nextInt(30)
+        val varB = 20 + rand.nextInt(40)
+        val total = varA + varB
+        val ratio = String.format(Locale.US, "%.2f", (varA.toDouble() / total.toDouble()) * 100)
+
+        val qText = """
+            An analysis of structural metrics in "$subtopicName" shows that out of $total trial conditions, exactly $varA satisfy primary criteria A and $varB satisfy criteria B. 
+            If a single random trial is observed, what is the exact percentage probability (rounded to two decimal places) that it falls under criteria A?
+        """.trimIndent()
+
+        val optA = "$ratio%"
+        val optB = String.format(Locale.US, "%.2f%%", ((varA + 5).toDouble() / total * 100))
+        val optC = String.format(Locale.US, "%.2f%%", ((varA - 3).toDouble() / total * 100))
+        val optD = String.format(Locale.US, "%.2f%%", (varB.toDouble() / total * 100))
+
+        val options = listOf(optA, optB, optC, optD).shuffled(rand)
+        val correctIndex = options.indexOf(optA)
+
+        return GateQuestion(
+            id = qId,
+            subjectId = subjectId,
+            topicId = topicId,
+            subtopicId = subtopicId,
+            year = year,
+            questionText = qText,
+            questionType = type,
+            options = options,
+            correctOptions = listOf(correctIndex),
+            correctNumericalRange = null,
+            explanation = "We compute the probability by dividing the subset count ($varA) by the total outcomes ($total) and multiplying by 100: ($varA / $total) * 100 = $ratio%.",
+            formulasUsed = "P(A) = n(A) / N(total)",
+            shortcutTricks = "Always build the ratio directly. Check that the final percentage correlates directly with the magnitude of parts.",
+            relatedConcepts = "Probability, Ratio analysis, Quantitative Aptitude",
+            difficulty = difficulty
+        )
     }
 
     private fun generateMathQuestion(
@@ -1964,6 +2230,224 @@ object ProceduralQuestionGenerator {
                     relatedConcepts = "Transformers, Inductive coupling, Step-down machines",
                     difficulty = difficulty
                 )
+            }
+        }
+    }
+
+    private fun generateReasoningQuestion(
+        subjectId: String,
+        topicId: String,
+        subtopicId: String,
+        subtopicName: String,
+        index: Int,
+        year: Int,
+        type: QuestionType,
+        difficulty: String,
+        rand: Random
+    ): GateQuestion {
+        val qId = "proc_reasoning_${subtopicId}_$index"
+
+        return when (type) {
+            QuestionType.MCQ -> {
+                if (index % 2 == 0) {
+                    val stepsList = listOf(3, 4, 5, 6)
+                    val step = stepsList[index % stepsList.size]
+                    val start = 2 + rand.nextInt(10)
+                    val val1 = start
+                    val val2 = val1 + step
+                    val val3 = val2 + step + 1
+                    val val4 = val3 + step + 2
+                    val val5 = val4 + step + 3
+                    val expected = val5 + step + 4
+                    
+                    val qText = """
+                        Find the missing number in the following analytical number series:
+                        
+                        $val1, $val2, $val3, $val4, $val5, ?
+                        
+                        This series represents an increasing difference sequence under logical analysis for "$subtopicName".
+                    """.trimIndent()
+                    
+                    val optCorrect = "$expected"
+                    val optWrong1 = "${expected - 2}"
+                    val optWrong2 = "${expected + 2}"
+                    val optWrong3 = "${expected + step}"
+                    
+                    val options = listOf(optCorrect, optWrong1, optWrong2, optWrong3).shuffled(rand)
+                    val correctIdx = options.indexOf(optCorrect)
+                    
+                    GateQuestion(
+                        id = qId,
+                        subjectId = subjectId,
+                        topicId = topicId,
+                        subtopicId = subtopicId,
+                        year = year,
+                        questionText = qText,
+                        questionType = type,
+                        options = options,
+                        correctOptions = listOf(correctIdx),
+                        correctNumericalRange = null,
+                        explanation = "The first-order differences of the series are: ($val2 - $val1) = $step, ($val3 - $val2) = ${step + 1}, ($val4 - $val3) = ${step + 2}, ($val5 - $val4) = ${step + 3}. The second-order difference is constantly +1. Therefore, the next first-order difference should be ${step + 4}. The missing term is $val5 + ${step + 4} = $expected.",
+                        formulasUsed = "Arithmetic Progression of First-Order Differences",
+                        shortcutTricks = "Identify first-order differences: they increase by 1 at each step. Add the next increment to the last term.",
+                        relatedConcepts = "Number Series, Logical Patterns, Induction",
+                        difficulty = difficulty
+                    )
+                } else {
+                    val professions = listOf(
+                        Pair("Programmers", "Engineers"),
+                        Pair("Chemists", "Scientists"),
+                        Pair("Architects", "Designers"),
+                        Pair("Aeronauts", "Pilots")
+                    )
+                    val pair = professions[index % professions.size]
+                    val p1 = pair.first
+                    val p2 = pair.second
+                    
+                    val qText = """
+                        Consider the following logical assertions under "$subtopicName" rules:
+                        1. All $p1 are $p2.
+                        2. Some $p2 are managers.
+                        
+                        Which of the following conclusions logically follows with absolute 100% certainty?
+                    """.trimIndent()
+                    
+                    val optCorrect = "None of the other statements logically follow with absolute certainty."
+                    val optWrong1 = "Some $p1 are managers."
+                    val optWrong2 = "All $p1 are managers."
+                    val optWrong3 = "No $p1 are managers."
+                    
+                    val options = listOf(optCorrect, optWrong1, optWrong2, optWrong3).shuffled(rand)
+                    val correctIdx = options.indexOf(optCorrect)
+                    
+                    GateQuestion(
+                        id = qId,
+                        subjectId = subjectId,
+                        topicId = topicId,
+                        subtopicId = subtopicId,
+                        year = year,
+                        questionText = qText,
+                        questionType = type,
+                        options = options,
+                        correctOptions = listOf(correctIdx),
+                        correctNumericalRange = null,
+                        explanation = "Set P ($p1) is a subset of E ($p2). Set E overlaps with M (managers). This does not guarantee that Set P overlaps with M. It is entirely possible for P and M to be disjoint while satisfying both premises. Thus, none of the specific assertions logically follow with absolute certainties.",
+                        formulasUsed = "Set inclusions, Euler/Venn representations",
+                        shortcutTricks = "Draw a Venn/Euler diagram placing $p1 entirely inside $p2, and overlapping 'managers' with $p2 without touching $p1. This disproves all other choices.",
+                        relatedConcepts = "Syllogistic logic, Venn Diagrams, Validity",
+                        difficulty = difficulty
+                    )
+                }
+            }
+            QuestionType.MSQ -> {
+                val items = listOf(
+                    Triple("Gears", "Mechanisms", "Metal"),
+                    Triple("Resistors", "Components", "Passive"),
+                    Triple("Capacitors", "Devices", "Linear"),
+                    Triple("Compilers", "Translators", "Software")
+                )
+                val sel = items[index % items.size]
+                val t1 = sel.first
+                val t2 = sel.second
+                val t3 = sel.third
+                
+                val qText = """
+                    Given the following premises under "$subtopicName":
+                    1. All $t1 are $t2.
+                    2. No $t2 is $t3.
+                    
+                    Select all conclusions that are logically valid based strictly on the premises:
+                """.trimIndent()
+                
+                val optA = "No $t1 is $t3."
+                val optB = "Some $t2 are $t1."
+                val optC = "No $t3 is $t1."
+                val optD = "Some $t1 are $t3."
+                
+                val listOpts = listOf(optA, optB, optC, optD)
+                val correctIdx = listOf(0, 1, 2)
+                
+                GateQuestion(
+                    id = qId,
+                    subjectId = subjectId,
+                    topicId = topicId,
+                    subtopicId = subtopicId,
+                    year = year,
+                    questionText = qText,
+                    questionType = type,
+                    options = listOpts,
+                    correctOptions = correctIdx,
+                    correctNumericalRange = null,
+                    explanation = "Premise 1 states $t1 is a subset of $t2. Premise 2 states $t2 and $t3 are disjoint. Since $t1 is entirely inside $t2, it cannot have any overlap with $t3. Therefore, 'No $t1 is $t3' and 'No $t3 is $t1' are both logically certain. Also, since all $t1 are $t2, there are definitely 'Some $t2 are $t1'. Hence, options A, B, and C are valid.",
+                    formulasUsed = "Universal categorical exclusion",
+                    shortcutTricks = "If A is inside B, and B is external to C, then A must be completely external to C.",
+                    relatedConcepts = "Syllogisms, Contrapositive logic",
+                    difficulty = difficulty
+                )
+            }
+            QuestionType.NAT -> {
+                if (index % 2 == 0) {
+                    val totalStudents = 20 + rand.nextInt(30)
+                    val positionFromLeft = 5 + rand.nextInt(15)
+                    val positionFromRight = totalStudents - positionFromLeft + 1
+                    
+                    val qText = """
+                        In a class of $totalStudents engineering aspirants preparing for "$subtopicName", 
+                        Rahul is ranked $positionFromLeft from the top. 
+                        What is his rank from the bottom?
+                    """.trimIndent()
+                    
+                    val answer = positionFromRight.toDouble()
+                    
+                    GateQuestion(
+                        id = qId,
+                        subjectId = subjectId,
+                        topicId = topicId,
+                        subtopicId = subtopicId,
+                        year = year,
+                        questionText = qText,
+                        questionType = type,
+                        options = null,
+                        correctOptions = null,
+                        correctNumericalRange = (answer - 0.01)..(answer + 0.01),
+                        explanation = "The standard ranking relation is specified by the formula: Total = Rank from Top + Rank from Bottom - 1. Substituting given values: $totalStudents = $positionFromLeft + Rank_Bottom - 1. Therefore, Rank_Bottom = $totalStudents - $positionFromLeft + 1 = $positionFromRight.",
+                        formulasUsed = "Total count = Pos_Left + Pos_Right - 1",
+                        shortcutTricks = "Subtract the rank from the total number of people and add 1.",
+                        relatedConcepts = "Linear arrangements, Ranking, Order puzzles",
+                        difficulty = difficulty
+                    )
+                } else {
+                    val chars = listOf("GATE", "NPTEL", "MATH", "EEE")
+                    val str = chars[index % chars.size]
+                    val sum = str.map { it.code - 64 }.sum()
+                    
+                    val qText = """
+                        If each letter of the alphabet is assigned a number based on its alphabetic position (A=1, B=2, ..., Z=26), 
+                        the analytical code sum represented by a word is the sum of its letters' positions. 
+                        
+                        Find the exact analytical code sum for the word "$str" under these rules.
+                    """.trimIndent()
+                    
+                    val answer = sum.toDouble()
+                    
+                    GateQuestion(
+                        id = qId,
+                        subjectId = subjectId,
+                        topicId = topicId,
+                        subtopicId = subtopicId,
+                        year = year,
+                        questionText = qText,
+                        questionType = type,
+                        options = null,
+                        correctOptions = null,
+                        correctNumericalRange = (answer - 0.01)..(answer + 0.01),
+                        explanation = "We translate each letter of '$str' to its 1-based position in the alphabet. Summing these values yields exactly: " + str.map { it.code - 64 }.joinToString(" + ") + " = $sum.",
+                        formulasUsed = "Alphabetic alphanumeric letter conversion sum",
+                        shortcutTricks = "Write down known anchor letter values (E=5, J=10, O=15, T=20, Y=25) to map adjacent letters quickly.",
+                        relatedConcepts = "Coding-Decoding patterns, Alphanumeric mappings",
+                        difficulty = difficulty
+                    )
+                }
             }
         }
     }
