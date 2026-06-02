@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Dp
 import com.example.data.*
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
@@ -907,6 +908,7 @@ fun PracticeQuestionsTabContent(sub: Subtopic, viewModel: GateViewModel) {
     val customAttemptQuestions by viewModel.customAttemptQuestions.collectAsState()
     val currentIdx by viewModel.currentQuestionIndex.collectAsState()
     val isGenerating by viewModel.isGeneratingQuestions.collectAsState()
+    val customQuestionsState by viewModel.customQuestions.collectAsState()
 
     // Configuration states
     val topics = remember(sub.subjectId) { viewModel.getTopicsForSubject(sub.subjectId) }
@@ -916,7 +918,7 @@ fun PracticeQuestionsTabContent(sub: Subtopic, viewModel: GateViewModel) {
     var searchQuery by remember { mutableStateOf("") }
 
     // Dynamically retrieve questions for any selected subtopic
-    val questionsBySubtopic = remember(topics, selectedSubtopicIds) {
+    val questionsBySubtopic = remember(topics, selectedSubtopicIds, customQuestionsState) {
         val map = mutableMapOf<String, List<GateQuestion>>()
         val allSub = topics.flatMap { it.subtopics }
         selectedSubtopicIds.forEach { id ->
@@ -1596,7 +1598,7 @@ fun PracticeQuestionsTabContent(sub: Subtopic, viewModel: GateViewModel) {
                         OutlinedTextField(
                             value = natInput,
                             onValueChange = { if (!isSubmitted) viewModel.setNatAnswerInput(it) },
-                            label = { Text("Numeric Answer Value") },
+                            label = { Text("Enter Answer (Using Virtual Keyboard)") },
                             readOnly = true,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -2373,11 +2375,12 @@ fun CbtMockTestPlatformScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Predictive ranking formula matching 50 marks total
+                val scoreVal = finalScore ?: 0.0
                 val rankText = when {
-                    finalScore!! >= 40.0 -> "Predicted Rank: AIR 1 - 50 (Exemplary Mastery) 🏆"
-                    finalScore!! >= 30.0 -> "Predicted Rank: AIR 51 - 250 (Excellent Prep) 🚀"
-                    finalScore!! >= 20.0 -> "Predicted Rank: AIR 251 - 1000 (Very Good) ⚡"
-                    finalScore!! >= 15.0 -> "Predicted Rank: AIR 1001 - 3000 (Qualified) 🎓"
+                    scoreVal >= 40.0 -> "Predicted Rank: AIR 1 - 50 (Exemplary Mastery) 🏆"
+                    scoreVal >= 30.0 -> "Predicted Rank: AIR 51 - 250 (Excellent Prep) 🚀"
+                    scoreVal >= 20.0 -> "Predicted Rank: AIR 251 - 1000 (Very Good) ⚡"
+                    scoreVal >= 15.0 -> "Predicted Rank: AIR 1001 - 3000 (Qualified) 🎓"
                     else -> "Qualified (AIR 3000+). Needs more rigorous study. 📚"
                 }
 
@@ -2399,7 +2402,7 @@ fun CbtMockTestPlatformScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(text = "Final GATE Score", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            val displayScore = if (finalScore!! < 0.0) 0.0 else finalScore!!
+                            val displayScore = if (scoreVal < 0.0) 0.0 else scoreVal
                             Text(
                                 text = String.format("%.2f", displayScore),
                                 fontWeight = FontWeight.ExtraBold,
@@ -2551,7 +2554,7 @@ fun CbtMockTestPlatformScreen(
                 val filteredReviewedQuestions = questions.mapIndexed { idx, q ->
                     val userAns = userAnswers[q.id]
                     val isAttempted = userAns != null && userAns.trim().isNotEmpty()
-                    val isCorrect = isAttempted && viewModel.evaluateAnswerCorrectness(q, userAns!!)
+                    val isCorrect = isAttempted && userAns != null && viewModel.evaluateAnswerCorrectness(q, userAns)
                     Triple(q, idx, Pair(userAns, isAttempted to isCorrect))
                 }.filter { (_, _, info) ->
                     val (_, status) = info
@@ -2734,7 +2737,7 @@ fun CbtMockTestPlatformScreen(
                             OutlinedTextField(
                                 value = chosenOptionRep,
                                 onValueChange = { viewModel.setCbtAnswer(curQ.id, it) },
-                                label = { Text("Enter Numeric Answer") },
+                                label = { Text("Enter Answer (Using Virtual Keyboard)") },
                                 readOnly = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -2923,7 +2926,7 @@ fun ReviewedQuestionCard(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
-                    question.options!!.forEachIndexed { optIdx, optionText ->
+                    question.options?.forEachIndexed { optIdx, optionText ->
                         val isThisOptionCorrect = question.correctOptions?.contains(optIdx) == true
                         val isThisOptionSelected = when (question.questionType) {
                             QuestionType.MCQ -> userAns == optIdx.toString()
@@ -3144,7 +3147,7 @@ fun ReviewedQuestionCard(
                                     .padding(8.dp)
                             ) {
                                 Text(
-                                    text = question.formulasUsed!!,
+                                    text = question.formulasUsed ?: "",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -3192,7 +3195,7 @@ fun ReviewedQuestionCard(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = question.shortcutTricks!!,
+                                    text = question.shortcutTricks ?: "",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF5D4037)
@@ -3215,13 +3218,30 @@ fun AIAssistantButton(
     OutlinedButton(
         onClick = {
             val formattedText = "Please provide a clear, detailed answer to the following question:\n\n$questionText"
-            val sendIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, formattedText)
-                type = "text/plain"
+            
+            // 1. Copy to clipboard automatically for a flawless user experience
+            try {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("GATE Prep Question", formattedText)
+                clipboard.setPrimaryClip(clip)
+                android.widget.Toast.makeText(context, "Copied question to clipboard!", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            val chooserIntent = Intent.createChooser(sendIntent, "Select an AI to solve this question")
-            context.startActivity(chooserIntent)
+
+            // 2. Try-catch the external share intent chooser to prevent unhandled crashing empty environment issues
+            try {
+                val sendIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, formattedText)
+                    type = "text/plain"
+                }
+                val chooserIntent = Intent.createChooser(sendIntent, "Select an AI to solve this question")
+                context.startActivity(chooserIntent)
+            } catch (e: Exception) {
+                // Squelch and display helpful toast if no compatible sharing target apps exist
+                android.widget.Toast.makeText(context, "Paste anywhere to solve with ChatGPT / Gemini!", android.widget.Toast.LENGTH_LONG).show()
+            }
         },
         modifier = modifier.testTag("ai_assistant_button"),
         colors = ButtonDefaults.outlinedButtonColors(
@@ -3248,6 +3268,60 @@ fun AIAssistantButton(
 }
 
 @Composable
+private fun RowScope.GateKeyButton(
+    key: String,
+    weight: Float,
+    value: String,
+    onValueChange: (String) -> Unit,
+    height: Dp = 38.dp
+) {
+    val isAction = key == "⌫" || key == "-" || key == "."
+    val buttonBg = if (isAction) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val buttonTextCol = if (isAction) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    Card(
+        onClick = {
+            when (key) {
+                "⌫" -> {
+                    if (value.isNotEmpty()) {
+                        onValueChange(value.dropLast(1))
+                    }
+                }
+                else -> {
+                    onValueChange(value + key)
+                }
+            }
+        },
+        modifier = Modifier
+            .weight(weight)
+            .height(height),
+        shape = RoundedCornerShape(6.dp),
+        colors = CardDefaults.cardColors(containerColor = buttonBg),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = key,
+                style = if (key.length > 1) MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = buttonTextCol
+            )
+        }
+    }
+}
+
+@Composable
 fun GateVirtualKeyboard(
     value: String,
     onValueChange: (String) -> Unit,
@@ -3255,125 +3329,132 @@ fun GateVirtualKeyboard(
     enabled: Boolean = true
 ) {
     if (!enabled) return
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(16.dp)
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                shape = RoundedCornerShape(12.dp)
             )
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(16.dp)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(12.dp)
             )
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
+        // Keyboard Header
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "CBT OFFICIAL VIRTUAL KEYBOARD",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Use for NAT Type Questions",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
-        }
-        
-        val keys = listOf(
-            listOf("1", "2", "3", "⌫"),
-            listOf("4", "5", "6", "C"),
-            listOf("7", "8", "9", "-"),
-            listOf("", "0", ".", "")
-        )
-        
-        keys.forEach { rowKeys ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column {
+                Text(
+                    text = "CBT OFFICIAL ALPHANUMERIC KEYBOARD",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 0.5.sp
+                )
+                Text(
+                    text = "Tap keys to enter numbers or letters",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+            
+            Box(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
+                    .clickable { onValueChange("") }
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
-                rowKeys.forEach { key ->
-                    if (key.isEmpty()) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    } else {
-                        val isAction = key == "⌫" || key == "C" || key == "-" || key == "."
-                        val buttonBg = if (isAction) {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        }
-                        val buttonTextCol = if (isAction) {
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
-                        
-                        Card(
-                            onClick = {
-                                when (key) {
-                                    "⌫" -> {
-                                        if (value.isNotEmpty()) {
-                                            onValueChange(value.dropLast(1))
-                                        }
-                                    }
-                                    "C" -> {
-                                        onValueChange("")
-                                    }
-                                    "-" -> {
-                                        if (value.isEmpty()) {
-                                            onValueChange("-")
-                                        } else if (value == "-") {
-                                            onValueChange("")
-                                        } else if (!value.startsWith("-")) {
-                                            onValueChange("-" + value)
-                                        } else {
-                                            onValueChange(value.substring(1))
-                                        }
-                                    }
-                                    "." -> {
-                                        if (!value.contains(".")) {
-                                            onValueChange(if (value.isEmpty() || value == "-") value + "0." else value + ".")
-                                        }
-                                    }
-                                    else -> {
-                                        if (value == "0" && key == "0") {
-                                            // do nothing
-                                        } else if (value == "0" && key != "0") {
-                                            onValueChange(key)
-                                        } else {
-                                            onValueChange(value + key)
-                                        }
-                                    }
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = buttonBg),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = key,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = buttonTextCol
-                                )
-                            }
-                        }
-                    }
+                Text(
+                    text = "CLEAR ALL",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        // Alphanumeric standard rows
+        val rowNumbers = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", ".")
+        val rowLetters1 = listOf("Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P")
+        val rowLetters2 = listOf("A", "S", "D", "F", "G", "H", "J", "K", "L")
+        val rowLetters3 = listOf("Z", "X", "C", "V", "B", "N", "M", "⌫")
+
+        // Row 1: Numbers Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            rowNumbers.forEach { key ->
+                GateKeyButton(key = key, weight = 1f, value = value, onValueChange = onValueChange)
+            }
+        }
+
+        // Row 2: QWERTY Row 1
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            rowLetters1.forEach { key ->
+                GateKeyButton(key = key, weight = 1f, value = value, onValueChange = onValueChange)
+            }
+        }
+
+        // Row 3: QWERTY Row 2
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            rowLetters2.forEach { key ->
+                GateKeyButton(key = key, weight = 1f, value = value, onValueChange = onValueChange)
+            }
+        }
+
+        // Row 4: QWERTY Row 3
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            rowLetters3.forEach { key ->
+                val weight = if (key == "⌫") 1.8f else 1f
+                GateKeyButton(key = key, weight = weight, value = value, onValueChange = onValueChange)
+            }
+        }
+
+        // Row 5: Space Key Row
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Card(
+                onClick = { onValueChange(value + " ") },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(36.dp),
+                shape = RoundedCornerShape(6.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SPACE",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 }
             }
         }

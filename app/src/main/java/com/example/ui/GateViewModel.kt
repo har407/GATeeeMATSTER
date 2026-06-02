@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 class GateViewModel(application: Application) : AndroidViewModel(application) {
@@ -164,24 +166,52 @@ class GateViewModel(application: Application) : AndroidViewModel(application) {
         return repository.getSubjectById(subjectId)?.topics ?: emptyList()
     }
 
+    private val generatingSubtopicIds = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
+    private fun triggerBackgroundGeneration(sub: Subtopic) {
+        if (generatingSubtopicIds.contains(sub.id)) return
+        generatingSubtopicIds.add(sub.id)
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                val totalPreset = sub.pyqs + sub.practiceQuestions + sub.mockQuiz
+                val targetCount = 30
+                if (totalPreset.size < targetCount) {
+                    val neededCount = targetCount - totalPreset.size
+                    val generated = ProceduralQuestionGenerator.generateQuestions(
+                        subjectId = sub.subjectId,
+                        topicId = sub.topicId,
+                        subtopicId = sub.id,
+                        subtopicName = sub.name,
+                        count = neededCount
+                    )
+                    withContext(Dispatchers.Main) {
+                        val current = _customQuestions.value.toMutableMap()
+                        current[sub.id] = generated
+                        _customQuestions.value = current
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        val current = _customQuestions.value.toMutableMap()
+                        current[sub.id] = emptyList()
+                        _customQuestions.value = current
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                generatingSubtopicIds.remove(sub.id)
+            }
+        }
+    }
+
     fun getOrGenerateQuestionsForSubtopic(sub: Subtopic): List<GateQuestion> {
         val totalPreset = sub.pyqs + sub.practiceQuestions + sub.mockQuiz
-        val custom = _customQuestions.value[sub.id] ?: emptyList()
-        if (custom.isEmpty() && totalPreset.size < 100) {
-            val neededCount = 100 - totalPreset.size
-            val generated = ProceduralQuestionGenerator.generateQuestions(
-                subjectId = sub.subjectId,
-                topicId = sub.topicId,
-                subtopicId = sub.id,
-                subtopicName = sub.name,
-                count = neededCount
-            )
-            val current = _customQuestions.value.toMutableMap()
-            current[sub.id] = generated
-            _customQuestions.value = current
-            return totalPreset + generated
+        val custom = _customQuestions.value[sub.id]
+        if (custom != null) {
+            return totalPreset + custom
         }
-        return totalPreset + custom
+        triggerBackgroundGeneration(sub)
+        return totalPreset
     }
 
     // --- Setup Navigation & Subject Contexts ---
@@ -201,23 +231,8 @@ class GateViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            // Immediately and automatically generate enough questions to reach 100 for all subtopics
-            val totalPreset = sub.pyqs.size + sub.practiceQuestions.size + sub.mockQuiz.size
-            val custom = _customQuestions.value[sub.id] ?: emptyList()
-            val targetCount = 100
-            if (custom.isEmpty() && totalPreset < targetCount) {
-                val neededCount = targetCount - totalPreset
-                val generated = ProceduralQuestionGenerator.generateQuestions(
-                    subjectId = subjectId,
-                    topicId = topicId,
-                    subtopicId = sub.id,
-                    subtopicName = sub.name,
-                    count = neededCount
-                )
-                val current = _customQuestions.value.toMutableMap()
-                current[sub.id] = generated
-                _customQuestions.value = current
-            }
+            // Immediately and automatically generate enough questions to reach 100 on background thread
+            triggerBackgroundGeneration(sub)
         }
     }
 
@@ -387,86 +402,92 @@ class GateViewModel(application: Application) : AndroidViewModel(application) {
 
     fun launchMockTest(subjectId: String? = null) {
         _cbtSelectedSubjectId.value = subjectId
-        val questionsPool = mutableListOf<GateQuestion>()
+        _isCbtRunning.value = false // Pause any active timer
         
-        if (subjectId != null) {
-            val subject = repository.subjects.find { it.id == subjectId }
-            if (subject != null) {
-                // Collect preloaded
-                subject.topics.forEach { topic ->
-                    topic.subtopics.forEach { subtopic ->
-                        questionsPool.addAll(subtopic.pyqs)
-                        questionsPool.addAll(subtopic.practiceQuestions)
-                        questionsPool.addAll(subtopic.mockQuiz)
+        viewModelScope.launch(Dispatchers.Default) {
+            val questionsPool = mutableListOf<GateQuestion>()
+            
+            if (subjectId != null) {
+                val subject = repository.subjects.find { it.id == subjectId }
+                if (subject != null) {
+                    // Collect preloaded
+                    subject.topics.forEach { topic ->
+                        topic.subtopics.forEach { subtopic ->
+                            questionsPool.addAll(subtopic.pyqs)
+                            questionsPool.addAll(subtopic.practiceQuestions)
+                            questionsPool.addAll(subtopic.mockQuiz)
+                        }
                     }
-                }
-                
-                // Pad with procedural questions from subtopics of this subject
-                var index = 0
-                while (questionsPool.size < 100 && index < 200) {
-                    for (topic in subject.topics) {
-                        for (subtopic in topic.subtopics) {
-                            val pqs = ProceduralQuestionGenerator.generateQuestions(
-                                subjectId = subject.id,
-                                topicId = topic.id,
-                                subtopicId = subtopic.id,
-                                subtopicName = subtopic.name,
-                                count = 10
-                            )
-                            questionsPool.addAll(pqs)
+                    
+                    // Pad with procedural questions from subtopics of this subject
+                    var index = 0
+                    while (questionsPool.size < 100 && index < 200) {
+                        for (topic in subject.topics) {
+                            for (subtopic in topic.subtopics) {
+                                val pqs = ProceduralQuestionGenerator.generateQuestions(
+                                    subjectId = subject.id,
+                                    topicId = topic.id,
+                                    subtopicId = subtopic.id,
+                                    subtopicName = subtopic.name,
+                                    count = 10
+                                )
+                                questionsPool.addAll(pqs)
+                                if (questionsPool.size >= 120) break
+                            }
                             if (questionsPool.size >= 120) break
                         }
-                        if (questionsPool.size >= 120) break
-                    }
-                    index++
-                }
-            }
-        } else {
-            // All Subjects combined
-            val allPreloaded = repository.subjects.flatMap { subject ->
-                subject.topics.flatMap { topic ->
-                    topic.subtopics.flatMap { subtopic ->
-                        subtopic.pyqs + subtopic.practiceQuestions + subtopic.mockQuiz
+                        index++
                     }
                 }
-            }
-            questionsPool.addAll(allPreloaded)
-            
-            // Pad with procedural questions from all subjects
-            var index = 0
-            while (questionsPool.size < 150 && index < 200) {
-                for (subject in repository.subjects.shuffled()) {
-                    for (topic in subject.topics) {
-                        for (subtopic in topic.subtopics) {
-                            val pqs = ProceduralQuestionGenerator.generateQuestions(
-                                subjectId = subject.id,
-                                topicId = topic.id,
-                                subtopicId = subtopic.id,
-                                subtopicName = subtopic.name,
-                                count = 10
-                            )
-                            questionsPool.addAll(pqs)
+            } else {
+                // All Subjects combined
+                val allPreloaded = repository.subjects.flatMap { subject ->
+                    subject.topics.flatMap { topic ->
+                        topic.subtopics.flatMap { subtopic ->
+                            subtopic.pyqs + subtopic.practiceQuestions + subtopic.mockQuiz
+                        }
+                    }
+                }
+                questionsPool.addAll(allPreloaded)
+                
+                // Pad with procedural questions from all subjects
+                var index = 0
+                while (questionsPool.size < 150 && index < 200) {
+                    for (subject in repository.subjects.shuffled()) {
+                        for (topic in subject.topics) {
+                            for (subtopic in topic.subtopics) {
+                                val pqs = ProceduralQuestionGenerator.generateQuestions(
+                                    subjectId = subject.id,
+                                    topicId = topic.id,
+                                    subtopicId = subtopic.id,
+                                    subtopicName = subtopic.name,
+                                    count = 10
+                                )
+                                questionsPool.addAll(pqs)
+                                if (questionsPool.size >= 200) break
+                            }
                             if (questionsPool.size >= 200) break
                         }
                         if (questionsPool.size >= 200) break
                     }
-                    if (questionsPool.size >= 200) break
+                    index++
                 }
-                index++
+            }
+            
+            // Take exactly 50 distinct questions and shuffle them
+            val finalQuestions = questionsPool.distinctBy { it.id }.shuffled().take(50)
+            
+            withContext(Dispatchers.Main) {
+                _cbtQuestions.value = finalQuestions
+                _cbtUserAnswers.value = emptyMap()
+                _cbtFinalScore.value = null
+                // GATE standard exam format: 50 questions / 90 minutes (5400 seconds)
+                _cbtTimerSeconds.value = 5400
+                _isCbtRunning.value = true
+                
+                startCbtTimerJob()
             }
         }
-        
-        // Take exactly 50 distinct questions and shuffle them
-        val finalQuestions = questionsPool.distinctBy { it.id }.shuffled().take(50)
-
-        _cbtQuestions.value = finalQuestions
-        _cbtUserAnswers.value = emptyMap()
-        _cbtFinalScore.value = null
-        // GATE standard exam format: 50 questions / 90 minutes (5400 seconds)
-        _cbtTimerSeconds.value = 5400
-        _isCbtRunning.value = true
-
-        startCbtTimerJob()
     }
 
     private fun startCbtTimerJob() {

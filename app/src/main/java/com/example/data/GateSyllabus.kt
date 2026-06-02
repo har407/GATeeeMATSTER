@@ -1355,6 +1355,19 @@ object GateSyllabus {
 
     private fun createControlSystems(): Subject {
         val subjectId = "control_systems"
+        val allCsQuestions = ControlSystemsQuestions.questions
+
+        fun getQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allCsQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Control Systems",
@@ -1366,197 +1379,121 @@ object GateSyllabus {
                     name = "Mathematical Modeling",
                     subtopics = listOf(
                         Subtopic(
-                            id = "cs_mm_tf",
+                            id = "cs_mm_tf_model",
                             topicId = "cs_math_modeling",
                             subjectId = subjectId,
-                            name = "Transfer Functions, Block Diagrams & Signal Flow Graphs",
+                            name = "Mathematical Modeling & Transfer Function",
                             theory = TheoryContent(
-                                title = "System Modeling, Block Reductions & SFGs",
-                                synopsis = "Covers differential models of physical systems, linear approximation, transform methods, block diagram reduction, and Mason's gain formula on signal flow graphs.",
+                                title = "LTI Physical System Modeling & Laplace Transforms",
+                                synopsis = "Explaining differential formulations of electrical and mechanical systems and analyzing transfer function bounds under zero initial states.",
                                 detailedBullets = listOf(
-                                    "Transfer Function: Ratio of Laplace transform of the output to Laplace transform of the input under zero initial conditions.",
-                                    "Block Diagram Algebra: Rules for moving summing points and take-off points to simplify nested feedback loops.",
-                                    "Signal Flow Graphs (SFG): Graphical representations of cause-and-effect relations. Mason's Gain Formula provides a direct feedback path ratio calculation without block reduction."
+                                    "Transfer Function: Evaluates output Laplace transform over input Laplace transform with zero physical starting conditions.",
+                                    "Force-Voltage Analogy: Translates Force to Voltage, Mass to Inductance (L), Damper to Resistance (R), and Spring stiffness to elastance (1/C).",
+                                    "Force-Current Analogy: Translates Force to Current, Mass to Capacitance (C), Damper to Conductance (G), and Spring stiffness to reluctance (1/L)."
                                 ),
-                                keyInsight = "If two feedback loops touch each other, their product cannot be included in the non-touching loop term of determinant Δ."
+                                keyInsight = "A linear time-invariant (LTI) system transfer function depends uniquely on structural parameters, and remains independent of input type/amount."
                             ),
                             formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Mason's Gain Formula",
-                                    expression = "T = (1/Δ) * ∑ (P_k * Δ_k)",
-                                    description = "Finds the overall transfer function of a signal flow graph directly.",
-                                    applicationTrick = "Identify all individual loops and determine if any group of loops are mutually non-touching."
+                                FormulaItem("Transfer Function Matrix", "T(s) = Y(s) / X(s)", "Rational representation of complex frequency response.", "Set all state derivatives and integrals to zero before computing ratio.")
+                            ),
+                            pyqs = getQuestions("cs_mm_tf_model", 0),
+                            practiceQuestions = getQuestions("cs_mm_tf_model", 1),
+                            mockQuiz = getQuestions("cs_mm_tf_model", 2)
+                        ),
+                        Subtopic(
+                            id = "cs_mm_block",
+                            topicId = "cs_math_modeling",
+                            subjectId = subjectId,
+                            name = "Block Diagram Reduction",
+                            theory = TheoryContent(
+                                title = "Block Diagrams & Simplification Algebra",
+                                synopsis = "Addresses modern structural simplifications of complex system block diagrams through moving summing and take-off nodes.",
+                                detailedBullets = listOf(
+                                    "Cascading: Two blocks G1 and G2 in series simply multiply: G_eq = G1 * G2.",
+                                    "Parallel: Outputs of two parallel blocks are added: G_eq = G1 + G2.",
+                                    "Unity Feedback: Closed loop transfer function for negative feedback: T(s) = G(s) / (1 + G(s)H(s)). With positive feedback: T(s) = G(s) / (1 - G(s)H(s))."
                                 ),
-                                FormulaItem(
-                                    name = "Unity Negative-Feedback Gain",
-                                    expression = "T(s) = G(s) / (1 + G(s)*H(s))",
-                                    description = "Closed-loop transfer function with forward gain G(s) and feedback gain H(s).",
-                                    applicationTrick = "If feedback is positive, the denominator becomes 1 - G(s)*H(s)."
-                                )
+                                keyInsight = "Swapping adjacent summing junctions of identical signs leaves physical signal parameters completely unmodified."
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_cs_mm_sfg",
-                                    subjectId = subjectId,
-                                    topicId = "cs_math_modeling",
-                                    subtopicId = "cs_mm_tf",
-                                    year = 2024,
-                                    questionText = "For a signal flow graph, there are two forward paths: P1 = G1*G2*G3 and P2 = G4. There are three individual loops: L1 = -G2*H1, L2 = -G3*H2, and L3 = -G1*G2*G3*H3. Loops L1 and L2 are non-touching. What is the determinant Δ of this system?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "1 + G2*H1 + G3*H2 + G1*G2*G3*H3",
-                                        "1 + G2*H1 + G3*H2 + G1*G2*G3*H3 + G2*H1*G3*H2",
-                                        "1 - G2*H1 - G3*H2 - G1*G2*G3*H3 + G2*G3*H1*H2",
-                                        "1 - G2*H1 - G3*H2 - G1*G2*G3*H3"
-                                    ),
-                                    correctOptions = listOf(1),
-                                    explanation = "According to Mason's Gain Rule, the determinant Δ is defined as: Δ = 1 - (Sum of individual loop gains) + (Sum of gain products of all possible combinations of two non-touching loops).\nIndividual loops are L1, L2, L3. Their gains are L1 = -G2*H1, L2 = -G3*H2, L3 = -G1*G2*G3*H3.\nTwo non-touching loops are L1 and L2. The product is L1*L2 = (-G2*H1) * (-G3*H2) = G2*H1*G3*H2.\nTherefore, Δ = 1 - (L1 + L2 + L3) + (L1 * L2)\nΔ = 1 - (-G2*H1 - G3*H2 - G1*G2*G3*H3) + (G2*H1*G3*H2)\nΔ = 1 + G2*H1 + G3*H2 + G1*G2*G3*H3 + G2*H1*G3*H2.",
-                                    formulasUsed = "Δ = 1 - ∑L_i + ∑L_i*L_j",
-                                    shortcutTricks = "Identify that L1 and L2 do not touch, so the term representing their gain product (+ L1*L2) must be present in Δ. Look for the positive product term G2*H1*G3*H2 with a '+' sign since (-)*(-) = + in the negative loops sum subtraction.",
-                                    relatedConcepts = "Mason's Gain Rule, Signal Flow Graph, Determinant calculation",
-                                    difficulty = "Medium"
-                                )
+                            formulaSheet = listOf(
+                                FormulaItem("Negative Feedback Loop", "T(s) = G(s) / (1 + G(s)H(s))", "Standard closed loop transfer function under negative feedback.", "Sign in denominator is opposite of feedback path multiplier.")
                             ),
-                            practiceQuestions = listOf(
-                                GateQuestion(
-                                    id = "pract_cs_mm_tf_val",
-                                    subjectId = subjectId,
-                                    topicId = "cs_math_modeling",
-                                    subtopicId = "cs_mm_tf",
-                                    year = 2023,
-                                    questionText = "For a unity negative feedback system with forward path transfer function G(s) = 8 / (s + 2), find the value of the closed-loop transfer function T(s) at s = 2.",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 0.66..0.67,
-                                    explanation = "The closed-loop transfer function T(s) is given by:\nT(s) = G(s) / (1 + G(s)*H(s))\nSince feedback H(s) = 1 (unity feedback):\nT(s) = G(s) / (1 + G(s)) = [8 / (s+2)] / [1 + 8/(s+2)] = 8 / (s+2 + 8) = 8 / (s + 10).\nAt s = 2:\nT(2) = 8 / (2 + 10) = 8 / 12 = 2 / 3 ≈ 0.667.",
-                                    formulasUsed = "T(s) = G(s) / (1 + G(s))",
-                                    shortcutTricks = "With H(s)=1, the closed loop pole moves from -2 to -2-8 = -10, yielding T(s) = 8/(s+10). For s=2, T(2) = 8/12 = 0.667 directly.",
-                                    relatedConcepts = "Closed loop poles, transfer function analysis",
-                                    difficulty = "Easy"
-                                )
+                            pyqs = getQuestions("cs_mm_block", 0),
+                            practiceQuestions = getQuestions("cs_mm_block", 1),
+                            mockQuiz = getQuestions("cs_mm_block", 2)
+                        ),
+                        Subtopic(
+                            id = "cs_mm_sfg",
+                            topicId = "cs_math_modeling",
+                            subjectId = subjectId,
+                            name = "Signal Flow Graphs",
+                            theory = TheoryContent(
+                                title = "Mason's Gain Formula on Directed Graphs",
+                                synopsis = "Details signal flow graph structural analysis, identifying nodes, forward paths, and individual or touching loops.",
+                                detailedBullets = listOf(
+                                    "Source Node: A node containing strictly outgoing transmission branches.",
+                                    "Sink Node: A node containing strictly incoming transmission branches.",
+                                    "Non-touching Loops: Feedback loops that share no physical node coordinates."
+                                ),
+                                keyInsight = "Mason's Gain formula is universally equivalent to block diagram reduction, but highly systematic for complex loop topologies."
                             ),
-                            mockQuiz = listOf(
-                                GateQuestion(
-                                    id = "mock_cs_mm_sfg_term",
-                                    subjectId = subjectId,
-                                    topicId = "cs_math_modeling",
-                                    subtopicId = "cs_mm_tf",
-                                    year = 2025,
-                                    questionText = "In a signal flow graph, what is the value of the dynamic forward path cofactor Δ_k if the k-th forward path touches all individual loops in the graph?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "Δ_k = 0",
-                                        "Δ_k = 1",
-                                        "Δ_k = Δ",
-                                        "Δ_k = -1"
-                                    ),
-                                    correctOptions = listOf(1),
-                                    explanation = "By definition, Δ_k is the cofactor of the k-th forward path, calculated from Δ by removing all loops that touch the k-th forward path.\nIf the k-th forward path touches all individual loops in the graph, all loop terms inside Δ are discarded (set to 0) for this cofactor calculation.\nThus, Δ_k reduces strictly to the baseline term: Δ_k = 1.",
-                                    formulasUsed = "Δ_k = Δ evaluated by removing touching loops",
-                                    shortcutTricks = "When a path touches every single loop, no loops remain in the sub-graph. The determinant of an empty loop graph is always 1.",
-                                    relatedConcepts = "Mason's Gain Equation, Path cofactors",
-                                    difficulty = "Easy"
-                                )
-                            )
+                            formulaSheet = listOf(
+                                FormulaItem("Mason's Gain Formula", "T = Σ (P_k * Δ_k) / Δ", "Computes global graph transmission gain mathematically.", "The determinant Δ incorporates all single and combinations of non-touching loops.")
+                            ),
+                            pyqs = getQuestions("cs_mm_sfg", 0),
+                            practiceQuestions = getQuestions("cs_mm_sfg", 1),
+                            mockQuiz = getQuestions("cs_mm_sfg", 2)
                         )
                     )
                 ),
                 Topic(
                     id = "cs_time_response",
                     subjectId = subjectId,
-                    name = "Time Response",
+                    name = "Time Response Analysis",
                     subtopics = listOf(
                         Subtopic(
-                            id = "cs_tr_order_steady",
+                            id = "cs_tr_analysis",
                             topicId = "cs_time_response",
                             subjectId = subjectId,
-                            name = "First & Second Order Systems, Steady State Error",
+                            name = "Time Response Analysis",
                             theory = TheoryContent(
-                                title = "Transient Responses & Steady-State Error Coefficients",
-                                synopsis = "Deals with time domain responses of LTI control systems to standard inputs. Analyzes transient characteristics of 1st and 2nd-order systems, and steady-state errors.",
+                                title = "Transient Response of First & Second Order Systems",
+                                synopsis = "Analyzes state dynamics as a function of time following step, ramp, or impulse input configurations.",
                                 detailedBullets = listOf(
-                                    "First-Order Transient: Characterized by time constant τ (tau). Time taken to reach 63.2% of its final value for a step input is exactly τ.",
-                                    "Second-Order transient: Responses are categorized as Underdamped (0 < ζ < 1), Critically Damped (ζ = 1), Overdamped (ζ > 1), or Undamped (ζ = 0).",
-                                    "Steady State Error (e_ss): Evaluates how well a system tracks reference inputs. Classified into Position (K_p), Velocity (K_v), and Acceleration (K_a) error constants dependent on system type."
+                                    "First-Order Response: Dominates by time constant τ, reaching 63.2% in 1τ and 98% in 4τ.",
+                                    "Damping Ratio (ζ): ζ=0 undamped; 0<ζ<1 underdamped; ζ=1 critically damped; ζ>1 overdamped.",
+                                    "Damped Frequency: ω_d = ω_n * sqrt(1 - ζ^2), characterizing oscillation periodicity."
                                 ),
-                                keyInsight = "System Type (number of open-loop poles at s=0) directly dictates the steady-state tracking error."
+                                keyInsight = "A critically damped system guarantees the fastest step-response settling time without generating transient overshoot."
                             ),
                             formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Peak Overshoot %",
-                                    expression = "M_p = e^(-(ζ * π) / sqrt(1 - ζ^2)) * 100%",
-                                    description = "Calculates maximum transient deviation under step input for underdamped systems.",
-                                    applicationTrick = "M_p depends ONLY on the damping ratio ζ. The larger the ζ, the smaller the overshoot."
+                                FormulaItem("Peak Overshoot Fraction", "M_p = e^{-π * ζ / sqrt(1 - ζ^2)}", "Computes maximum proportional transient overshoot.", "Overshoot is independent of natural frequency and relates only to ζ.")
+                            ),
+                            pyqs = getQuestions("cs_tr_analysis", 0),
+                            practiceQuestions = getQuestions("cs_tr_analysis", 1),
+                            mockQuiz = getQuestions("cs_tr_analysis", 2)
+                        ),
+                        Subtopic(
+                            id = "cs_tr_steady_error",
+                            topicId = "cs_time_response",
+                            subjectId = subjectId,
+                            name = "Steady State Error",
+                            theory = TheoryContent(
+                                title = "Steady State Accuracy & Error Constants",
+                                synopsis = "Addresses the tracking offset of feedback systems after the initial transient oscillations decay completely.",
+                                detailedBullets = listOf(
+                                    "System Type: Defined by number of open-loop poles residing exactly at s=0.",
+                                    "Type 0 System: Yields finite step error: 1/(1+Kp), infinite ramp error.",
+                                    "Type 1 System: Yields zero step error, finite ramp error: 1/Kv, infinite parabolic error."
                                 ),
-                                FormulaItem(
-                                    name = "Settling Time (2% Criterion)",
-                                    expression = "t_s = 4 / (ζ * ω_n)",
-                                    description = "Time required for response to stay within 2% of final value.",
-                                    applicationTrick = "For 5% criterion, use 3 / (ζ * ω_n) instead."
-                                ),
-                                FormulaItem(
-                                    name = "Steady-State Error Form",
-                                    expression = "e_ss = lim_{s->0} [ s * R(s) / (1 + G(s)*H(s)) ]",
-                                    description = "Computes steady-state tracking error using Final Value Theorem.",
-                                    applicationTrick = "Ensure s*R(s)/(1+GH(s)) has no poles in the RHS before applying."
-                                )
+                                keyInsight = "Increasing the system type improves steady-state accuracy but typically reduces system stability margins."
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_cs_tr_static_error",
-                                    subjectId = subjectId,
-                                    topicId = "cs_time_response",
-                                    subtopicId = "cs_tr_order_steady",
-                                    year = 2023,
-                                    questionText = "An open-loop transfer function of a unity feedback system is G(s) = 10 / (s*(s + 2)). Find the steady-state error when the system is subjected to a unit ramp input r(t) = t * u(t).",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 0.2..0.2,
-                                    explanation = "For a unit ramp input R(s) = 1/s^2.\nThe steady-state error for a unit ramp in a unity feedback system is e_ss = 1 / K_v, where K_v is the velocity error constant.\nK_v = lim_{s->0} [ s * G(s) ] = lim_{s->0} [ s * 10 / (s*(s + 2)) ] = 10 / 2 = 5.\ne_ss = 1 / K_v = 1 / 5 = 0.2.",
-                                    formulasUsed = "K_v = lim_{s->0} s*G(s), e_ss = 1 / K_v",
-                                    shortcutTricks = "For a type-1 system, K_v is simply the gain factor divided by any remaining constant in the denominator when s=0, i.e., 10 / 2 = 5. Error e_ss = 1/5 = 0.2 instantly.",
-                                    relatedConcepts = "Steady-state error, Velocity error constant, System type",
-                                    difficulty = "Easy"
-                                )
+                            formulaSheet = listOf(
+                                FormulaItem("Steady State Error (General)", "e_ss = lim_{s->0} [ s * R(s) / (1 + G(s)H(s)) ]", "Computes tracking offset for any reference input R(s).", "Must evaluate poles of G(s)H(s) at s=0 first to determine System Type.")
                             ),
-                            practiceQuestions = listOf(
-                                GateQuestion(
-                                    id = "pract_cs_tr_specs",
-                                    subjectId = subjectId,
-                                    topicId = "cs_time_response",
-                                    subtopicId = "cs_tr_order_steady",
-                                    year = 2022,
-                                    questionText = "A second-order closed-loop system is modeled by the transfer function T(s) = 100 / (s^2 + 10s + 100). Find the damping ratio and the peak time in seconds under unit step excitation.",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "ζ = 0.5, t_p = 0.363s",
-                                        "ζ = 0.5, t_p = 0.726s",
-                                        "ζ = 0.866, t_p = 0.363s",
-                                        "ζ = 0.866, t_p = 0.726s"
-                                    ),
-                                    correctOptions = listOf(0),
-                                    explanation = "Comparing s^2 + 10s + 100 with standard form s^2 + 2*ζ*ω_n*s + ω_n^2 = 0:\n1. ω_n^2 = 100 => ω_n = 10 rad/s.\n2. 2*ζ*ω_n = 10 => 20*ζ = 10 => ζ = 0.5 (Underdamped).\nPeak time t_p is given by: t_p = π / (ω_n * sqrt(1 - ζ^2)) = π / (10 * sqrt(1 - 0.25)) = π / (10 * sqrt(0.75)) = π / (10 * 0.866) = π / 8.66 ≈ 0.3627 seconds.",
-                                    formulasUsed = "ω_n = sqrt(K), 2*ζ*ω_n = 2α, t_p = π / (ω_n*sqrt(1-ζ^2))",
-                                    shortcutTricks = "With ω_n = 10 and ζ = 0.5, the damped frequency ω_d = ω_n * sqrt(1-ζ^2) = 10 * 0.866 = 8.66 rad/s. t_p = 3.1415 / 8.66 is clearly around 0.36s. This narrows the options immediately.",
-                                    relatedConcepts = "Transient specifications, underdamped systems",
-                                    difficulty = "Medium"
-                                )
-                            ),
-                            mockQuiz = listOf(
-                                GateQuestion(
-                                    id = "mock_cs_tr_steady_state_step",
-                                    subjectId = subjectId,
-                                    topicId = "cs_time_response",
-                                    subtopicId = "cs_tr_order_steady",
-                                    year = 2025,
-                                    questionText = "Determine the steady-state error e_ss of a system with open-loop transfer function G(s) = 100 / (s^2 + 15s + 50) and unity feedback under a unit step reference input r(t) = u(t).",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 0.33..0.34,
-                                    explanation = "This is a Type-0 system, so static error position constant K_p is finite:\nK_p = lim_{s->0} [ G(s) ] = 100 / 50 = 2.\nThe steady-state error under a unit step input is:\ne_ss = 1 / (1 + K_p) = 1 / (1 + 2) = 1/3 ≈ 0.333.",
-                                    formulasUsed = "K_p = lim_{s->0} G(s), e_ss = 1 / (1 + K_p)",
-                                    shortcutTricks = "For Type-0 system, evaluate G(0) = 100/50 = 2. e_ss is 1/(1+2) = 1/3 = 0.333 instantly.",
-                                    relatedConcepts = "System Type, Position error constant",
-                                    difficulty = "Easy"
-                                )
-                            )
+                            pyqs = getQuestions("cs_tr_steady_error", 0),
+                            practiceQuestions = getQuestions("cs_tr_steady_error", 1),
+                            mockQuiz = getQuestions("cs_tr_steady_error", 2)
                         )
                     )
                 ),
@@ -1566,91 +1503,48 @@ object GateSyllabus {
                     name = "Stability",
                     subtopics = listOf(
                         Subtopic(
-                            id = "cs_stab_routh_locus",
+                            id = "cs_stab_routh",
                             topicId = "cs_stability",
                             subjectId = subjectId,
-                            name = "Routh-Hurwitz Criterion & Root Locus",
+                            name = "Stability & Routh-Hurwitz",
                             theory = TheoryContent(
-                                title = "Absolute Stability Criteria & Closed-Loop Vector Trajectories",
-                                synopsis = "Covers absolute stability via Routh-Hurwitz criterion and plotting roots of the characteristic equation (Root Locus) as a function of open-loop gain.",
+                                title = "Routh-Hurwitz Stability Criterion",
+                                synopsis = "Formulates algebraic sign checklists on characteristic equations without computing exact pole roots.",
                                 detailedBullets = listOf(
-                                    "Routh-Hurwitz Table: Grid constructed using coefficients of the characteristic equation. The number of sign changes in the first column equals the number of roots in the right-half s-plane.",
-                                    "Asymptotes: Number of asymptotes = P - Z, meeting at centroid σ_a along the real axis with angles θ_a.",
-                                    "Breakaway Points: Points where roots leave or enter the real axis, found by solving dK/ds = 0."
+                                    "Necessary Condition: All characteristic equation coefficients must be strictly positive and non-zero.",
+                                    "Routh Array Row of Zeros: Indicates symmetric roots (e.g., pairs on jw-axis), solved via Auxiliary Polynomial derivative.",
+                                    "Right Half Plane Roots: The number of sign changes in the first column of the Routh array equals right-half plane poles (unstable)."
                                 ),
-                                keyInsight = "The angle of departure from complex poles is given by: φ_dep = 180° - ∑φ_p + ∑φ_z."
+                                keyInsight = "A single sign change in the first column of the Routh array is sufficient to prove system instability."
                             ),
                             formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Centroid of Asymptotes",
-                                    expression = "σ_a = (∑(Real part of Poles) - ∑(Real part of Zeros)) / (P - Z)",
-                                    description = "Computes the real axis intersection point of the root locus asymptotes.",
-                                    applicationTrick = "Include both real and complex poles/zeros correctly in the sum."
+                                FormulaItem("Routh Array Auxiliary Polynomial", "A(s) = a0*s^{2k} + a1*s^{2k-2} + ...", "Forms symmetric polynomial for a zero-row case.", "Differentiate dA/ds directly to replace the row of zeros and proceed.")
+                            ),
+                            pyqs = getQuestions("cs_stab_routh", 0),
+                            practiceQuestions = getQuestions("cs_stab_routh", 1),
+                            mockQuiz = getQuestions("cs_stab_routh", 2)
+                        ),
+                        Subtopic(
+                            id = "cs_stab_locus",
+                            topicId = "cs_stability",
+                            subjectId = subjectId,
+                            name = "Root Locus",
+                            theory = TheoryContent(
+                                title = "Root Locus Construction & Design Analysis",
+                                synopsis = "Tracks of closed-loop pole locations on the s-plane as feedback loop gain K varies from 0 to infinity.",
+                                detailedBullets = listOf(
+                                    "Number of Branches: Equal to the number of open-loop poles (P). Branches terminate at zeros or infinity.",
+                                    "Asymptote Centroid: Computed as (Sum of Pole Real Parts - Sum of Zero Real Parts) / (P - Z).",
+                                    "Breakpoint Criterion: Solved via dK/ds = 0, indicating coordinate split or merger points on the real axis."
                                 ),
-                                FormulaItem(
-                                    name = "Asymptotic Angles",
-                                    expression = "θ_a = (2q + 1) * 180° / (P - Z)",
-                                    description = "Angles of asymptotes with respect to the positive real axis.",
-                                    applicationTrick = "For P - Z = 3, angles are always 60°, 180°, and 300° (or -60°)."
-                                )
+                                keyInsight = "Adding an open-loop pole pulls root locus branches to the right, whereas adding a zero pulls them to the left."
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_cs_stab_routh",
-                                    subjectId = subjectId,
-                                    topicId = "cs_stability",
-                                    subtopicId = "cs_stab_routh_locus",
-                                    year = 2024,
-                                    questionText = "The characteristic equation of a closed-loop system is given by s^3 + 3s^2 + 2s + K = 0. For the system to be stable, the range of the feedback gain K must satisfy:",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "K > 0",
-                                        "0 < K < 6",
-                                        "K < 6",
-                                        "3 < K < 6"
-                                    ),
-                                    correctOptions = listOf(1),
-                                    explanation = "Build the Routh Array:\ns^3 :  1     2\ns^2 :  3     K\ns^1 :  (3*2 - K)/3 = (6-K)/3\ns^0 :  K\nFor stability, all elements in the first column must be strictly positive:\n1) K > 0\n2) (6 - K) / 3 > 0 => 6 - K > 0 => K < 6.\nCombining these gives: 0 < K < 6.",
-                                    formulasUsed = "Routh-Hurwitz array sign criteria",
-                                    shortcutTricks = "For a third-order polynomial s^3 + a_2*s^2 + a_1*s + a_0 = 0 to be stable, the inner product must exceed the outer product: a_2 * a_1 > a_0 => 3 * 2 > K => K < 6. Since K must be positive, 0 < K < 6.",
-                                    relatedConcepts = "Routh-Hurwitz criterion, Absolute stability",
-                                    difficulty = "Easy"
-                                )
+                            formulaSheet = listOf(
+                                FormulaItem("Angle of Asymptotes", "θ_q = (2q + 1) * 180° / (P - Z)", "Angle of departure lines heading to infinity.", "Iterate q from 0 up to (P - Z - 1).")
                             ),
-                            practiceQuestions = listOf(
-                                GateQuestion(
-                                    id = "pract_cs_stab_centroid",
-                                    subjectId = subjectId,
-                                    topicId = "cs_stability",
-                                    subtopicId = "cs_stab_routh_locus",
-                                    year = 2021,
-                                    questionText = "Consider a open-loop transfer function G(s)H(s) = K / (s * (s + 1) * (s + 5)). Compute the real-axis centroid coordinate σ_a of the root locus asymptotes.",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = -2.0..-2.0,
-                                    explanation = "Open-loop poles are located at: s = 0, s = -1, s = -5. Number of poles P = 3.\nOpen-loop zeros: None. Number of zeros Z = 0.\nUsing the centroid formula:\nσ_a = (∑ Poles - ∑ Zeros) / (P - Z)\nσ_a = ((0 + (-1) + (-5)) - 0) / (3 - 0)\nσ_a = -6 / 3 = -2.0.",
-                                    formulasUsed = "σ_a = (∑Re(P) - ∑Re(Z)) / (P - Z)",
-                                    shortcutTricks = "Sum the poles: 0 + (-1) + (-5) = -6. Since there are 3 asymptotes, divide -6 by 3 directly to get -2.0.",
-                                    relatedConcepts = "Root locus asymptotes, centroid of poles",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            mockQuiz = listOf(
-                                GateQuestion(
-                                    id = "mock_cs_stab_marginal_freq",
-                                    subjectId = subjectId,
-                                    topicId = "cs_stability",
-                                    subtopicId = "cs_stab_routh_locus",
-                                    year = 2025,
-                                    questionText = "For the characteristic equation s^3 + 3s^2 + 2s + K = 0, find the frequency of sustained oscillations (in rad/s) when the system is marginally stable (K = 6).",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 1.41..1.42,
-                                    explanation = "When K = 6, the row of s^1 in the Routh auxiliary array becomes zero. We form the auxiliary equation A(s) from the s^2 row above it:\nA(s) = 3*s^2 + K = 0.\nSubstituting K = 6:\n3*s^2 + 6 = 0 => s^2 + 2 = 0 => s = ±j*sqrt(2).\nThus, the frequency of sustained oscillations is ω = sqrt(2) ≈ 1.414 rad/s.",
-                                    formulasUsed = "Auxiliary Equation A(s) from Routh Array",
-                                    shortcutTricks = "For s^3 + a2*s^2 + a1*s + a0 = 0, auxiliary equation frequency ω = sqrt(a0/a2) = sqrt(K/3) = sqrt(6/3) = sqrt(2) ≈ 1.414 rad/s.",
-                                    relatedConcepts = "Marginal stability, auxiliary equations",
-                                    difficulty = "Medium"
-                                )
-                            )
+                            pyqs = getQuestions("cs_stab_locus", 0),
+                            practiceQuestions = getQuestions("cs_stab_locus", 1),
+                            mockQuiz = getQuestions("cs_stab_locus", 2)
                         )
                     )
                 ),
@@ -1660,103 +1554,70 @@ object GateSyllabus {
                     name = "Frequency Response",
                     subtopics = listOf(
                         Subtopic(
-                            id = "cs_fr_plots",
+                            id = "cs_fr_analysis",
                             topicId = "cs_freq_response",
                             subjectId = subjectId,
-                            name = "Bode, Nyquist, and Polar Plots",
+                            name = "Frequency Response Analysis",
                             theory = TheoryContent(
-                                title = "Frequency Domain Specifications & Nyquist Contours",
-                                synopsis = "Examines frequency domain response using logarithmic scales (Bode Plot), polar coordinates (Polar Plot), and complex contour mapping (Nyquist plots).",
+                                title = "Sinusoidal Steady State & Frequency Performance Metrics",
+                                synopsis = "Investigates sinusoidal tracking responses under a range of input frequencies, detailing resonant variables.",
                                 detailedBullets = listOf(
-                                    "Bode Plot: Consists of magnitude (dB vs log ω) and phase (degrees vs log ω). Offers quick verification of Gain Margin (GM) and Phase Margin (PM).",
-                                    "Gain Crossover (ω_gc) & Phase Crossover (ω_pc): ω_gc occurs where |G(jω)| = 1 (0 dB). ω_pc occurs where phase is -180°.",
-                                    "Nyquist Stability Criterion: Relates system closed-loop stability to open-loop poles and encirclements of (-1 + j0) in G(H) plane: Z = N + P."
+                                    "Resonant Frequency (ω_r): Frequency at which peak magnitude occurs under sinusoidal inputs.",
+                                    "Resonant Peak (M_r): Maximum magnification of tracking value: lower damping ratio creates higher peaks.",
+                                    "Bandwidth: Frequency range where output magnitude drops by -3 dB (1/sqrt(2)) from its DC value."
                                 ),
-                                keyInsight = "For minimum-phase systems, stable closed-loop behavior requires Phase Margin to be strictly greater than 0° at the gain crossover frequency."
+                                keyInsight = "Bandwidth is inversely proportional to rise time; a fast system requires wide frequency transmission ranges."
                             ),
                             formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Phase Margin (PM)",
-                                    expression = "PM = 180° + ∠G(jω_gc)",
-                                    description = "Measures additional phase delay allowable at gain crossover frequency before causing instability.",
-                                    applicationTrick = "Subtract the absolute phase value at ω_gc from 180° directly."
+                                FormulaItem("Resonant Peak", "M_r = 1 / (2 * ζ * sqrt(1 - ζ^2))", "Computes maximum magnitude peak under underdamped states.", "Applicable only for ζ < 0.707. No peak exists for ζ >= 0.707.")
+                            ),
+                            pyqs = getQuestions("cs_fr_analysis", 0),
+                            practiceQuestions = getQuestions("cs_fr_analysis", 1),
+                            mockQuiz = getQuestions("cs_fr_analysis", 2)
+                        ),
+                        Subtopic(
+                            id = "cs_fr_bode",
+                            topicId = "cs_freq_response",
+                            subjectId = subjectId,
+                            name = "Bode Plots",
+                            theory = TheoryContent(
+                                title = "Logarithmic Magnitude & Phase Bode Plots",
+                                synopsis = "Presents frequency responses using logarithmic plots of magnitude (dB) and phase angles versus frequency.",
+                                detailedBullets = listOf(
+                                    "Poles & Zeros: Every first-order pole contributes -20 dB/dec slope above corner frequency; every zero contributes +20 dB/dec.",
+                                    "Gain Margin (GM): Phase margin check at Phase Crossover Frequency (where phase is -180°).",
+                                    "Phase Margin (PM): Gain margin check at Gain Crossover Frequency (where magnitude is 0 dB / factor 1)."
                                 ),
-                                FormulaItem(
-                                    name = "Gain Margin (GM)",
-                                    expression = "GM = 1 / |G(jω_pc)|",
-                                    description = "Measures factor by which system gain can be multiplied before causing instability.",
-                                    applicationTrick = "If magnitude at phase crossover is 0.5, Gain Margin is 2.0 (or 20 * log10(2) = 6 dB)."
+                                keyInsight = "Logarithmic scaling enables rapid graphical cascade multiplication via simple algebraic addition of slopes."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem("Gain Margin (dB)", "GM_{dB} = -20 * log10(|G(jω_{pc})H(jω_{pc})|)", "Computes dB margin of gain safety factor.", "Positive GM indicates stable loop margins, whereas negative GM indicates loop instability.")
+                            ),
+                            pyqs = getQuestions("cs_fr_bode", 0),
+                            practiceQuestions = getQuestions("cs_fr_bode", 1),
+                            mockQuiz = getQuestions("cs_fr_bode", 2)
+                        ),
+                        Subtopic(
+                            id = "cs_fr_nyquist",
+                            topicId = "cs_freq_response",
+                            subjectId = subjectId,
+                            name = "Polar & Nyquist Plots",
+                            theory = TheoryContent(
+                                title = "Polar Representation & Nyquist Encirclement Theorem",
+                                synopsis = "Addresses complex magnitude and phase polar response loci, checking stability borders.",
+                                detailedBullets = listOf(
+                                    "Polar Plot: Maps magnitude and phase in a polar coordinate format as frequency ω varies from 0 to infinity.",
+                                    "Nyquist Contour: Encloses the entire right half of the s-plane, mapping it to standard frequency curves.",
+                                    "Critical Point (-1, j0): Closed-loop stability relates directly to encirclements of this unit vector."
                                 ),
-                                FormulaItem(
-                                    name = "Nyquist Encirclement Formula",
-                                    expression = "N = Z - P",
-                                    description = "Relates clockwise encirclements of (-1 + j0) to RHS closed-loop poles (Z) and RHS open-loop poles (P).",
-                                    applicationTrick = "For stable closed loop (Z=0), N must be equal to -P (counter-clockwise encirclements)."
-                                )
+                                keyInsight = "If the open loop is stable, the closed loop is stable if the polar plot does not encircle (-1, j0)."
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_cs_fr_pm_calc",
-                                    subjectId = subjectId,
-                                    topicId = "cs_freq_response",
-                                    subtopicId = "cs_fr_plots",
-                                    year = 2023,
-                                    questionText = "For an open-loop system with transfer function G(s)H(s) = 1 / (s * (s + 1)), find the phase margin in degrees at the gain crossover frequency ω_gc ≈ 0.786 rad/s.",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 51.0..53.0,
-                                    explanation = "The phase margin PM is given by: PM = 180° + ∠G(jω_gc)H(jω_gc).\n∠G(jω)H(jω) = -90° - tan^-1(ω).\nSubstituting ω_gc = 0.786:\n∠G(j0.786)H(j0.786) = -90° - tan^-1(0.786) ≈ -90° - 38.17° = -128.17°.\nPM = 180° - 128.17° = 51.83°.",
-                                    formulasUsed = "∠GH(jω) = -90 - tan^-1(ω), PM = 180 + ∠GH(jω_gc)",
-                                    shortcutTricks = "tan^-1(0.786) is approximately 38°. Subtracting 128° from 180° gives about 52°.",
-                                    relatedConcepts = "Phase Margin, Bode plot cross-overs, relative stability",
-                                    difficulty = "Medium"
-                                )
+                            formulaSheet = listOf(
+                                FormulaItem("Nyquist Stability Formula", "Z = P - N", "Relates closed-loop unstable poles (Z) to open-loop unstable poles (P).", "N is counter-clockwise encirclements of the point (-1, j0) on complex coordinate canvas.")
                             ),
-                            practiceQuestions = listOf(
-                                GateQuestion(
-                                    id = "pract_cs_fr_nyquist",
-                                    subjectId = subjectId,
-                                    topicId = "cs_freq_response",
-                                    subtopicId = "cs_fr_plots",
-                                    year = 2022,
-                                    questionText = "For a unity negative feedback system, the open-loop transfer function G(s) has 1 pole in the right-half s-plane (P = 1). If the Nyquist plot of G(s) encircles the critical point (-1, j0) exactly once in the counter-clockwise direction, the number of closed-loop poles in the right-half s-plane (Z) is:",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "Z = 0 (Stable)",
-                                        "Z = 1 (Unstable)",
-                                        "Z = 2 (Unstable)",
-                                        "Cannot be determined"
-                                    ),
-                                    correctOptions = listOf(0),
-                                    explanation = "According to the Nyquist Stability Criterion:\nN = Z - P, where N is the number of CLOCKWISE encirclements of (-1, j0).\nSince the encirclement is COUNTER-CLOCKWISE, N = -1.\nGiven open-loop RHS poles P = 1.\nSubstituting into the formula: -1 = Z - 1 => Z = 0.\nSince Z = 0, there are no closed-loop poles in the right-half s-plane, which means the closed-loop system is stable.",
-                                    formulasUsed = "N = Z - P",
-                                    shortcutTricks = "CCW encirclements count as negative clockwise encirclements. Thus N = -1. Z = N + P = -1 + 1 = 0. Instantly stable!",
-                                    relatedConcepts = "Nyquist stability criterion, contour encirclements",
-                                    difficulty = "Medium"
-                                )
-                            ),
-                            mockQuiz = listOf(
-                                GateQuestion(
-                                    id = "mock_cs_fr_bode_slope",
-                                    subjectId = subjectId,
-                                    topicId = "cs_freq_response",
-                                    subtopicId = "cs_fr_plots",
-                                    year = 2025,
-                                    questionText = "A Bode magnitude plot has a slope that changes from -20 dB/decade to -60 dB/decade at frequency ω = 10 rad/s. This slope transition represents:",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "A simple zero at ω = 10",
-                                        "A double pole at ω = 10",
-                                        "A double zero at ω = 10",
-                                        "A simple pole at ω = 10"
-                                    ),
-                                    correctOptions = listOf(1),
-                                    explanation = "Each pole contributes a slope of -20 dB/decade at its corner frequency, while each zero contributes +20 dB/decade.\nThe slope changes from -20 dB/dec to -60 dB/dec, which is a net decrease in slope of (-60) - (-20) = -40 dB/dec.\nSince each pole decreases the slope by -20 dB/dec, a drop of -40 dB/dec indicates a double pole (two poles) at ω = 10 rad/s.",
-                                    formulasUsed = "Slope change = -20 * (No. of poles at crossover) + 20 * (No. of zeros)",
-                                    shortcutTricks = "A slope change of -40 dB/dec is always 2 poles (double pole). A change of +20 dB/dec is a single zero.",
-                                    relatedConcepts = "Bode plots, corner frequencies, poles and zeros",
-                                    difficulty = "Easy"
-                                )
-                            )
+                            pyqs = getQuestions("cs_fr_nyquist", 0),
+                            practiceQuestions = getQuestions("cs_fr_nyquist", 1),
+                            mockQuiz = getQuestions("cs_fr_nyquist", 2)
                         )
                     )
                 ),
@@ -1766,99 +1627,26 @@ object GateSyllabus {
                     name = "Controllers & Compensators",
                     subtopics = listOf(
                         Subtopic(
-                            id = "cs_ctrl_pid_leadlag",
+                            id = "cs_ctrl_compensators",
                             topicId = "cs_controllers_comp",
                             subjectId = subjectId,
-                            name = "PID Controllers & Compensation Techniques",
+                            name = "Compensators & Controllers",
                             theory = TheoryContent(
-                                title = "Industrial Regulation & Phase Shifting Compensators",
-                                synopsis = "Details proportional-integral-derivative controllers (PID) and physical realization of lead, lag, and lead-lag compensation networks.",
+                                title = "Compensator Classes & PID Regulators",
+                                synopsis = "Details lead, lag, and lead-lag compensation configurations, and PID industrial regulators.",
                                 detailedBullets = listOf(
-                                    "P-Controller: Increases speed of response but may preserve steady-state feedback offset error.",
-                                    "I-Controller: Adds a pole at the origin, eliminating steady-state offset error but typically reducing relative stability margins.",
-                                    "D-Controller: Adds a zero in LHP. Improves transient damping, raises Phase Margin, but increases noise sensitivity.",
-                                    "Lead Compensator: Zero is closer to origin than pole. Acts like high-pass filter; increases phase margin and speed.",
-                                    "Lag Compensator: Pole is closer to origin than zero. Acts like low-pass filter; reduces steady-state error by rising low-frequency gain."
+                                    "Lead Compensator: Zero is closer to origin than pole. Serves as high-pass filter, raising speed and PM.",
+                                    "Lag Compensator: Pole is closer to origin than zero. Serves as low-pass filter, attenuating high-frequency gains.",
+                                    "PID Controller: Combines proportional tracking speed, integral steady-state accuracy, and derivative dampings."
                                 ),
-                                keyInsight = "A Phase-Lead compensator acts structurally as a High-Pass filter, whereas a Phase-Lag compensator serves as a Low-Pass filter."
+                                keyInsight = "A Derivative controller (D) improves stability margins but amplifies high-frequency channel noises."
                             ),
                             formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Max Phase Frequency - Lead",
-                                    expression = "ω_m = sqrt(ω_z * ω_p)",
-                                    description = "Frequency at which peak positive phase lead shift occurs.",
-                                    applicationTrick = "Calculated as the geometric mean of the lead pole and zero frequencies."
-                                ),
-                                FormulaItem(
-                                    name = "Max Phase Shift - Lead",
-                                    expression = "sin(φ_m) = (1 - α) / (1 + α)",
-                                    description = "Relates maximum phase angle contribution to the lead factor alpha (α = Z / P < 1).",
-                                    applicationTrick = "If α = 1/3, then sin(φ_m) = 0.5, yielding peak phase shift φ_m = 30°."
-                                )
+                                FormulaItem("Geometric Mean Shift", "ω_m = sqrt(ω_z * ω_p)", "Computes peak Phase Lead compensator frequency.", "Place compensator pole and zero symmetrically about targeted operating point.")
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_cs_ctrl_lead_poles",
-                                    subjectId = subjectId,
-                                    topicId = "cs_controllers_comp",
-                                    subtopicId = "cs_ctrl_pid_leadlag",
-                                    year = 2024,
-                                    questionText = "The transfer function of a phase-lead compensator is given by D(s) = (s + a) / (s + b). Which of the following conditions must be satisfied for this network to act as a proper phase-lead network?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "a > b and both are positive",
-                                        "a < b and both are positive",
-                                        "a > b and both are negative",
-                                        "a = b"
-                                    ),
-                                    correctOptions = listOf(1),
-                                    explanation = "For a lead compensator D(s) = (s + a) / (s + b), the zero at -a must be closer to the origin than the pole at -b.\nIn terms of absolute values, this means a < b (or zero frequency a is smaller than pole frequency b).\nAdditionally, both poles and zeros must lie in the LHP, which requires both a and b to be positive constants.",
-                                    formulasUsed = "Structural definition of Lead: Zero closer to origin than Pole",
-                                    shortcutTricks = "Remember that a lead compensator behaves as a high-pass filter. At low frequencies s->0, gain is a/b. At high frequencies s->inf, gain is 1. For high-pass behavior, high frequency gain must exceed low frequency gain: 1 > a/b => b > a, meaning a < b.",
-                                    relatedConcepts = "Phase-lead design, passive networks, filters",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            practiceQuestions = listOf(
-                                GateQuestion(
-                                    id = "pract_cs_ctrl_max_phase_freq",
-                                    subjectId = subjectId,
-                                    topicId = "cs_controllers_comp",
-                                    subtopicId = "cs_ctrl_pid_leadlag",
-                                    year = 2022,
-                                    questionText = "For a lead compensator transfer function G_c(s) = (s + 2) / (s + 8), compute the frequency (in rad/s) at which the maximum phase lead occurs.",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 4.0..4.0,
-                                    explanation = "For a compensator in the form (s + z) / (s + p), the zero is at z = 2 and the pole is at p = 8.\nThe maximum phase lead occurs at the geometric mean of the pole and zero frequencies:\nω_m = sqrt(z * p)\nω_m = sqrt(2 * 8) = sqrt(16) = 4.0 rad/s.",
-                                    formulasUsed = "ω_m = sqrt(z * p)",
-                                    shortcutTricks = "Instantly take the square root of the product of the numerator zero and denominator pole values: root(2 * 8) = 4.0.",
-                                    relatedConcepts = "Geometric mean frequency, lead compensator specs",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            mockQuiz = listOf(
-                                GateQuestion(
-                                    id = "mock_cs_ctrl_pid_prop",
-                                    subjectId = subjectId,
-                                    topicId = "cs_controllers_comp",
-                                    subtopicId = "cs_ctrl_pid_leadlag",
-                                    year = 2025,
-                                    questionText = "In industrial automation, what is the primary side-effect of using a heavy Integral (I) controller action?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "Increases the steady-state error",
-                                        "Increases noise amplification at high frequencies",
-                                        "Reduces speed of rise time and causes system offset",
-                                        "Increases system overshoot and tends to degrade relative stability"
-                                    ),
-                                    correctOptions = listOf(3),
-                                    explanation = "An Integral controller action adds a pole at the origin, which increases the system type by 1 and removes any steady-state error.\nHowever, adding a pole pushes the root locus branches further to the right in the s-plane, which reduces the damping and the phase margin.\nThis typically results in increased system overshoot and degrades relative stability, potentially leading to oscillations or even instability if the integral gain is set too high.",
-                                    formulasUsed = "Adding pole at origin = Phase delay -90 degrees",
-                                    shortcutTricks = "Adding a pole at s=0 adds -90 degrees of negative phase lag. This directly reduces phase margin and thus degrades stability, causing more overshoot.",
-                                    relatedConcepts = "PID controller tuning, integral action, system type",
-                                    difficulty = "Medium"
-                                )
-                            )
+                            pyqs = getQuestions("cs_ctrl_compensators", 0),
+                            practiceQuestions = getQuestions("cs_ctrl_compensators", 1),
+                            mockQuiz = getQuestions("cs_ctrl_compensators", 2)
                         )
                     )
                 ),
@@ -1868,97 +1656,26 @@ object GateSyllabus {
                     name = "State Space Analysis",
                     subtopics = listOf(
                         Subtopic(
-                            id = "cs_ss_variables",
+                            id = "cs_ss_analysis",
                             topicId = "cs_state_space",
                             subjectId = subjectId,
-                            name = "State Variables, Controllability, and Observability",
+                            name = "State Space Analysis",
                             theory = TheoryContent(
-                                title = "Multi-variable Modeling, Coordinate Transforms & System Matrix States",
-                                synopsis = "Introduces modern state space control theory. Analyzes state variables translation, State Transition Matrix (STM) calculation, controllability, and observability criterion.",
+                                title = "State Variable Multi-variable Time Domain Analysis",
+                                synopsis = "Introduces modern controls, modeling internal system coordinates, checking controllability, and resolving STM equations.",
                                 detailedBullets = listOf(
-                                    "State Equation & Output Equation: dx/dt = A*x + B*u, and y = C*x + D*u.",
-                                    "State Transition Matrix (STM) φ(t) = e^{A*t} = L^{-1}{ (sI - A)^{-1} }. It maps state values from t=0 to any time t.",
-                                    "Controllability & Observability: Matrix rank criteria of Kalman: Q_c = [ B | A*B | ... | A^{n-1}*B ] and Q_o = [ C | C*A | ... | C*A^{n-1} ]^T must be full rank."
+                                    "State Matrices: System Matrix A (n x n), Input Matrix B, Output Matrix C, Feedthrough Matrix D.",
+                                    "State Transition Matrix (STM): maps initial state values x(0) to dynamic time states x(t).",
+                                    "Eigenvalues: Solved via det(sI - A) = 0, determining basic natural modes of the system."
                                 ),
-                                keyInsight = "If a pole-zero cancellation occurs in the input-output transfer function, that cancelled mode is guaranteed to be either uncontrollable, unobservable, or both."
+                                keyInsight = "Similarity transforms under non-singular matrices leave system characteristic eigenvalues completely invariant."
                             ),
                             formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "State Transition Matrix Expression",
-                                    expression = "φ(t) = L^-1 { (sI - A)^-1 }",
-                                    description = "Computes the continuous-time state transition matrix using inverse Laplace transforms.",
-                                    applicationTrick = "For diagonal systems where A is diag(λ1, λ2), then φ(t) is simply diag(e^{λ1*t}, e^{λ2*t})."
-                                ),
-                                FormulaItem(
-                                    name = "Transfer Matrix from State Space",
-                                    expression = "T(s) = C * (sI - A)^-1 * B + D",
-                                    description = "Evaluates overall input-to-output matrix relation from state space equations.",
-                                    applicationTrick = "For single-input-single-output (SISO) physical systems, feedthrough term D is usually zero."
-                                )
+                                FormulaItem("Controllability Matrix", "Q_c = [ B | AB | A^2B | ... | A^{n-1}B ]", "Kalman controllability test matrix.", "The system is fully controllable if the determinant of Q_c is non-zero (full rank n).")
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_cs_ss_controllability",
-                                    subjectId = subjectId,
-                                    topicId = "cs_state_space",
-                                    subtopicId = "cs_ss_variables",
-                                    year = 2024,
-                                    questionText = "A state space model is given by dx/dt = [0 1; -2 -3]*x + [1; 1]*u. What is the determinant of its controllability matrix Q_c?",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = -6.0..-6.0,
-                                    explanation = "Here, A = [0 1; -2 -3] and B = [1; 1].\nWe calculate the vector A * B:\nA * B = [0*1 + 1*1; -2*1 + (-3)*1] = [1; -5].\nThe controllability matrix is:\nQ_c = [ B | A*B ] = [1 1; 1 -5].\nDeterminant of Q_c is:\ndet(Q_c) = 1*(-5) - 1*1 = -5 - 1 = -6.0.",
-                                    formulasUsed = "Q_c = [ B | AB ], det(Q_c)",
-                                    shortcutTricks = "Construct matrix [B | AB] directly. For A = [0 1; -2 -3] and B = [1; 1], the second column is [1; -5]. det = -5 - 1 = -6.",
-                                    relatedConcepts = "Controllability matrix rank, state variable modeling",
-                                    difficulty = "Medium"
-                                )
-                            ),
-                            practiceQuestions = listOf(
-                                GateQuestion(
-                                    id = "pract_cs_ss_stm",
-                                    subjectId = subjectId,
-                                    topicId = "cs_state_space",
-                                    subtopicId = "cs_ss_variables",
-                                    year = 2023,
-                                    questionText = "For a linear system with state matrix A = [-2 0; 0 -5], find the state transition matrix φ(t).",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "[e^(-2t) 0; 0 e^(-5t)]",
-                                        "[e^(2t) 0; 0 e^(5t)]",
-                                        "[1/2 0; 0 1/5]",
-                                        "[e^(-2t) t; 0 e^(-5t)]"
-                                    ),
-                                    correctOptions = listOf(0),
-                                    explanation = "When matrix A is diagonal, i.e., A = [λ1 0; 0 λ2], the state transition matrix φ(t) = e^(At) is also diagonal, given by φ(t) = [e^(λ1*t) 0; 0 e^(λ2*t)].\nSubstituting λ1 = -2 and λ2 = -5:\nφ(t) = [e^(-2t) 0; 0 e^(-5t)].",
-                                    formulasUsed = "φ(t) = e^(At)",
-                                    shortcutTricks = "Since there are no off-diagonal elements in A, each state equation is completely uncoupled: dx1/dt = -2x1, and dx2/dt = -5x2. The responses are x1(t) = e^(-2t)x1(0), and x2(t) = e^(-5t)x2(0). This corresponds to the diagonal exponential matrix immediately.",
-                                    relatedConcepts = "State transition matrix, uncoupled differential systems",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            mockQuiz = listOf(
-                                GateQuestion(
-                                    id = "mock_cs_ss_observability",
-                                    subjectId = subjectId,
-                                    topicId = "cs_state_space",
-                                    subtopicId = "cs_ss_variables",
-                                    year = 2025,
-                                    questionText = "A second order system is given with state matrix A = [1 2; 0 3] and output matrix C = [1 0]. The system is:",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "Fully Observable",
-                                        "Unobservable",
-                                        "Stable but Unobservable",
-                                        "Marginally Observable"
-                                    ),
-                                    correctOptions = listOf(0),
-                                    explanation = "To check if the system is observable, we construct the observability matrix Q_o:\nQ_o = [ C; C*A ].\nC = [1 0].\nC * A = [1 0] * [1 2; 0 3] = [1*1 + 0*0, 1*2 + 0*3] = [1 2].\nTherefore, Q_o = [1 0; 1 2].\nNow check the rank by finding the determinant:\ndet(Q_o) = 1*2 - 0*1 = 2.\nSince det(Q_o) = 2, which is non-zero, the observability matrix has full rank (rank = 2), so the system is fully observable.",
-                                    formulasUsed = "Q_o = [ C; CA ], det(Q_o) != 0",
-                                    shortcutTricks = "Compute C*A = [1 2]. Q_o is [1 0; 1 2]. Since the columns/rows are clearly linearly independent, rank is 2 (full rank), hence fully observable.",
-                                    relatedConcepts = "Observability matrix rank, system identification",
-                                    difficulty = "Medium"
-                                )
-                            )
+                            pyqs = getQuestions("cs_ss_analysis", 0),
+                            practiceQuestions = getQuestions("cs_ss_analysis", 1),
+                            mockQuiz = getQuestions("cs_ss_analysis", 2)
                         )
                     )
                 )
@@ -1968,6 +1685,19 @@ object GateSyllabus {
 
     private fun createElectricalMachines(): Subject {
         val subjectId = "electrical_machines"
+        val allEmQuestions = ElectricalMachinesQuestions.questions
+
+        fun getQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allEmQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Electrical Machines",
@@ -1979,48 +1709,72 @@ object GateSyllabus {
                     name = "Transformers",
                     subtopics = listOf(
                         Subtopic(
-                            id = "em_trans_equiv",
+                            id = "em_trans_single_phase",
                             topicId = "em_transformers",
                             subjectId = subjectId,
-                            name = "Equivalent Circuits, Losses & Efficiency",
+                            name = "Single-phase Transformers",
                             theory = TheoryContent(
-                                title = "Transformer Modeling & Loss Analysis",
-                                synopsis = "Addresses equivalent models, core hysteretic/eddy damping, variable winding copper losses, and maximum efficiency loading parameters.",
+                                title = "Single-phase Transformer Modeling & Analysis",
+                                synopsis = "Addresses equivalent models, core hysteretic/eddy damping, open/short-circuit parameters, regulation, and efficiency.",
                                 detailedBullets = listOf(
-                                    "No-Load Losses (Iron loss P_i): Remain strictly constant across loading branches under rated operating voltage.",
-                                    "Copper Losses (P_cu): Vary quadratically on loading fractions x: P_cu = x^2 * P_cu_fl.",
-                                    "Condition for Maximum Efficiency: Variable copper loss equals constant iron core loss: P_cu = P_i."
+                                    "Equivalent Circuit: Referred winding resistances and leakage reactances modeled through turn squared ratios: R2' = R2 / a^2.",
+                                    "Open Circuit Test: Performed on low-voltage side at rated voltage to determine core loss (hysteresis + eddy current) and magnetizing parameters.",
+                                    "Short Circuit Test: Performed on high-voltage side with reduced voltage to check rated copper loss and series winding reactances.",
+                                    "Maximum Efficiency: Occurs when variable copper loss equals constant core iron loss: P_cu = P_core."
                                 ),
-                                keyInsight = "At maximum efficiency, the load fraction x at which it occurs is: x = sqrt(P_i / P_cu_fl)."
+                                keyInsight = "At maximum efficiency, the load fraction x at which it occurs is: x = sqrt(P_core / P_cu_fl)."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Max Efficiency Loading Fraction",
-                                    expression = "x = sqrt(P_i / P_cu_fl)",
-                                    description = "Evaluates load fraction yielding maximum conversion efficiency.",
+                                    name = "Loading Fraction for Max Efficiency",
+                                    expression = "x = sqrt(P_core / P_cu_fl)",
+                                    description = "Evaluates optimum load fraction yielding maximum conversion efficiency.",
                                     applicationTrick = "If iron loss is 150W and FL copper loss is 600W, maximum efficiency occurs at exactly x_fl = sqrt(150/600) = sqrt(0.25) = 0.5 (or 50% load)."
+                                ),
+                                FormulaItem(
+                                    name = "Voltage Regulation Approximation",
+                                    expression = "VR = I_2 * (R_eq2 * cos(θ) ± X_eq2 * sin(θ)) / V_2",
+                                    description = "Calculates secondary terminal voltage drop under lagging (+) or leading (-) power factor loads.",
+                                    applicationTrick = "Voltage regulation can be zero or negative only under leading power factor conditions."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_em_trans_1",
-                                    subjectId = subjectId,
-                                    topicId = "em_transformers",
-                                    subtopicId = "em_trans_equiv",
-                                    year = 2021,
-                                    questionText = "A 10 kVA, single-phase transformer has a constant core (iron) loss of 150 W and a full-load copper loss of 600 W. At what percentage of full load does maximum efficiency occur?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf("25%", "50%", "75%", "100%"),
-                                    correctOptions = listOf(1),
-                                    explanation = "Maximum efficiency condition: Variable Copper Loss = Constant Iron Loss.\nx^2 * P_cu_fl = P_i\nx = sqrt(P_i / P_cu_fl) = sqrt(150 / 600) = sqrt(1/4) = 0.5.\nThus, maximum efficiency occurs at 50% of the full-load rating.",
-                                    formulasUsed = "x = sqrt(P_i / P_cu_fl)",
-                                    shortcutTricks = "The root of 150 / 600 is root(1/4) = 0.5. Directly corresponds to 50% load fraction instantly.",
-                                    relatedConcepts = "Transformer losses, efficiency curves, magnetic sizing",
-                                    difficulty = "Easy"
+                            pyqs = getQuestions("em_trans_single_phase", 0),
+                            practiceQuestions = getQuestions("em_trans_single_phase", 1),
+                            mockQuiz = getQuestions("em_trans_single_phase", 2)
+                        ),
+                        Subtopic(
+                            id = "em_trans_three_phase",
+                            topicId = "em_transformers",
+                            subjectId = subjectId,
+                            name = "Three-phase Transformers & Autotransformers",
+                            theory = TheoryContent(
+                                title = "3-Phase Transformers, Parallel Runs & Autotransformers",
+                                synopsis = "Explores vector group phase displacements, parallel matching constraints, and autotransformer power transfer components.",
+                                detailedBullets = listOf(
+                                    "Vector Groups: Phase displacements (e.g., Dy11 represents 30° leading) determine safe parallel grid connections.",
+                                    "Parallel Conditions: Units must have identical voltage ratios, same polarities, same phase sequence, and identical phase-displacements.",
+                                    "Autotransformer Power: Transfers power via both induction and direct electrical conduction, greatly reducing winding mass.",
+                                    "Conduction Power: P_cond = k * P_total, where k is the auto-turns ratio (V_LV / V_HV)."
+                                ),
+                                keyInsight = "Autotransformers are extremely efficient and lightweight when the high-voltage and low-voltage ratings are very close to each other (i.e., k is close to 1.0)."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Power Transferred Conductively",
+                                    expression = "P_conductive = k * P_input = (V_LV / V_HV) * P_input",
+                                    description = "Calculates the component of power transferred directly via physical terminal connections.",
+                                    applicationTrick = "Subtract inductive power (1-k)*P_input from total output to find the conductive power component directly."
+                                ),
+                                FormulaItem(
+                                    name = "Autotransformer Rating Boost",
+                                    expression = "Rating_auto = [1 / (1 - k)] * Rating_2winding",
+                                    description = "Gives the increased power handling capability when re-connecting as an autotransformer.",
+                                    applicationTrick = "For a 5 kVA 400/200V transformer reconnected as a 400/600V autotransformer, k = 400/600 = 2/3, so new rating is 5 / (1 - 2/3) = 15 kVA."
                                 )
                             ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("em_trans_three_phase", 0),
+                            practiceQuestions = getQuestions("em_trans_three_phase", 1),
+                            mockQuiz = getQuestions("em_trans_three_phase", 2)
                         )
                     )
                 ),
@@ -2030,114 +1784,198 @@ object GateSyllabus {
                     name = "DC Machines",
                     subtopics = listOf(
                         Subtopic(
-                            id = "em_dc_motors",
+                            id = "em_dc_generators_motors",
                             topicId = "em_dc",
                             subjectId = subjectId,
-                            name = "Motors Characteristics & Speed Control",
+                            name = "Operating Characteristics & Starting",
                             theory = TheoryContent(
-                                title = "DC Motors: Shunt, Series & Regulation",
-                                synopsis = "Covers operating speed-torque characteristics, back EMF, and speed regulation methods (armature series resistance, field flux control).",
+                                title = "DC Motors & Generators: Char & Starters",
+                                synopsis = "Covers operating speed-torque characteristics, back EMF voltage loops, and starting protectors (3-point & 4-point starters).",
                                 detailedBullets = listOf(
-                                    "Back EMF Equation: E_b = (P * Phi * Z * N) / (60 * A). Usually modeled as E_b = V - I_a * R_a.",
-                                    "Speed Relationship: Speed N is proportional to E_b / Phi."
+                                    "Back EMF Equation: E_b = V - I_a * R_a = (P * Phi * Z * N) / (60 * A). Speed N is proportional to E_b / Phi.",
+                                    "Shunt Characteristics: Shunt motor exhibits extremely stable speed-torque curves, suitable for constant-speed loads.",
+                                    "Series Hazard: Must never be started under zero load; low flux drives speed dangerously towards infinity.",
+                                    "Multi-point Starters: Limit excess starting armature currents by inserting high series starting resistance blocks."
                                 ),
-                                keyInsight = "A DC Series motor must never be started on no-load because the series field current approaches zero, causing the speed to rise dangerously toward infinity."
+                                keyInsight = "A DC Series motor develops startup torque proportional to the square of starting current, making it ideal for high-inertia traction duty."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
                                     name = "Back EMF Voltage",
                                     expression = "E_b = V - I_a * R_a",
-                                    description = "Evaluates developed internal back EMF for shunt motor.",
+                                    description = "Evaluates developed internal back EMF under motor conditions.",
                                     applicationTrick = "Solve for armature current I_a using line input and field branches current values."
+                                ),
+                                FormulaItem(
+                                    name = "Electromagnetic Torque developed",
+                                    expression = "T_e = (P * Z * Phi * I_a) / (2 * π * A) = K_a * Phi * I_a",
+                                    description = "Computes internal mechanical torque developed in the armature structure.",
+                                    applicationTrick = "Torque is directly proportional to armature current under constant shunt excitation flux."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("em_dc_generators_motors", 0),
+                            practiceQuestions = getQuestions("em_dc_generators_motors", 1),
+                            mockQuiz = getQuestions("em_dc_generators_motors", 2)
+                        ),
+                        Subtopic(
+                            id = "em_dc_reaction_control",
+                            topicId = "em_dc",
+                            subjectId = subjectId,
+                            name = "Armature Reaction, Commutation & Speed Control",
+                            theory = TheoryContent(
+                                title = "Armature Reaction, Commutation & Speed Control",
+                                synopsis = "Examines cross-magnetizing distortions, mechanical brush commutation transients, and armature vs. field speed regulation.",
+                                detailedBullets = listOf(
+                                    "Armature Reaction: Armature MMF distorsts main pole flux, shifting Magnetic Neutral Axis (MNA) in the direction of rotation.",
+                                    "Interpoles & Compensating Windings: Neutralize armature MMF cross-fields and reverse reactive EMF to eliminate commutator sparking.",
+                                    "Armature Speed Control: Adjusting terminal voltage regulates speed smoothly below rated base value.",
+                                    "Field Speed Control: Decreasing field flux (field weakening) regulates motor speed above rated base value."
+                                ),
+                                keyInsight = "Compensating windings are placed in main pole shoe slots and must be connected in series with the armature to cancel reaction MMF."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Armature Voltage Speed Control",
+                                    expression = "N = (V_t - I_a * R_a) / (K_a * Phi)",
+                                    description = "Determines motor operating speed based on terminal voltage, armature drops, and field flux.",
+                                    applicationTrick = "To reduce speed below base speed, increase external series armature resistance, raising the resistive drop."
+                                )
+                            ),
+                            pyqs = getQuestions("em_dc_reaction_control", 0),
+                            practiceQuestions = getQuestions("em_dc_reaction_control", 1),
+                            mockQuiz = getQuestions("em_dc_reaction_control", 2)
                         )
                     )
                 ),
                 Topic(
-                    id = "em_ac",
+                    id = "em_induction",
                     subjectId = subjectId,
-                    name = "Induction & Synchronous Machines",
+                    name = "Induction Machines",
                     subtopics = listOf(
                         Subtopic(
-                            id = "em_ac_rotary",
-                            topicId = "em_ac",
+                            id = "em_induction_three_phase",
+                            topicId = "em_induction",
                             subjectId = subjectId,
-                            name = "Torque-Slip curves, Sync Speed & Alternators",
+                            name = "Three-phase Induction Motors",
                             theory = TheoryContent(
-                                title = "Rotating Fields, Alternators & Slip Factors",
-                                synopsis = "Addresses rotating magnetic fields, synchronous speed equations, slip torque induction parameters, power-angle alternator grids.",
+                                title = "Induction Motors, Slip & Torque Characteristics",
+                                synopsis = "Analyzes rotating magnetic fields, synchronous speed equations, slip torque induction parameters, power splits, and tests.",
                                 detailedBullets = listOf(
                                     "Synchronous Speed: N_s = 120 * f / P.",
-                                    "Slip Equation: s = (N_s - N_r) / N_s. When stator field matches rotor speed, slip is zero.",
-                                    "Power Angle: Alternator real power: P = (E * V / X_s) * sin(delta), where X_s is synchronous reactance."
+                                    "Slip Equation: s = (N_s - N_r) / N_s. Active motoring slip typically ranges from 2% to 6%.",
+                                    "Blocked-Rotor Test: Conducted at reduced voltage to determine winding leakage reactances and resistances.",
+                                    "Rotor Copper Loss: P_rcu = s * P_g, where P_g represents air gap power."
                                 ),
-                                keyInsight = "An induction motor operates on a non-zero slip; operating at synchronous speed would produce zero torque as no current would be induced."
+                                keyInsight = "When three-phase stator windings are excited with balanced AC currents, they generate a constant amplitude magnetic field rotating at synchronous speed."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Synchronous Field Speed",
-                                    expression = "N_s = 120 * f / P",
-                                    description = "Calculates synchronous magnetic speed based on frequency and pole count.",
-                                    applicationTrick = "Use integer pole pairs. For a 4-pole machine at 50Hz, N_s is exactly 120*50/4 = 1500 RPM."
+                                    name = "Slip Power Balance Split",
+                                    expression = "P_g : P_rcu : P_mech = 1 : s : (1 - s)",
+                                    description = "Air gap power distribution across rotor winding losses and mechanical shaft outputs.",
+                                    applicationTrick = "Rotor copper loss is always fraction s of air gap input: P_rcu = s * P_g."
+                                ),
+                                FormulaItem(
+                                    name = "Slip for Maximum Torque",
+                                    expression = "s_mT = R_2 / X_2",
+                                    description = "Yields slip at which the motor develops its peak breakdown torque.",
+                                    applicationTrick = "Inserting external rotor resistance shifts peak torque to higher slips, leaving its peak Nm amplitude unchanged."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_em_ac_1",
-                                    subjectId = subjectId,
-                                    topicId = "em_ac",
-                                    subtopicId = "em_ac_rotary",
-                                    year = 2022,
-                                    questionText = "A 3-phase, 4-pole induction motor is supplied from a 50 Hz system. If the motor runs at 1440 RPM, what is the value of the rotor slip?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf("2%", "4%", "5%", "6%"),
-                                    correctOptions = listOf(1),
-                                    explanation = "1. Calculate Synchronous Speed:\nN_s = 120 * f / P = 120 * 50 / 4 = 1500 RPM.\n2. Calculate matching Slip:\ns = (N_s - N_r) / N_s = (1500 - 1440) / 1500 = 60 / 1500 = 0.04 (or 4%).",
-                                    formulasUsed = "N_s = 120*f/P, s = (N_s - N_r)/N_s",
-                                    shortcutTricks = "Since 1440 RPM is close to 1500 RPM, the slip must be a low decimal: 60/1500 = 4% instantly.",
-                                    relatedConcepts = "Slip torque parameters, rotating magnetic fields",
-                                    difficulty = "Easy"
+                            pyqs = getQuestions("em_induction_three_phase", 0),
+                            practiceQuestions = getQuestions("em_induction_three_phase", 1),
+                            mockQuiz = getQuestions("em_induction_three_phase", 2)
+                        ),
+                        Subtopic(
+                            id = "em_induction_single_phase",
+                            topicId = "em_induction",
+                            subjectId = subjectId,
+                            name = "Single-phase Induction Motors",
+                            theory = TheoryContent(
+                                title = "Single-phase Induction Motors & Starting Mechanisms",
+                                synopsis = "Analyzes double-revolving field theory, starting winding splits, capacitor run/start configurations, and shaded-pole motors.",
+                                detailedBullets = listOf(
+                                    "Pulsating Field: Stator single-phase excitation creates a pulsating standstill field with zero starting torque.",
+                                    "Double Revolving Theory: Pulsating field is modeled as forward and backward rotating fields of equal magnitude, with backward-slip: s_b = 2 - s.",
+                                    "Capacitor Start: Inserts auxiliary winding with series capacitor to split phase angles, generating starting torque.",
+                                    "Shaded Pole: Shaded copper rings delay flux build-up, shifting magnetic field sweeps towards the shaded sector."
+                                ),
+                                keyInsight = "A centrifugal switch automatically disconnects the auxiliary starter loop when motor speeds approach 75% of synchronous speed."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Backward Field Slip",
+                                    expression = "s_b = 2 - s",
+                                    description = "Determines the slip experienced by the rotor conductors relative to the backward-rotating magnetic field.",
+                                    applicationTrick = "If forward slip is 4% (0.04), the backward field slip is exactly 2 - 0.04 = 1.96 index units."
                                 )
                             ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("em_induction_single_phase", 0),
+                            practiceQuestions = getQuestions("em_induction_single_phase", 1),
+                            mockQuiz = getQuestions("em_induction_single_phase", 2)
                         )
                     )
                 ),
                 Topic(
-                    id = "em_special",
+                    id = "em_synchronous",
                     subjectId = subjectId,
-                    name = "Special Electrical Machines",
+                    name = "Synchronous Machines",
                     subtopics = listOf(
                         Subtopic(
-                            id = "em_special_steppers",
-                            topicId = "em_special",
+                            id = "em_synchronous_generators",
+                            topicId = "em_synchronous",
                             subjectId = subjectId,
-                            name = "Stepper & Servo Motors",
+                            name = "Synchronous Generators (Alternators)",
                             theory = TheoryContent(
-                                title = "Stepper Angles, Servos & Special Transduction",
-                                synopsis = "Analyzes brushless positioning devices, stepping resolution, servo feedbacks, and stepper motor operating regimes.",
+                                title = "Synchronous Alternator Models & Regulation Theory",
+                                synopsis = "Addresses cylindrical & salient pole models, regulation tests (EMF, MMF, Potier), parallel runs, and power-angle limits.",
                                 detailedBullets = listOf(
-                                    "Stepper step angle: Beta = (N_s - N_r)/(N_s * N_r) * 360 degrees.",
-                                    "Microstepping: Subdivides winding phase currents continuously to achieve smaller step increments."
+                                    "Armature Reaction: Lagging load power factors demagnetize pole flux; leading factors magnetize pole flux.",
+                                    "Regulation Methods: EMF (Synchronous Impedance) is pessimistic; MMF (Ampere-Turns) is optimistic.",
+                                    "Short Circuit Ratio (SCR): Reciprocal of per-unit synchronous reactance: SCR = 1 / X_d_pu.",
+                                    "Salience Reluctance: Direct and Quadrature axis reactances (Xd > Xq) yield an additional reluctance power term."
                                 ),
-                                keyInsight = "A stepper motor is an open-loop digital actuator, while a servo motor operates strictly as an encoder-based closed-loop feedback actuator."
+                                keyInsight = "Adjusting the prime mover input controls active power output, whereas adjusting field excitation control alters reactive power grids."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Step Angle Equation",
-                                    expression = "β = 360 / (m * N_r)",
-                                    description = "Calculates stepping angular resolution for m-phases and N_r rotor teeth.",
-                                    applicationTrick = "For a 2-phase stepper motor with 200 rotor segments, step angle is exactly 360 / (2 * 200) = 0.9 degrees."
+                                    name = "Blondel's Two-Reaction Alternator Power",
+                                    expression = "P = (E*V/Xd)*sin(d) + (V^2/2)*(1/Xq - 1/Xd)*sin(2d)",
+                                    description = "Power output of salient-pole generators including excitation and reluctance terms.",
+                                    applicationTrick = "For cylindrical non-salient rotor machines, Xd = Xq, collapsing the reluctance term to zero."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("em_synchronous_generators", 0),
+                            practiceQuestions = getQuestions("em_synchronous_generators", 1),
+                            mockQuiz = getQuestions("em_synchronous_generators", 2)
+                        ),
+                        Subtopic(
+                            id = "em_synchronous_motors",
+                            topicId = "em_synchronous",
+                            subjectId = subjectId,
+                            name = "Synchronous Motors & Excitation Control",
+                            theory = TheoryContent(
+                                title = "Synchronous Motors, V-Curves & Transients",
+                                synopsis = "Covers armature V-curves, synchronous condenser operations, starting techniques, and hunting transients.",
+                                detailedBullets = listOf(
+                                    "V-Curves: Armature current versus exciters field current. Over-excited motor runs at leading power factor.",
+                                    "Synchronous Condenser: Over-excited motor running on no-load acts as dynamic capacitor to improve power factor.",
+                                    "Hunting Phenomenon: Sudden load spikes cause rotor speeds to oscillate, damped via slot damper windings.",
+                                    "Starting: Not self-starting; damper windings allow starting as temporary induction motors."
+                                ),
+                                keyInsight = "A synchronous motor runs strictly at synchronous speed: N_s = 120 * f / P under all stable loaded steady-states."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Power Factor excitation tracking",
+                                    expression = "I_a = f(I_f) at Constant Mechanical Load",
+                                    description = "Armature current tracks a V-shape as field current varies.",
+                                    applicationTrick = "Armature current is minimum at unity power factor excitation state."
+                                )
+                            ),
+                            pyqs = getQuestions("em_synchronous_motors", 0),
+                            practiceQuestions = getQuestions("em_synchronous_motors", 1),
+                            mockQuiz = getQuestions("em_synchronous_motors", 2)
                         )
                     )
                 )

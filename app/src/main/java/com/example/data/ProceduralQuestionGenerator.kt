@@ -97,89 +97,199 @@ object ProceduralQuestionGenerator {
         idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
     ): GateQuestion {
         val qId = "proc_apt_${subtopicId}_$idx"
+        val subtopicOffset = if (subtopicId.hashCode() == Int.MIN_VALUE) Int.MAX_VALUE else kotlin.math.abs(subtopicId.hashCode())
+        val effIdx = idx + subtopicOffset
         return when (subtopicId) {
             "apt_verb_vocab", "apt_verb_completion" -> {
                 val words = listOf(
                     Triple("benevolent", "generous and kind", "malicious"),
                     Triple("capricious", "unpredictable and impulsive", "stable"),
                     Triple("ephemeral", "short-lived and fleeting", "perpetual"),
-                    Triple("obdurate", "stubborn and unyielding", "flexible")
+                    Triple("obdurate", "stubborn and unyielding", "flexible"),
+                    Triple("gregarious", "sociable and outgoing", "introverted"),
+                    Triple("laconic", "using few words and concise", "verbose"),
+                    Triple("pragmatic", "practical and sensible", "idealistic"),
+                    Triple("cacophony", "harsh and discordant sounds", "harmony"),
+                    Triple("ameliorate", "make something better and improve", "exacerbate"),
+                    Triple("venerate", "regard with great respect and revere", "despise"),
+                    Triple("recondite", "obscure and little known", "straightforward"),
+                    Triple("didantic", "intended to teach and instructional", "uninformative"),
+                    Triple("transient", "lasting only a short time", "permanent"),
+                    Triple("equivocal", "open to more than one interpretation", "unambiguous"),
+                    Triple("assiduous", "showing great care and persistent", "negligent"),
+                    Triple("precarious", "not securely held and dangerously unstable", "safe"),
+                    Triple("copious", "abundant in supply or quantity", "sparse"),
+                    Triple("dearth", "a scarcity or lack of something", "abundance"),
+                    Triple("fortuitous", "happening by a lucky accident", "intentional"),
+                    Triple("mitigate", "make less severe or serious", "intensify"),
+                    Triple("ostentatious", "vulgar or pretentious display", "modest"),
+                    Triple("reticent", "not revealing one's thoughts readily", "communicative"),
+                    Triple("taciturn", "reserved or uncommunicative in speech", "loquacious"),
+                    Triple("zealot", "a person who is fanatical and uncompromising", "moderate"),
+                    Triple("apathy", "lack of interest or concern", "enthusiasm"),
+                    Triple("audacious", "showing a willingness to take surprisingly bold risks", "timid"),
+                    Triple("candid", "truthful and straightforward", "evasive"),
+                    Triple("dogmatic", "inclined to lay down principles as incontrovertibly true", "flexible"),
+                    Triple("fastidious", "very attentive to and concerned about accuracy", "careless"),
+                    Triple("loquacious", "tending to talk a great deal", "silent")
                 )
-                val sel = words[idx % words.size]
+                val sel = words[effIdx % words.size]
                 if (type == QuestionType.MCQ) {
                     val qText = if (subtopicId == "apt_verb_vocab") {
                         "Determine the closest synonym for the word \"${sel.first}\" in standard academic writing."
                     } else {
-                        "Complete the sentence contextually: \"The philanthropist's ________ actions were celebrated by the entire community.\""
+                        val sentence = when (sel.first) {
+                            "benevolent" -> "The philanthropist's ________ actions were celebrated by the entire community."
+                            "capricious" -> "The weather during autumn was ________, changing from bright sunlight to storm in minutes."
+                            "ephemeral" -> "The cherry blossom season is beautiful but ________, lasting only a few short days."
+                            "obdurate" -> "Despite hours of intense negotiation, the management remained ________ and refused to compromise."
+                            "gregarious" -> "As a ________ individual, she thrived in busy academic conferences and collaborative group labs."
+                            "laconic" -> "The engineer's ________ response of 'Done' conveyed all necessary information without excess words."
+                            "pragmatic" -> "We need a ________ approach to solving the power dissipation limit, rather than an idealized theoretical one."
+                            "cacophony" -> "Entering the industrial turbine hall, the visitor was met with a loud ________ of metallic screeches."
+                            "ameliorate" -> "Installing liquid nitrogen cooling jackets was done to ________ the rapid heating of superconducting qubits."
+                            "venerate" -> "Young apprentices ________ the old master craftsmen who built the original analog grids."
+                            "recondite" -> "He spent his career studying ________ topics in multi-variable complex variables."
+                            "didantic", "didactic", "didantic" -> "Her lectures were strictly ________, focusing entirely on analytical guidelines."
+                            "transient" -> "The voltage surge was ________, lasting only a millisecond before the fuse tripped."
+                            "equivocal" -> "The tester's safety summary was ________, containing conflicting assessments that confused researchers."
+                            "assiduous" -> "Through twenty years of ________ study, she compiled the definitive volume on linear matrix systems."
+                            "precarious" -> "The sensor was placed in a ________ position on the outer lip of the pressure chamber."
+                            "copious" -> "The meteorologist collected ________ amounts of rain statistics during the monsoon season."
+                            "dearth" -> "A sudden ________ of raw component materials forced the plant to delay its production plan."
+                            "fortuitous" -> "It was a ________ discovery when a minor calculation mistake led to a breakthrough in control loops."
+                            "mitigate" -> "Adjusting the feedback loop gain was necessary to ________ the loud harmonic oscillations."
+                            "ostentatious" -> "He avoided ________ declarations, presenting his mathematical proofs in a quiet, modest style."
+                            "reticent" -> "The usually vocal analyst was ________ to comment on the preliminary research results."
+                            "taciturn" -> "She was known as a quiet, ________ researcher who preferred coding in silence to public debates."
+                            "zealot" -> "A true ________ for efficiency, he refused to use any compiler that didn't optimize loops."
+                            "apathy" -> "The widespread ________ among the technicians slowed the integration of new safety protocols."
+                            "audacious" -> "Their ________ plan to reconstruct the entire power grid within 24 hours surprised administrators."
+                            "candid" -> "In a ________ interview, the lead engineer admitted that testing has been severely neglected."
+                            "dogmatic" -> "We should avoid a ________ adherence to theoretical models when actual empirical data contradicts them."
+                            "fastidious" -> "The team compiled the database with ________ attention, ensuring zero typographical mistakes."
+                            "loquacious" -> "The ________ speaker talked at great length, turning a short review into a three-hour seminar."
+                            else -> "The team made a ________ effort to ensure that the final system components matched standard criteria."
+                        }
+                        "Complete the sentence contextually: \"$sentence\""
                     }
-                    val correct = if (subtopicId == "apt_verb_vocab") sel.second else "benevolent"
-                    val wrongOpt = if (subtopicId == "apt_verb_vocab") sel.third else "capricious"
+                    val correct = if (subtopicId == "apt_verb_vocab") sel.second else sel.first
+                    val wrongOpt = if (subtopicId == "apt_verb_vocab") sel.third else sel.third
                     val options = listOf(correct, wrongOpt, "strictly professional", "aggressive").shuffled(rand)
                     val correctIdx = options.indexOf(correct)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "By vocabulary definition, '${sel.first}' means '${sel.second}'. Thus the correct answer is '$correct'.",
+                        explanation = if (subtopicId == "apt_verb_vocab") {
+                            "By vocabulary definition, '${sel.first}' means '${sel.second}'. Thus the correct answer is '$correct'."
+                        } else {
+                            "Based on the contextual sentence meaning, the word '${sel.first}' (meaning '${sel.second}') fits the blank perfectly."
+                        },
                         formulasUsed = "Verbal semantics", shortcutTricks = "Analyze word prefix/suffix context.",
                         relatedConcepts = "Vocabulary, Syllogistic logic", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all of the options that are synonyms or related words of \"${sel.first}\":"
-                    val options = listOf(sel.second.split(" and ")[0], sel.second.split(" and ")[1], "altruistic", sel.third)
+                    val qText = "Select all of the options that are related to the meaning or synonym list of \"${sel.first}\":"
+                    val options = listOf(
+                        "Meaning covers: ${sel.second}",
+                        "Suitable for high-frequency academic vocabulary",
+                        "Represents a standard English semantic term",
+                        "Its primary synonym is \"${sel.third}\""
+                    )
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "The words are synonyms of '${sel.first}', whereas '${sel.third}' is an antonym.",
-                        formulasUsed = "Semantic matching", shortcutTricks = "Identify related conceptual terms.",
+                        explanation = "The options indicating the definition '${sel.second}' and its academic nature are correct. Option D of '${sel.third}' is incorrect since that word is an antonym, not a synonym.",
+                        formulasUsed = "Semantic matching", shortcutTricks = "Recognize definitions versus antonyms easily.",
                         relatedConcepts = "Synonyms matching", difficulty = difficulty
                     )
                 } else {
                     val ans = sel.first.length.toDouble()
-                    val qText = "In the sentence completion task, how many letters are there in the word \"${sel.first.uppercase()}\"?"
+                    val qText = "In the sentence completion task, how many letters are there in the word \"${sel.first.uppercase(Locale.US)}\"?"
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
                         correctNumericalRange = (ans - 0.01)..(ans + 0.01),
-                        explanation = "Counting the characters in '${sel.first.uppercase()}' yields exactly ${sel.first.length} characters.",
+                        explanation = "Counting the characters in '${sel.first.uppercase(Locale.US)}' yields exactly ${sel.first.length} characters.",
                         formulasUsed = "Character mapping count", shortcutTricks = "Examine spelling and count precisely.",
                         relatedConcepts = "Grammar lexicon rules", difficulty = difficulty
                     )
                 }
             }
             "apt_verb_reading", "apt_verb_critical" -> {
+                val readings = listOf(
+                    Triple(
+                        "Although parallel computing provides high throughput for matrix multiplications, power dissipation limits the deployment scale.",
+                        "Deployment scale is limited by power dissipation despite superior parallel computing speedups.",
+                        listOf("Matrix multiplications cannot be processed concurrently.", "Power dissipation is completely irrelevant to high throughput operations.", "Parallel computing guarantees zero thermal limits.")
+                    ),
+                    Triple(
+                        "While superconducting qubits offer fast gate execution, environmental noise limits their quantum coherence times. Resolving decoherence is critical for achieving fault-tolerant computation.",
+                        "Coherence times are restricted by environmental noise despite fast gates.",
+                        listOf("Superconducting qubits have slow gate execution speeds.", "Decoherence plays no role in fault-tolerant systems.", "Superconducting grids operate at room temperatures.")
+                    ),
+                    Triple(
+                        "Solar and wind power offer carbon-neutral energy production, but their intermittent nature requires wide-scale deployment of battery storage systems. Without adequate storage, grid balancing becomes highly volatile.",
+                        "Intermittent generation necessitates battery storage to prevent grid volatility.",
+                        listOf("Renewable energy is highly stable and does not require storage.", "Carbon-neutral production is impossible with solar energy.", "Grid balancing is simplified by direct wind inputs.")
+                    ),
+                    Triple(
+                        "Deep learning architectures excel at identifying complex spatial patterns in MRI scans. However, their black-box nature makes clinical explanation problematic, causing integration issues with doctors.",
+                        "Doctor integration is limited by the non-interpretable black-box nature of deep models.",
+                        listOf("Deep learning models are completely incapable of spatial analysis.", "MRI scans cannot be verified by machine learning architectures.", "AI models provide instant, clear explanations to medical staff.")
+                    ),
+                    Triple(
+                        "While edge processing allows real-time inference with ultra-low latency for steering decisions, thermal limitations prevent equipping vehicles with extensive high-end server hardware. Thus, lightweight network models are required.",
+                        "Thermal limitations necessitate lightweight models for real-time edge vehicle steering.",
+                        listOf("Edge processing has high latency unsuitable for vehicle control.", "Vehicles can hold standard high-end server arrays without heating.", "Lightweight networks require mainframe cloud connections.")
+                    ),
+                    Triple(
+                        "Containerization enables uniform application deployment across heterogeneous servers. However, shared kernel architectures introduce potential side-channel vulnerability threats compared to virtual machines.",
+                        "Shared kernels create side-channel security vulnerabilities in container deployments.",
+                        listOf("Containers do not allow uniform deployments across servers.", "Virtual machines use shared kernels and are less secure than containers.", "Side-channel vulnerabilities are impossible in cloud layers.")
+                    )
+                )
+                val selText = readings[effIdx % readings.size]
                 if (type == QuestionType.MCQ) {
                     val qText = """
-                        Read the technical excerpt:
-                        "Although parallel computing provides high throughput for matrix multiplications, power dissipation limits the deployment scale."
+                        Read the technical excerpt carefully:
+                        "${selText.first}"
                         Which statement represents the main thesis or logical conclusion?
                     """.trimIndent()
-                    val options = listOf(
-                        "Deployment scale is limited by power dissipation despite superior parallel computing speedups.",
-                        "Matrix multiplications cannot be processed concurrently.",
-                        "Power dissipation is completely irrelevant to high throughput operations.",
-                        "Parallel computing guarantees zero thermal limits."
-                    ).shuffled(rand)
-                    val correctIdx = options.indexOf("Deployment scale is limited by power dissipation despite superior parallel computing speedups.")
+                    val options = (listOf(selText.second) + selText.third).shuffled(rand)
+                    val correctIdx = options.indexOf(selText.second)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "The passage contrasts the high-throughput benefits of parallel computing against physical limitations in power dissipation.",
-                        formulasUsed = "Logical thesis parsing", shortcutTricks = "Look for contrast markers such as 'Although' or 'But' to locate main arguments.",
+                        explanation = "The passage directly contrasts the functional advantages of the topic with its active real-world constraints: '${selText.second}'.",
+                        formulasUsed = "Logical thesis parsing", shortcutTricks = "Examine the main transition markers to locate key analytical constraints.",
                         relatedConcepts = "Critical reading, theme extraction", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all of the logically valid deductions supported by the premises: \"All compilers translate source files. Some compilers optimize loops.\""
+                    val concepts = listOf(
+                        Triple("compilers", "translate source files", "optimize loops"),
+                        Triple("assemblers", "generate machine code", "resolve symbols"),
+                        Triple("interpreters", "execute code line-by-line", "compile bytecode"),
+                        Triple("parsers", "produce syntax trees", "detect indentation faults"),
+                        Triple("loaders", "load segments into RAM", "schedule operating processes"),
+                        Triple("linkers", "bind library functions", "eliminate dead code blocks")
+                    )
+                    val selConcept = concepts[effIdx % concepts.size]
+                    val c1 = selConcept.first
+                    val c2 = selConcept.second
+                    val c3 = selConcept.third
+                    val qText = "For verification task #[MS-${effIdx + 300}], select all of the logically valid deductions supported by the premises: \"All $c1 $c2. Some $c1 $c3.\""
                     val options = listOf(
-                        "There exists a translation tool that optimizes loops.",
-                        "All tools that optimize loops are translators.",
-                        "Some compilers that translate source files do not optimize loops is possible.",
-                        "No compiler translates source files."
+                        "There exists a tool that $c2 and also $c3.",
+                        "Any tool that does not $c2 cannot be a $c1.",
+                        "Some tools that $c2 do not $c3 is possible.",
+                        "No $c1 $c2."
                     )
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "Since all compilers translate, any compiler that optimizes loops must also be a translator.",
-                        formulasUsed = "Syllogistic logic parsing", shortcutTricks = "Use containment: loop optimizers are a subset of compilers or intersect. Compilers are subset of translators.",
+                        explanation = "Since all $c1 $c2, any $c1 that $c3 must also $c2. Option B is is valid because if a tool does not $c2, it cannot be a $c1.",
+                        formulasUsed = "Syllogistic logic parsing", shortcutTricks = "Use containment: $c3 actors are a subset of $c1 or intersect. $c1 are subset of $c2.",
                         relatedConcepts = "Deductive validity", difficulty = difficulty
                     )
                 } else {
@@ -199,53 +309,81 @@ object ProceduralQuestionGenerator {
             }
             "apt_verb_analogies", "apt_verb_word_groups", "apt_verb_narrative_seq" -> {
                 if (type == QuestionType.MCQ) {
-                    val qText = "Identify the analogical relationship: COAL : LOCOMOTIVE :: ________ : ________"
-                    val options = listOf("ELECTRICITY : MOTOR", "WIND : SAIL", "WATER : PIPELINE", "FUEL : FILTER").shuffled(rand)
-                    val correctIdx = options.indexOf("ELECTRICITY : MOTOR")
+                    val analogies = listOf(
+                        Triple("COAL : LOCOMOTIVE", "ELECTRICITY : MOTOR", listOf("WATER : PIPELINE", "FUEL : FILTER", "WIND : SAIL")),
+                        Triple("AUTHOR : BOOK", "ARCHITECT : BUILDING", listOf("DOCTOR : STETHOSCOPE", "TEACHER : CHALK", "ENGINEER : ENGINE")),
+                        Triple("MICROSCOPE : BACTERIA", "TELESCOPE : STAR", listOf("SCALPEL : SURGERY", "CAMERA : PHOTO", "CLOCK : TIME")),
+                        Triple("CONDUCTOR : ORCHESTRA", "DIRECTOR : FILM", listOf("PILOT : AIRPLANE", "WRITER : NOVEL", "SOLDIER : ARMY")),
+                        Triple("EPIDEMIC : VIRUS", "FLOOD : WATER", listOf("FIRE : COAL", "WIND : SAIL", "EARTHQUAKE : PLATE")),
+                        Triple("OXYGEN : RESPIRATION", "FUEL : COMBUSTION", listOf("LIGHT : VISION", "WATER : DRINKING", "AIR : WIND")),
+                        Triple("HEAT : EVAPORATION", "COLD : CONDENSATION", listOf("LIGHT : REFRACTION", "FORCE : MOTION", "SPEED : VELOCITY")),
+                        Triple("SURGEON : SCALPEL", "WRITER : PEN", listOf("MASON : BRICK", "PILOT : AIRSTRIP", "BAKER : OVEN")),
+                        Triple("SCALING : MAP", "RATIO : PROPORTION", listOf("LENGTH : WIDTH", "VOLUME : MASS", "AREA : GRID")),
+                        Triple("SOLVENT : SOLUTE", "WATER : SALT", listOf("ACID : BASE", "IRON : STEEL", "OXYGEN : HYDROGEN"))
+                    )
+                    val sel = analogies[effIdx % analogies.size]
+                    val qText = "Identify the option that displays the most appropriate analogical relationship matching: ${sel.first} :: ________ : ________"
+                    val options = (listOf(sel.second) + sel.third).shuffled(rand)
+                    val correctIdx = options.indexOf(sel.second)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "Coal acts as the primary energy source powering locomotives, and electricity acts as the energy source powering motors.",
-                        formulasUsed = "Analogy relations", shortcutTricks = "Map the functional relation: '[EnergySource] powers the [Device]'.",
+                        explanation = "The target pair maps the fundamental functional/relational link shown by ${sel.first}. Symmetrically, ${sel.second} represents this link perfectly.",
+                        formulasUsed = "Analogy relations", shortcutTricks = "Formulate a relational sentence between the original pair to test the options.",
                         relatedConcepts = "Analogical arguments, matching relations", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all of the options containing word groups representing mechanical parts of a macroscopic whole (PART : WHOLE relation):"
-                    val options = listOf("SPOKE : WHEEL", "LEAF : TREE", "ENGINE : CAR", "WATER : PIPELINE")
+                    val msqOptions = listOf(
+                        listOf("SPOKE : WHEEL", "LEAF : TREE", "ENGINE : CAR", "WATER : PIPELINE") to listOf(0, 1, 2),
+                        listOf("RESISTOR : CIRCUIT", "KEYBOARD : COMPUTER", "PAGE : BOOK", "STREET : ROAD") to listOf(0, 1, 2),
+                        listOf("NUCLEUS : ATOM", "STAR : GALAXY", "PIXEL : MONITOR", "HEAT : COLD") to listOf(0, 1, 2),
+                        listOf("CHASSIS : VEHICLE", "FIBER : CABLE", "CELL : TISSUE", "GLUCOSE : PROTEIN") to listOf(0, 1, 2)
+                    )
+                    val selMsq = msqOptions[effIdx % msqOptions.size]
+                    val qText = "Select all of the options containing word groups representing mechanical/physical parts of a macroscopic whole (PART : WHOLE relation):"
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
-                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "A spoke is part of a wheel, leaf is part of a tree, and engine is part of a car.",
-                        formulasUsed = "Semantic taxonomy", shortcutTricks = "Identify physical components vs containers.",
+                        questionText = qText, questionType = type, options = selMsq.first, correctOptions = selMsq.second,
+                        explanation = "Under taxonomy principles, the first three items express physical sub-components of a host system structure.",
+                        formulasUsed = "Semantic taxonomy", shortcutTricks = "Identify physical components vs descriptive bounds.",
                         relatedConcepts = "Analogy associations", difficulty = difficulty
                     )
                 } else {
+                    val natOptions = listOf(
+                        Triple("LIGHT : BLIND :: SOUND : [?]", "DEAF", 4.0),
+                        Triple("ODOR : ANOSMIC :: TASTE : [?]", "AGEUSIC", 7.0),
+                        Triple("TOUCH : NUMB :: SIGHT : [?]", "BLIND", 5.0),
+                        Triple("SPEECH : MUTE :: HEAR : [?]", "DEAF", 4.0)
+                    )
+                    val selNat = natOptions[effIdx % natOptions.size]
                     val qText = """
-                        In the analogy LIGHT : BLIND :: SOUND : [?], 
-                        count the number of characters in the 4-letter response representing the corresponding sensory impairment.
+                        In the analogy ${selNat.first}, 
+                        count the number of characters in the response representing the corresponding sensory impairment.
                     """.trimIndent()
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
-                        correctNumericalRange = 3.99..4.01,
-                        explanation = "The response is 'DEAF', which has exactly 4 characters.",
-                        formulasUsed = "Analogy spelling mapping", shortcutTricks = "Compute the 4-letter synonym length.",
+                        correctNumericalRange = (selNat.third - 0.01)..(selNat.third + 0.01),
+                        explanation = "The response is '${selNat.second}', which contains exactly ${selNat.second.length} characters.",
+                        formulasUsed = "Analogy spelling mapping", shortcutTricks = "Solve the analogy synonym first, and then count.",
                         relatedConcepts = "Verbal Analogies", difficulty = difficulty
                     )
                 }
             }
             else -> {
-                val wordList = listOf(
-                    Pair("benevolent", "generous and kind"),
-                    Pair("capricious", "unpredictable and impulsive"),
-                    Pair("ephemeral", "short-lived and fleeting"),
-                    Pair("obdurate", "stubborn and unyielding")
+                val words = listOf(
+                    Triple("benevolent", "generous and kind", "malicious"),
+                    Triple("capricious", "unpredictable and impulsive", "stable"),
+                    Triple("ephemeral", "short-lived and fleeting", "perpetual"),
+                    Triple("obdurate", "stubborn and unyielding", "flexible"),
+                    Triple("gregarious", "sociable and outgoing", "introverted"),
+                    Triple("laconic", "using few words and concise", "verbose")
                 )
-                val select = wordList[idx % wordList.size]
+                val select = words[effIdx % words.size]
                 if (type == QuestionType.MCQ) {
                     val qText = """
                         Select the option that represents the closest synonym for the word "${select.first}" under modern formal sentence usage.
-                        Sentence: "The CEO was known for her ${select.first} actions during structural reorganizations."
+                        Sentence: "The executive was known for her ${select.first} actions during structural reorganizations."
                     """.trimIndent()
                     val options = listOf(select.second, "unreliable and slow", "strictly professional and formal", "aggressive and profit-focused").shuffled(rand)
                     val correctIndex = options.indexOf(select.second)
@@ -257,7 +395,8 @@ object ProceduralQuestionGenerator {
                         relatedConcepts = "Vocabulary, Grammar usage", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Identify which of the following English sentences are grammatically correct in formal writing: (Select all that apply)"
+                    val tagStr = "SC-${1000 + effIdx}"
+                    val qText = "For grammar evaluation card $tagStr, identify which of the following English sentences are grammatically correct in formal academic writing: (Select all that apply)"
                     val options = listOf(
                         "Neither the principal nor the teachers are attending the annual summit.",
                         "If she had registered on time, she would have received the confirmation code.",
@@ -272,16 +411,31 @@ object ProceduralQuestionGenerator {
                         relatedConcepts = "Subject-verb agreement", difficulty = difficulty
                     )
                 } else {
+                    val sentences = listOf(
+                        "Writing clean code requires persistent attention." to 6.0,
+                        "To write code efficiently requires focus and strict discipline." to 9.0,
+                        "Optimization should be performed only after profiling bottlenecks." to 9.0,
+                        "Designing adaptive systems demands deep architectural insights and testing." to 10.0,
+                        "Routh-Hurwitz stability criterion provides a highly systematic algebraic test." to 10.0,
+                        "Every solid sphere has five reflective planes under standard dilations." to 10.0,
+                        "Syllogistic logic forms the basis of computer reasoning systems today." to 10.0,
+                        "A feedback compensator modifies open-loop dynamics to achieve transient safety." to 11.0,
+                        "A real symmetric matrix always possesses strictly real orthogonal eigenvectors." to 11.0,
+                        "The velocity error constant of any Type one system is finite." to 11.0
+                    )
+                    val selPair = sentences[effIdx % sentences.size]
+                    val sText = selPair.first
+                    val ans = selPair.second
                     val qText = """
-                        Read the sentence: "To write code efficiently requires focus and strict discipline."
+                        Read the sentence: "$sText"
                         Let N represent the total number of words in this sentence (excluding any punctuation).
                         Compute the exact numerical value of N.
                     """.trimIndent()
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
-                        correctNumericalRange = 8.99..9.01,
-                        explanation = "Counting the words in the sentence yields exactly 9 words.",
+                        correctNumericalRange = (ans - 0.01)..(ans + 0.01),
+                        explanation = "Counting the words in the sentence yields exactly ${ans.toInt()} words.",
                         formulasUsed = "Sentence parsing count", shortcutTricks = "Identify each word unit precisely.",
                         relatedConcepts = "Textual parsing", difficulty = difficulty
                     )
@@ -295,36 +449,70 @@ object ProceduralQuestionGenerator {
         idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
     ): GateQuestion {
         val qId = "proc_apt_${subtopicId}_$idx"
+        val subtopicOffset = if (subtopicId.hashCode() == Int.MIN_VALUE) Int.MAX_VALUE else kotlin.math.abs(subtopicId.hashCode())
+        val effIdx = idx + subtopicOffset
         return when (subtopicId) {
             "apt_quant_ratios", "apt_quant_percentages", "apt_quant_profit_loss" -> {
                 if (type == QuestionType.MCQ) {
-                    val qText = "Under \"$subtopicName\", if the price of a component is increased by 25%, by what percentage must a factory reduce utilization of the component to keep its overall budget unchanged?"
-                    val options = listOf("20%", "25%", "15%", "33.33%").shuffled(rand)
-                    val correctIdx = options.indexOf("20%")
+                    val pPercentList = listOf(20, 25, 40, 50, 100)
+                    val p = pPercentList[effIdx % pPercentList.size]
+                    val reduction = (p.toDouble() / (100.0 + p.toDouble())) * 100.0
+                    val formattedRed = String.format(Locale.US, "%.2f", reduction)
+
+                    val qText = "Under \"$subtopicName\", if the price of a manufacturing component is increased by $p%, by what approximate percentage must a factory reduce its raw utilization of that component to keep its overall budget unchanged?"
+                    val correctOpt = "$formattedRed%"
+                    val wrong1 = "${p}%"
+                    val wrong2 = String.format(Locale.US, "%.2f%%", reduction * 1.2)
+                    val wrong3 = String.format(Locale.US, "%.2f%%", reduction * 0.8)
+                    val options = listOf(correctOpt, wrong1, wrong2, wrong3).distinct().shuffled(rand)
+                    val correctIdx = options.indexOf(correctOpt)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "If price becomes 1.25, utilization must become 1/1.25 = 0.8 to keep budget identical. This is a 20% reduction.",
-                        formulasUsed = "P * U = Total budget", shortcutTricks = "+1/4 price increase -> -1/5 utilization change.",
+                        explanation = "If price increases to (1 + $p/100) times CP, then utilization must drop to 1 / (1 + $p/100) to maintain budgetary equality. The exact net reduction is $formattedRed%.",
+                        formulasUsed = "P * U = Total budget", shortcutTricks = "Change CP to 1.0, increase by ratio and check the inverse.",
                         relatedConcepts = "Ratios, percentage margins", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all mathematically correct percentage/ratio statements under \"$subtopicName\":"
-                    val options = listOf(
-                        "An increase of 50% followed by a decrease of 50% result in a net decrease of 25%.",
-                        "If a:b = 2:3 and b:c = 4:5, the compounded ratio a:b:c is 8:12:15.",
-                        "If cost price is 100, and it is marked up by 30%, then sold with a 10% discount, profit is 17%.",
-                        "If selling price is less than cost price, a net profit is obtained directly."
+                    val msqSets = listOf(
+                        Pair(
+                            "Select all mathematically correct percentage/ratio statements under \"$subtopicName\":",
+                            listOf(
+                                "An increase of 50% followed by a decrease of 50% result in a net decrease of 25%.",
+                                "If a:b = 2:3 and b:c = 4:5, the compounded ratio a:b:c is 8:12:15.",
+                                "If cost price is 100, and it is marked up by 30%, then sold with a 10% discount, profit is 17%.",
+                                "If selling price is less than cost price, a net profit is obtained directly."
+                            ) to listOf(0, 1, 2)
+                        ),
+                        Pair(
+                            "Which of the following propositions regarding growth, percentage margins, and ratios are mathematically correct under \"$subtopicName\"?",
+                            listOf(
+                                "An increase of 20% followed by another increase of 10% results in a net increase of 32%.",
+                                "If x is 25% larger than y, then y is 20% smaller than x.",
+                                "If a:b is 3:4, then a is 75% of b.",
+                                "A markup of 100% followed by a 100% discount results in zero cost price loss."
+                            ) to listOf(0, 1, 2)
+                        ),
+                        Pair(
+                            "Identify the true assertions regarding rates and proportions for industrial operations under \"$subtopicName\":",
+                            listOf(
+                                "If the ratio of capacities of two tanks is 3:5, the larger tank holds 66.6% more than the smaller.",
+                                "A 10% profit margin calculated on selling price is strictly greater than 10% margin on cost price.",
+                                "If a factory throughput is scaled by 1.15, it represents a 15% increase.",
+                                "If a:b = 1:2, then b is 50% of a."
+                            ) to listOf(0, 1, 2)
+                        )
                     )
+                    val selSet = msqSets[effIdx % msqSets.size]
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
-                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "Statement 1: 1.5 * 0.5 = 0.75 (25% decrease). Statement 2: LCM of 3 and 4 is 12 (8:12:15). Statement 3: Profit is 130 * 0.9 - 100 = 17.",
+                        questionText = selSet.first, questionType = type, options = selSet.second.first, correctOptions = selSet.second.second,
+                        explanation = "Applying basic arithmetic proportions and percentages, the correct options satisfy the mathematical constraints.",
                         formulasUsed = "Profit & Ratio identities", shortcutTricks = "Substitute base 100 to quickly confirm assertions.",
                         relatedConcepts = "Profit CP SP ratios", difficulty = difficulty
                     )
                 } else {
-                    val cost = 80.0 + (idx % 3) * 10
+                    val cost = 80.0 + (effIdx % 3) * 10
                     val sp = cost * 1.25
                     val qText = "If a component's manufacturing cost is $$cost and we sell it to obtain exactly 25% profit margin, what is the selling price in dollars?"
                     GateQuestion(
@@ -339,39 +527,77 @@ object ProceduralQuestionGenerator {
             }
             "apt_quant_time_work", "apt_quant_permutation_combination", "apt_quant_probability" -> {
                 if (type == QuestionType.MCQ) {
-                    val qText = "In \"$subtopicName\", how many distinct ways can the letters of the word \"GATE\" be rearranged?"
-                    val options = listOf("24", "12", "6", "48").shuffled(rand)
-                    val correctIdx = options.indexOf("24")
+                    val wordsList = listOf("GATE", "EXAM", "KOTLIN", "GRADLE", "ROUTER", "ENGINE", "SYSTEM", "SIGNAL", "MATRIX", "VECTOR")
+                    val word = wordsList[effIdx % wordsList.size]
+                    val len = word.length
+                    val frequencies = word.groupingBy { it }.eachCount()
+                    var factorials = 1L
+                    for (i in 1..len) {
+                        factorials *= i
+                    }
+                    var denominator = 1L
+                    for (cnt in frequencies.values) {
+                        var itemFactorial = 1L
+                        for (i in 1..cnt) {
+                            itemFactorial *= i
+                        }
+                        denominator *= itemFactorial
+                    }
+                    val totalPermutations = factorials / denominator
+                    val qText = "In \"$subtopicName\", how many mathematically distinct ways can the letters of the word \"$word\" be rearranged?"
+                    val correctOpt = "$totalPermutations"
+                    val wrongOpt1 = "${totalPermutations + 12}"
+                    val wrongOpt2 = "${totalPermutations / 2}"
+                    val wrongOpt3 = "${totalPermutations * 2}"
+                    val options = listOf(correctOpt, wrongOpt1, wrongOpt2, wrongOpt3).distinct().shuffled(rand)
+                    val correctIdx = options.indexOf(correctOpt)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "'GATE' contains 4 distinct letters. Permutations = 4! = 24.",
-                        formulasUsed = "n! permutations", shortcutTricks = "Compute standard permutations with non-repeating terms.",
+                        explanation = "Using the formula for permutations with indistinguishable objects: N! / (c1! * c2! * ...), the rearrangement yields exactly $totalPermutations.",
+                        formulasUsed = "n! / (n1! * n2! ...) permutations", shortcutTricks = "Count duplicate characters and divide the factorial safely.",
                         relatedConcepts = "Combinatorics, factorials", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all of the valid probabilitic and combinatorial formulas under \"$subtopicName\":"
-                    val options = listOf(
-                        "C(5, 2) is exactly 10.",
-                        "P(5, 2) is exactly 20.",
-                        "If two fair coins are tossed, the probability of obtaining at least one head is 3/4.",
-                        "C(4, 4) is exactly 4."
+                    val msqCombinatorics = listOf(
+                        listOf(
+                            "C(5, 2) is exactly 10.",
+                            "P(5, 2) is exactly 20.",
+                            "If two fair coins are tossed, the probability of obtaining at least one head is 3/4.",
+                            "C(4, 4) is exactly 4."
+                        ) to listOf(0, 1, 2),
+                        listOf(
+                            "C(6, 2) is exactly 15.",
+                            "P(4, 2) is exactly 12.",
+                            "Tossing a single fair six-sided die twice has a 1/36 probability of landing double sixes.",
+                            "For any positive n, C(n, 1) is exactly n!."
+                        ) to listOf(0, 1, 2),
+                        listOf(
+                            "C(7, 2) is exactly 21.",
+                            "P(6, 2) is exactly 30.",
+                            "If an event has a probability p of occurring, the complementary event has probability 1-p.",
+                            "C(3, 2) is exactly 6."
+                        ) to listOf(0, 1, 2)
                     )
+                    val selCombinatorics = msqCombinatorics[effIdx % msqCombinatorics.size]
+                    val qText = "Select all of the valid probabilistic and combinatorial propositions under \"$subtopicName\":"
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
-                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "C(5,2)=10, P(5,2)=20, Coin toss at least one head = {HH, HT, TH} = 3/4. C(4,4) is 1, not 4.",
+                        questionText = qText, questionType = type, options = selCombinatorics.first, correctOptions = selCombinatorics.second,
+                        explanation = "Based on standard combinations, permutations, and probabilistic event spacing, the selected choices are valid bounds.",
                         formulasUsed = "C(n, r) and P(n, r) formulations", shortcutTricks = "Manually check small factorials.",
                         relatedConcepts = "Probability & arrangements", difficulty = difficulty
                     )
                 } else {
-                    val ans = 15.0 // C(6, 2)
-                    val qText = "Determine the exact value of combinatorial selections represented by C(6, 2) under \"$subtopicName\" rules."
+                    val n = 5 + (effIdx % 4) // 5, 6, 7, 8
+                    val r = 2
+                    val ans = (n * (n - 1) / 2).toDouble()
+                    val qText = "Determine the exact number of combinatorial selections of $r items from a set of $n distinct items (represented by C($n, $r)) under \"$subtopicName\" principles."
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
                         correctNumericalRange = (ans - 0.01)..(ans + 0.01),
-                        explanation = "C(6, 2) = (6 * 5) / 2 = 15.",
+                        explanation = "C($n, 2) = ($n * ${n - 1}) / 2 = $ans.",
                         formulasUsed = "C(n, r) = n! / (r! * (n-r)!)", shortcutTricks = "Compute small coefficients systematically.",
                         relatedConcepts = "Permutations & Selections", difficulty = difficulty
                     )
@@ -379,39 +605,62 @@ object ProceduralQuestionGenerator {
             }
             "apt_quant_logarithms", "apt_quant_data_interpretation", "apt_quant_geometry", "apt_quant_mensuration" -> {
                 if (type == QuestionType.MCQ) {
-                    val qText = "Under \"$subtopicName\" properties, if the linear radius of a solid 3D sphere is doubled, its volume increases by what factor?"
-                    val options = listOf("8", "4", "2", "6").shuffled(rand)
-                    val correctIdx = options.indexOf("8")
+                    val scaleFactorList = listOf(2, 3, 4, 5)
+                    val k = scaleFactorList[effIdx % scaleFactorList.size]
+                    val volumeFactor = k * k * k
+                    val qText = "Under \"$subtopicName\" scaling laws, if the linear radius of a solid 3D sphere is multiplied by $k, its total volume increases by what factor?"
+                    val correctOpt = "$volumeFactor"
+                    val wrongOpt1 = "${k * k}"
+                    val wrongOpt2 = "${2 * k}"
+                    val wrongOpt3 = "${volumeFactor + k}"
+                    val options = listOf(correctOpt, wrongOpt1, wrongOpt2, wrongOpt3).distinct().shuffled(rand)
+                    val correctIdx = options.indexOf(correctOpt)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "Volume is proportional to the third power of linear scale: 2^3 = 8.",
+                        explanation = "Volume of a 3D sphere is proportional to the third power of its linear dimensions (r^3). Scaling by $k scales volume by $k^3 = $volumeFactor.",
                         formulasUsed = "V = 4/3 * pi * r^3", shortcutTricks = "Volume is proportional to k^3.",
                         relatedConcepts = "Mensuration geometry", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all mathematically sound geometric relationships for circular or regular boundaries in \"$subtopicName\":"
-                    val options = listOf(
-                        "Each interior angle of a regular hexagon is exactly 120 degrees.",
-                        "In a right triangle with sides 6 cm and 8 cm, the hypotenuse is exactly 10 cm.",
-                        "For any real numbers, log(ab) = log(a) + log(b) is a valid logarithm identity.",
-                        "The volume of a cone is half the volume of a cylinder of identical radius and height."
+                    val geometryMsqs = listOf(
+                        listOf(
+                            "Each interior angle of a regular hexagon is exactly 120 degrees.",
+                            "In a right triangle with sides 6 cm and 8 cm, the hypotenuse is exactly 10 cm.",
+                            "For any real numbers, log(ab) = log(a) + log(b) is a valid logarithm identity.",
+                            "The volume of a cone is half the volume of a cylinder of identical radius and height."
+                        ) to listOf(0, 1, 2),
+                        listOf(
+                            "Each interior angle of an equilateral triangle is exactly 60 degrees.",
+                            "The sum of interior angles of any planar quadrilateral is exactly 360 degrees.",
+                            "For positive b and x, log_b(x^k) = k * log_b(x) is a valid identity.",
+                            "A circle with radius r has a circumference of π * r."
+                        ) to listOf(0, 1, 2),
+                        listOf(
+                            "The interior angle sum of a regular pentagon is exactly 540 degrees.",
+                            "If the sides of similar triangles are in 1:2 ratio, then their areas are in 1:4 ratio.",
+                            "The derivative of ln(x) is 1/x for all x > 0.",
+                            "A sphere of radius r has a total surface area of 2 * π * r^2."
+                        ) to listOf(0, 1, 2)
                     )
+                    val selGeometry = geometryMsqs[effIdx % geometryMsqs.size]
+                    val qText = "Select all mathematically sound geometric and logarithmic relationships under \"$subtopicName\":"
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
-                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "Hexagon angle is 120 deg. Triangle 6-8-10 is Pythagorean triple. log(ab) = log(a)+log(b). Cone is 1/3 of cylinder, not half.",
+                        questionText = qText, questionType = type, options = selGeometry.first, correctOptions = selGeometry.second,
+                        explanation = "Evaluating polygon angles, Pythagorean triplets, logarithmic rules, or area scaling confirms these options as mathematically true.",
                         formulasUsed = "Symmetry & logarithm properties", shortcutTricks = "Double check standard conic and cylinder formulas.",
                         relatedConcepts = "Geometry, logarithms, shape scaling", difficulty = difficulty
                     )
                 } else {
-                    val ans = 150.0 // 6 * s^2 where s = 5
-                    val qText = "A regular 3D cube representing structural elements in \"$subtopicName\" has an edge length of 5.0 cm. Find the total surface area in sq cm."
+                    val s = 3 + (effIdx % 5) // 3, 4, 5, 6, 7
+                    val ans = 6.0 * s * s
+                    val qText = "A regular 3D cube representing structural elements in \"$subtopicName\" has an edge length of $s.0 cm. Find the total surface area in square centimeters."
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
                         correctNumericalRange = (ans - 0.01)..(ans + 0.01),
-                        explanation = "Area of a cube has 6 faces: 6 * s^2 = 6 * 25 = 150.0.",
+                        explanation = "A regular 3D cube consists of 6 identical square faces. Thus, Total Area = 6 * s^2 = 6 * ($s.0)^2 = $ans sq cm.",
                         formulasUsed = "Area = 6 * s^2", shortcutTricks = "Compute basic face area and scale by face counts.",
                         relatedConcepts = "Mensuration scaling", difficulty = difficulty
                     )
@@ -419,21 +668,31 @@ object ProceduralQuestionGenerator {
             }
             else -> {
                 val workCombos = listOf(Pair(12, 6), Pair(12, 24), Pair(10, 15))
-                val pair = workCombos[idx % workCombos.size]
+                val pair = workCombos[effIdx % workCombos.size]
                 val x = pair.first
                 val y = pair.second
                 val ans = (x * y).toDouble() / (x + y).toDouble()
                 if (type == QuestionType.MCQ) {
+                    val speedPairs = listOf(Pair(40, 60), Pair(30, 60), Pair(50, 75), Pair(60, 90), Pair(40, 80))
+                    val sp = speedPairs[effIdx % speedPairs.size]
+                    val s1 = sp.first
+                    val s2 = sp.second
+                    val avgSpeed = (2.0 * s1 * s2) / (s1 + s2)
+                    val correctStr = String.format(Locale.US, "%.2f km/h", avgSpeed)
+                    val wm1 = String.format(Locale.US, "%.2f km/h", (s1 + s2) / 2.0)
+                    val wm2 = String.format(Locale.US, "%.2f km/h", avgSpeed - 5.0)
+                    val wm3 = String.format(Locale.US, "%.2f km/h", avgSpeed + 5.0)
+                    
                     val qText = """
-                        An engineer drives from home at an average speed of 40 km/h and immediately returns along the exact same path driving at 60 km/h.
+                        An engineer drives from home at an average speed of $s1 km/h for a task representing "$subtopicName" and immediately returns along the exact same path driving at $s2 km/h.
                         Compute the overall average speed (in km/h) for the entire round trip.
                     """.trimIndent()
-                    val options = listOf("48.00 km/h", "50.00 km/h", "45.00 km/h", "52.50 km/h").shuffled(rand)
-                    val correctIdx = options.indexOf("48.00 km/h")
+                    val options = listOf(correctStr, wm1, wm2, wm3).distinct().shuffled(rand)
+                    val correctIdx = options.indexOf(correctStr)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "V_avg = 2 * V1 * V2 / (V1 + V2) = 2 * 40 * 60 / 100 = 48 km/h.",
+                        explanation = "V_avg = 2 * V1 * V2 / (V1 + V2) = 2 * $s1 * $s2 / (${s1 + s2}) = $correctStr.",
                         formulasUsed = "Harmonic Mean = 2 * v1 * v2 / (v1 + v2)", shortcutTricks = "Round trip average is harmonic mean, strictly less than modern arithmetic mean.",
                         relatedConcepts = "Speed rates computations", difficulty = difficulty
                     )
@@ -476,78 +735,104 @@ object ProceduralQuestionGenerator {
         idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
     ): GateQuestion {
         val qId = "proc_apt_${subtopicId}_$idx"
+        val subtopicOffset = if (subtopicId.hashCode() == Int.MIN_VALUE) Int.MAX_VALUE else kotlin.math.abs(subtopicId.hashCode())
+        val effIdx = idx + subtopicOffset
         return when (subtopicId) {
             "apt_anal_number_series", "apt_anal_numerical_reasoning" -> {
                 if (type == QuestionType.MCQ) {
-                    val qText = "Determine the next term in the logical number series under \"$subtopicName\": 2, 5, 10, 17, 26, ?"
-                    val options = listOf("37", "35", "41", "39").shuffled(rand)
-                    val correctIdx = options.indexOf("37")
+                    val startOffset = 1 + (effIdx % 5) // 1 to 5
+                    val multiplier = 1 + (effIdx % 3)  // 1 to 3
+                    val seq = (1..5).map { (it * it) * multiplier + startOffset }
+                    val expected = 36 * multiplier + startOffset
+                    val qText = "Determine the next term in the logical number series under \"$subtopicName\": ${seq.joinToString(", ")}, ?"
+                    val optCorrect = "$expected"
+                    val optWrong1 = "${expected - (5 * multiplier)}"
+                    val optWrong2 = "${expected + (5 * multiplier)}"
+                    val optWrong3 = "${expected + 11}"
+                    val options = listOf(optCorrect, optWrong1, optWrong2, optWrong3).distinct().shuffled(rand)
+                    val correctIdx = options.indexOf(optCorrect)
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "Pattern is n^2 + 1. For n = 6, 6^2 + 1 = 37.",
-                        formulasUsed = "T_n = n^2 + 1", shortcutTricks = "Identify first-order differences: 3, 5, 7, 9, 11...",
+                        explanation = "Pattern of terms is T_n = n^2 * $multiplier + $startOffset. For n = 6, 6^2 * $multiplier + $startOffset = $expected.",
+                        formulasUsed = "T_n = n^2 * m + s", shortcutTricks = "Identify first-order differences to observe the quadratic step size.",
                         relatedConcepts = "Progressions, sequences", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
+                    val offset = effIdx % 4
                     val qText = "Select all of the option sequences that represent quadratic progression growth under \"$subtopicName\":"
                     val options = listOf(
-                        "2, 5, 10, 17, 26, 37",
-                        "1, 4, 9, 16, 25, 36",
-                        "3, 6, 11, 18, 27, 38",
-                        "2, 4, 8, 16, 32, 64"
+                        "${offset + 2}, ${offset + 5}, ${offset + 10}, ${offset + 17}, ${offset + 26}, ${offset + 37}",
+                        "${offset + 1}, ${offset + 4}, ${offset + 9}, ${offset + 16}, ${offset + 25}, ${offset + 36}",
+                        "${offset + 3}, ${offset + 6}, ${offset + 11}, ${offset + 18}, ${offset + 27}, ${offset + 38}",
+                        "${offset + 2}, ${offset + 4}, ${offset + 8}, ${offset + 16}, ${offset + 32}, ${offset + 64}"
                     )
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "A, B, and C grow quadratically (second difference is 2). D grows exponentially (powers of 2).",
+                        explanation = "A, B, and C grow quadratically (second-order difference is exactly 2). Option D grows exponentially (powers of 2), which is not quadratic progress.",
                         formulasUsed = "Sequence difference tracking", shortcutTricks = "Evaluate adjacent difference progressions.",
                         relatedConcepts = "Number Series structures", difficulty = difficulty
                     )
                 } else {
-                    val ans = 125.0 // n^3 for n=5
-                    val qText = "Solve for the next term in the cubic sequence under \"$subtopicName\": 1, 8, 27, 64, ?"
+                    val baseValue = 5 + (effIdx % 5) // 5, 6, 7, 8, 9
+                    val seqTerms = (1 until baseValue).map { (it * it * it) }
+                    val ans = (baseValue * baseValue * baseValue).toDouble()
+                    val qText = "Solve for the next term in the cubic sequence under \"$subtopicName\": ${seqTerms.joinToString(", ")}, ?"
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
                         correctNumericalRange = (ans - 0.01)..(ans + 0.01),
-                        explanation = "Cubes: 1^3, 2^3, 3^3, 4^3, 5^3=125.",
-                        formulasUsed = "T_n = n^3", shortcutTricks = "Perfect cubes recognition.",
+                        explanation = "Cubes: " + (1..baseValue).joinToString { "n^3 = $it^3" } + " = $ans.",
+                        formulasUsed = "T_n = n^3", shortcutTricks = "Recognizing perfect integer cubes.",
                         relatedConcepts = "Cubic progressions", difficulty = difficulty
                     )
                 }
             }
             "apt_anal_deduction_induction", "apt_anal_analogies" -> {
                 if (type == QuestionType.MCQ) {
-                    val qText = "Analyze the numerical analogy under \"$subtopicName\" and solve for the missing term: 4 : 16 :: 5 : ?"
-                    val options = listOf("25", "20", "30", "125").shuffled(rand)
-                    val correctIdx = options.indexOf("25")
+                    val base1 = 3 + (effIdx % 5) // 3 to 7
+                    val base2 = base1 + 1
+                    val square1 = base1 * base1
+                    val square2 = base2 * base2
+                    val qText = "Analyze the numerical analogy under \"$subtopicName\" and solve for the missing term: $base1 : $square1 :: $base2 : ?"
+                    val options = listOf("$square2", "${square2 - 5}", "${square2 + 5}", "${base2 * 5}").distinct().shuffled(rand)
+                    val correctIdx = options.indexOf("$square2")
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = options, correctOptions = listOf(correctIdx),
-                        explanation = "The relationship is square mapping: x : x^2. Since 4 is mapped to 16, 5 maps to 25.",
+                        explanation = "The relationship is square mapping: x : x^2. Since $base1 is mapped to $square1, the counterpart $base2 maps directly to $square2.",
                         formulasUsed = "Analogy square function f(x) = x^2", shortcutTricks = "Identify square mapping values on both sides.",
                         relatedConcepts = "Analogies", difficulty = difficulty
                     )
                 } else if (type == QuestionType.MSQ) {
-                    val qText = "Select all option pairs displaying the squaring function relation \"x : x^2\" under \"$subtopicName\":"
-                    val options = listOf("3 : 9", "4 : 16", "5 : 25", "6 : 30")
+                    val k = 2 + (effIdx % 4) // 2 to 5
+                    val sq1 = k * k
+                    val sq2 = (k + 1) * (k + 1)
+                    val sq3 = (k + 2) * (k + 2)
+                    val sq4_wrong = (k + 3) * (k + 3) - 6
+                    val options = listOf("$k : $sq1", "${k + 1} : $sq2", "${k + 2} : $sq3", "${k + 3} : $sq4_wrong")
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
-                        questionText = qText, questionType = type, options = options, correctOptions = listOf(0, 1, 2),
-                        explanation = "3^2=9, 4^2=16, 5^2=25 are correct. 6^2 is 36, not 30.",
+                        questionText = "Select all option pairs displaying the squaring function relation \"x : x^2\" under \"$subtopicName\":",
+                        questionType = type,
+                        options = options, correctOptions = listOf(0, 1, 2),
+                        explanation = "Since $k^2=$sq1, ${(k+1)}^2=$sq2, and ${(k+2)}^2=$sq3 are mathematically correct. However, ${(k+3)}^2 is ${(k+3)*(k+3)}, not $sq4_wrong.",
                         formulasUsed = "x : x^2", shortcutTricks = "Square left term and cross-check right term.",
                         relatedConcepts = "Symmetric analogies", difficulty = difficulty
                     )
                 } else {
-                    val ans = 27.0
-                    val qText = "Determine the missing term in the cubic analogic relation under \"$subtopicName\": 2 : 8 :: 3 : ?"
+                    val baseValue = 2 + (effIdx % 3) // 2, 3, 4
+                    val resultValue1 = baseValue * baseValue * baseValue
+                    val targetBase = baseValue + 1
+                    val ans = (targetBase * targetBase * targetBase).toDouble()
+                    val qText = "Determine the missing term in the cubic analogic relation under \"$subtopicName\": $baseValue : $resultValue1 :: $targetBase : ?"
                     GateQuestion(
                         id = qId, subjectId = subjectId, topicId = topicId, subtopicId = subtopicId, year = year,
                         questionText = qText, questionType = type, options = null, correctOptions = null,
                         correctNumericalRange = (ans - 0.01)..(ans + 0.01),
-                        explanation = "Cubic: 2^3=8, so 3^3=27.",
-                        formulasUsed = "f(x) = x^3", shortcutTricks = "Cube of base 3.",
+                        explanation = "Cubic analogy mapping: $baseValue^3 = $resultValue1, so $targetBase^3 = $ans.",
+                        formulasUsed = "f(x) = x^3", shortcutTricks = "Recognize cube of base $targetBase.",
                         relatedConcepts = "Cubic analogical mappings", difficulty = difficulty
                     )
                 }
@@ -555,7 +840,7 @@ object ProceduralQuestionGenerator {
             else -> {
                 if (type == QuestionType.MCQ) {
                     val stepsList = listOf(3, 4, 5, 6)
-                    val step = stepsList[idx % stepsList.size]
+                    val step = stepsList[effIdx % stepsList.size]
                     val start = 2 + rand.nextInt(10)
                     val val1 = start
                     val val2 = val1 + step
@@ -597,7 +882,7 @@ object ProceduralQuestionGenerator {
                         relatedConcepts = "Euler overlays", difficulty = difficulty
                     )
                 } else {
-                    val base = 4.0 + (idx % 4)
+                    val base = 4.0 + (effIdx % 4)
                     val ans = base * base
                     val qText = "A logical grid has $base rows and $base columns. Find the total number of basic single-grid cell locations representing \"$subtopicName\" vertices."
                     GateQuestion(
@@ -618,6 +903,8 @@ object ProceduralQuestionGenerator {
         idx: Int, year: Int, type: QuestionType, difficulty: String, rand: Random
     ): GateQuestion {
         val qId = "proc_apt_${subtopicId}_$idx"
+        val subtopicOffset = if (subtopicId.hashCode() == Int.MIN_VALUE) Int.MAX_VALUE else kotlin.math.abs(subtopicId.hashCode())
+        val effIdx = idx + subtopicOffset
         return when (subtopicId) {
             "apt_spatial_rotation", "apt_spatial_shape_transformation" -> {
                 if (type == QuestionType.MCQ) {
@@ -2094,23 +2381,50 @@ object ProceduralQuestionGenerator {
                     What is the overall open-loop forward path gain of this combined model?
                 """.trimIndent()
 
-                GateQuestion(
-                    id = qId,
-                    subjectId = subjectId,
-                    topicId = topicId,
-                    subtopicId = subtopicId,
-                    year = year,
-                    questionText = qText,
-                    questionType = type,
-                    options = null,
-                    correctOptions = null,
-                    correctNumericalRange = (answer - 0.01)..(answer + 0.01),
-                    explanation = "For non-interacting cascade systems, the overall transfer function or gain is simply the product of the individual gains: G_total = G1 * G2 = $g1 * $g2 = $answer.",
-                    formulasUsed = "G_total(s) = G1(s) * G2(s)",
-                    shortcutTricks = "Multiply the individual transfer functions together. Cascade means direct multiplication.",
-                    relatedConcepts = "Cascade gain configurations, Gain modeling",
-                    difficulty = difficulty
-                )
+                if (type == QuestionType.MCQ || type == QuestionType.MSQ) {
+                    val optCorrect = "${answer.toInt()}"
+                    val optWrong1 = "${(answer + 4).toInt()}"
+                    val optWrong2 = "${(answer - 2).toInt()}"
+                    val optWrong3 = "${(answer * 2).toInt()}"
+                    val optionsList = listOf(optCorrect, optWrong1, optWrong2, optWrong3).shuffled(rand)
+                    val correctIndex = optionsList.indexOf(optCorrect)
+
+                    GateQuestion(
+                        id = qId,
+                        subjectId = subjectId,
+                        topicId = topicId,
+                        subtopicId = subtopicId,
+                        year = year,
+                        questionText = qText,
+                        questionType = type,
+                        options = optionsList,
+                        correctOptions = listOf(correctIndex),
+                        correctNumericalRange = null,
+                        explanation = "For non-interacting cascade systems, the overall transfer function or gain is simply the product of the individual gains: G_total = G1 * G2 = $g1 * $g2 = $answer.",
+                        formulasUsed = "G_total(s) = G1(s) * G2(s)",
+                        shortcutTricks = "Multiply the individual transfer functions together. Cascade means direct multiplication.",
+                        relatedConcepts = "Cascade gain configurations, Gain modeling",
+                        difficulty = difficulty
+                    )
+                } else {
+                    GateQuestion(
+                        id = qId,
+                        subjectId = subjectId,
+                        topicId = topicId,
+                        subtopicId = subtopicId,
+                        year = year,
+                        questionText = qText,
+                        questionType = type,
+                        options = null,
+                        correctOptions = null,
+                        correctNumericalRange = (answer - 0.01)..(answer + 0.01),
+                        explanation = "For non-interacting cascade systems, the overall transfer function or gain is simply the product of the individual gains: G_total = G1 * G2 = $g1 * $g2 = $answer.",
+                        formulasUsed = "G_total(s) = G1(s) * G2(s)",
+                        shortcutTricks = "Multiply the individual transfer functions together. Cascade means direct multiplication.",
+                        relatedConcepts = "Cascade gain configurations, Gain modeling",
+                        difficulty = difficulty
+                    )
+                }
             }
         }
     }
@@ -2128,110 +2442,1104 @@ object ProceduralQuestionGenerator {
     ): GateQuestion {
         val qId = "proc_elec_${subtopicId}_$index"
 
-        return when (type) {
-            QuestionType.MCQ -> {
-                val r1 = 5 * (2 + rand.nextInt(10)) // 10 to 60 ohms
-                val r2 = 5 * (2 + rand.nextInt(10))
-                val v = 10 * (1 + rand.nextInt(12)) // 10 to 120 V
-                val iTotal = v.toDouble() / (r1 + r2)
-                val v2 = iTotal * r2
-                val formattedV2 = String.format(Locale.US, "%.2f", v2)
+        var questionText = ""
+        var optionsList: List<String>? = null
+        var correctOptionsList: List<Int>? = null
+        var correctRange: ClosedRange<Double>? = null
+        var explanationText = ""
+        var formulaUsed = ""
+        var shortcut = ""
+        var concepts = ""
 
-                val qText = """
-                    An electrical circuit configuration representing "$subtopicName" contains a DC voltage source of $v V connected in series with two resistors, $r1 Ω and $r2 Ω. 
-                    What is the steady-state load voltage drop (in Volts) across the $r2 Ω resistor?
-                """.trimIndent()
-
-                val optA = "$formattedV2 V"
-                val optB = String.format(Locale.US, "%.2f V", v2 * 0.8)
-                val optC = String.format(Locale.US, "%.2f V", v2 * 1.2)
-                val optD = String.format(Locale.US, "%.2f V", (v.toDouble() - v2))
-
-                val options = listOf(optA, optB, optC, optD).shuffled(rand)
-                val correctIndex = options.indexOf(optA)
-
-                GateQuestion(
-                    id = qId,
-                    subjectId = subjectId,
-                    topicId = topicId,
-                    subtopicId = subtopicId,
-                    year = year,
-                    questionText = qText,
-                    questionType = type,
-                    options = options,
-                    correctOptions = listOf(correctIndex),
-                    correctNumericalRange = null,
-                    explanation = "According to the Voltage Division Rule, the voltage drop across $r2 Ω is given by: V_2 = V * (R2 / (R1 + R2)) = $v * ($r2 / ($r1 + $r2)) = $v * ($r2 / ${r1 + r2}) = $formattedV2 V.",
-                    formulasUsed = "V_out = V_in * (R_target / R_total)",
-                    shortcutTricks = "Resistors in series divide voltage in direct proportion to their resistance values. Estimate the ratio immediately.",
-                    relatedConcepts = "Network Theory, KVL, Series Circuit Voltage Division",
-                    difficulty = difficulty
-                )
+        when (subtopicId) {
+            "nt_laws_basics" -> {
+                val r1 = 4.0 + (index % 5) * 2.0
+                val r2 = 10.0 + (index % 5) * 2.0
+                val req = (r1 * r2) / (r1 + r2)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Under \"$subtopicName\", calculate the equivalent resistance (in ohms) of $r1 Ω and $r2 Ω resistors connected in parallel."
+                        val correct = String.format(Locale.US, "%.2f Ω", req)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f Ω", r1 + r2), String.format(Locale.US, "%.2f Ω", r2 - r1), "1.00 Ω")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Parallel equivalent resistance formula is R_eq = (R1 * R2) / (R1 + R2) = ($r1 * $r2) / ($r1 + $r2) = $correct."
+                        formulaUsed = "R_eq = (R1*R2)/(R1+R2)"
+                        shortcut = "The parallel resistance is always strictly smaller than the smallest individual resistor."
+                        concepts = "Resistor parallel configurations"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions about electrical network laws and parameters under \"$subtopicName\" are correct? (Select all that apply)"
+                        optionsList = listOf("KCL is a direct manifestation of conservation of charge.", "KVL is based on conservation of energy.", "KVL is valid for non-linear circuits.", "KCL is only valid for planar networks.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "KCL represents conservation of charge, while KVL represents conservation of energy. Both laws apply to any lumped network regardless of linearity or planar structure. Therefore, options A, B, and C are correct, whereas option D is incorrect."
+                        formulaUsed = "Kirchhoff's Current Law, Kirchhoff's Voltage Law"
+                        shortcut = "Identify conservation principles instantly."
+                        concepts = "Charge vs Energy Conservation"
+                    }
+                    QuestionType.NAT -> {
+                        val current = 2.0 + (index % 4)
+                        val voltage = current * (r1 + r2)
+                        questionText = "An electrical series loop under \"$subtopicName\" has $r1 Ω and $r2 Ω resistors with a steady-state current of $current A flowing. Calculate the source voltage (in Volts) across the series combinations."
+                        correctRange = (voltage - 0.1)..(voltage + 0.1)
+                        explanationText = "Voltage = I * R_total = I * (R1 + R2) = $current * ($r1 + $r2) = $voltage V."
+                        formulaUsed = "V = I * (R1 + R2)"
+                        shortcut = "Always sum series resistors first before multiplying with source current."
+                        concepts = "Ohm's series voltage division"
+                    }
+                }
             }
-            QuestionType.MSQ -> {
-                val qText = """
-                    Under standard electrical AC operations related to "$subtopicName" frameworks, which of the following assertions about resonant RLC networks is/are correct? (Select all that apply)
-                """.trimIndent()
-
-                val optA = "At resonance, the network input impedance is purely resistive and reaches its minimum value."
-                val optB = "The voltage across the inductor and capacitor can exceed the source voltage amplitude at high Q values."
-                val optC = "Resonance occurs strictly when inductive reactance equals capacitive reactance magnitude."
-                val optD = "The system power factor is exactly zero at the resonant peak."
-
-                val listOpts = listOf(optA, optB, optC, optD)
-                // A, B, and C are correct. D is false since power factor is exactly 1 (unity) at resonance when impedance is purely resistive.
-                val correctIdx = listOf(0, 1, 2)
-
-                GateQuestion(
-                    id = qId,
-                    subjectId = subjectId,
-                    topicId = topicId,
-                    subtopicId = subtopicId,
-                    year = year,
-                    questionText = qText,
-                    questionType = type,
-                    options = listOpts,
-                    correctOptions = correctIdx,
-                    correctNumericalRange = null,
-                    explanation = "At resonance, X_L = X_C, making the imaginary part of circuit impedance zero, so Z = R (minimum and real resistive). This creates a unity power factor (PF = cos(0) = 1.0). High quality factors Q cause voltage magnification across L and C scaling above source power.",
-                    formulasUsed = "ω_0 = 1 / √(LC); Power Factor = cos(θ_z)",
-                    shortcutTricks = "Resonance implies real alignment; hence, reactance vanishes, power factor must become unity (1.0). Never choose zero power factor.",
-                    relatedConcepts = "AC Circuits, Resonance Impedance, Power Magnification",
-                    difficulty = difficulty
-                )
+            "nt_theorems_active" -> {
+                val vth = 10.0 + (index % 5) * 2.0
+                val rth = 4.0 + (index % 3)
+                val pmax = (vth * vth) / (4.0 * rth)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "For a network with a Thevenin equivalent voltage source of $vth V in series with a Thevenin resistance of $rth Ω under \"$subtopicName\", find the maximum power (in Watts) that can be delivered to a load resistor."
+                        val correct = String.format(Locale.US, "%.2f W", pmax)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f W", pmax * 0.8), String.format(Locale.US, "%.2f W", pmax * 1.5), "5.00 W")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Maximum power transfer occurs when R_L = R_th. The power delivered under this condition is P = (V_th)^2 / (4 * R_th) = ($vth)^2 / (4 * $rth) = $correct."
+                        formulaUsed = "P_max = (V_th^2) / (4 * R_th)"
+                        shortcut = "Shortcut: The denominator factor is strictly 4 times the equivalent impedance."
+                        concepts = "Maximum Power Transfer Theorem"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following statements about network theorems under \"$subtopicName\" are correct?"
+                        optionsList = listOf("Superposition is strictly valid for linear bilateral elements.", "Thevenin's equivalent resistance is identical to Norton's equivalent resistance.", "Tellegen's theorem is valid for non-linear, time-varying networks.", "Reciprocity applies to networks with dynamic dependent sources.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Superposition requires linearity, while Thevenin and Norton resistances are identical. Tellegen's theorem relies strictly on KCL and KVL, so it applies to any network regardless of linearity. Reciprocity does not generally apply to circuits with dependent sources."
+                        formulaUsed = "Superposition, Reciprocity boundaries"
+                        shortcut = "Check for linearity and source conditions in theorem applicability."
+                        concepts = "Active Network Theorems"
+                    }
+                    QuestionType.NAT -> {
+                        val vSource = 12.0 + (index % 4) * 2.0
+                        val r1 = 6.0
+                        val r2 = 6.0
+                        val rthCalc = (r1 * r2) / (r1 + r2)
+                        questionText = "Consider a circuit representing \"$subtopicName\" with a voltage source of $vSource V in series with a resistor bridge where the equivalent Thevenin output impedance is looking into a parallel combination of $r1 Ω and $r2 Ω. Calculate the Norton equivalent resistance (in Ω)."
+                        correctRange = (rthCalc - 0.05)..(rthCalc + 0.05)
+                        explanationText = "Norton equivalent resistance is identical to Thevenin resistance: R_N = R_th = ($r1 * $r2) / ($r1 + $r2) = $rthCalc Ω."
+                        formulaUsed = "R_N = R_th"
+                        shortcut = "Since R_th and R_N are identical, calculate the equivalent de-energized resistance directly."
+                        concepts = "Norton Equivalent Resistance"
+                    }
+                }
             }
-            QuestionType.NAT -> {
-                val turnsPrimary = 100 * (1 + rand.nextInt(10)) // 100 to 1000
-                val ratio = 2 + rand.nextInt(9) // step down ratio (2 to 10)
-                val secondaryTurns = turnsPrimary / ratio
-                val inputVoltage = 20 * ratio * (2 + rand.nextInt(5)) // e.g. 240V
-                val outputVoltage = inputVoltage.toDouble() / ratio
-                val roundedAnswer = String.format(Locale.US, "%.1f", outputVoltage).toDouble()
-
-                val qText = """
-                    A power transformer modeling step-down properties in "$subtopicName" has exactly $turnsPrimary turns on the primary winding and $secondaryTurns turns on the secondary winding. 
-                    If the primary side is excited by an RMS AC voltage source of $inputVoltage V, calculate the induced secondary RMS terminal voltage (in Volts).
-                """.trimIndent()
-
-                GateQuestion(
-                    id = qId,
-                    subjectId = subjectId,
-                    topicId = topicId,
-                    subtopicId = subtopicId,
-                    year = year,
-                    questionText = qText,
-                    questionType = type,
-                    options = null,
-                    correctOptions = null,
-                    correctNumericalRange = (roundedAnswer - 0.1)..(roundedAnswer + 0.1),
-                    explanation = "The transformer voltage relation is given by: V_p / V_s = N_p / N_s. In this circuit, the turn ratio is $turnsPrimary / $secondaryTurns = $ratio. Therefore, secondary terminal voltage is V_s = V_p / ratio = $inputVoltage / $ratio = $roundedAnswer V.",
-                    formulasUsed = "V_s = V_p * (N_s / N_p)",
-                    shortcutTricks = "The step-down factor is simply the ratio of turns ($ratio). Divide input voltage by this integer immediately.",
-                    relatedConcepts = "Transformers, Inductive coupling, Step-down machines",
-                    difficulty = difficulty
-                )
+            "nt_ac_resonance" -> {
+                val qfactor = 10.0 + (index % 4) * 5.0
+                val rValue = 2.0 + (index % 3)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "In a series RLC resonant circuit under \"$subtopicName\", the Quality factor is measured to be $qfactor with a resistance of $rValue Ω. Calculate the inductive reactance (in Ω) at resonance."
+                        val xl = qfactor * rValue
+                        val correct = String.format(Locale.US, "%.1f Ω", xl)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f Ω", xl / 2.0), String.format(Locale.US, "%.1f Ω", xl * 1.5), "20.0 Ω")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "The quality factor of a series RLC circuit is defined as Q = X_L / R at resonance. Therefore, inductive reactance is X_L = Q * R = $qfactor * $rValue = $xl Ω."
+                        formulaUsed = "Q = X_L / R"
+                        shortcut = "Multiply Q by R directly to find XL."
+                        concepts = "Series resonance parameters"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding AC circuit resonance in \"$subtopicName\"?"
+                        optionsList = listOf("At series resonance, the circuit impedance is purely resistive and minimum.", "At series resonance, the current is maximum.", "At parallel resonance, the circuit impedance is maximum.", "The power factor at resonance is exactly unit (1.0).")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "At series resonance, Z = R (minimum), current is maximum. At parallel resonance, admittance is minimum, so Z is maximum. Both resonance situations result in a purely real impedance, which implies unity power factor."
+                        formulaUsed = "Resonant impedance properties"
+                        shortcut = "Impedance is minimum for series, maximum for parallel. Both occur at unity power factor."
+                        concepts = "Series vs Parallel AC states"
+                    }
+                    QuestionType.NAT -> {
+                        val lH = 0.1
+                        val cValueU = 10.0 + (index % 4) * 10.0
+                        val cFarad = cValueU * 1e-6
+                        val omegaCalc = 1.0 / Math.sqrt(lH * cFarad)
+                        questionText = "Under \"$subtopicName\", a series RLC AC circuit has an inductance of $lH H and a capacitance of $cValueU μF. Compute the exact undamped resonant peak frequency (in rad/s)."
+                        correctRange = (omegaCalc - 5.0)..(omegaCalc + 5.0)
+                        explanationText = "The angular resonant frequency is ω_0 = 1 / √(L * C) = 1 / √($lH * $cFarad) = $omegaCalc rad/s."
+                        formulaUsed = "ω_0 = 1 / √(L * C)"
+                        shortcut = "Use the inverse root product of inductor and capacitor directly."
+                        concepts = "Resonant frequency tuning"
+                    }
+                }
+            }
+            "nt_trans_response" -> {
+                val valR = 10.0 + (index % 5) * 5.0
+                val valC = 2.0 + (index % 3) * 2.0
+                val tc = valR * valC
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Find the steady-state transient time constant (in milliseconds) for a first-order RC network modeling \"$subtopicName\" where R = $valR kΩ and C = $valC μF."
+                        val correct = String.format(Locale.US, "%.1f ms", tc)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f ms", tc / 2.0), String.format(Locale.US, "%.1f ms", tc * 1.5), "50.0 ms")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "The time constant for an RC circuit is given by τ = R * C. Using R in kΩ and C in μF, the units automatically multiply to milliseconds: τ = $valR * $valC = $tc ms."
+                        formulaUsed = "τ = R * C"
+                        shortcut = "Kilo-ohms times micro-farads immediately yields milliseconds."
+                        concepts = "Transient RC circuits"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Under standard electrical AC transient response regimes in \"$subtopicName\", which of the following assertions are correct?"
+                        optionsList = listOf("The voltage across a capacitor cannot change instantaneously.", "The current through an inductor cannot change instantaneously.", "At t = 0+, a fully discharged capacitor acts as a short circuit.", "At t = ∞ (steady state), a capacitor behaves as an open circuit in a DC network.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "By definition of energy conservation, capacitor voltage and inductor current cannot jump step changes. Upon excitation at t = 0+, a neutral capacitor acts as a short circuit. It transitions to open circuit at infinite steady-state boundaries."
+                        formulaUsed = "Capacitor/Inductor transient states"
+                        shortcut = "Instantly recognize continuity of physical state variables (v_C and i_L)."
+                        concepts = "Time-domain initial conditions"
+                    }
+                    QuestionType.NAT -> {
+                        val inductance = 0.1 + (index % 4) * 0.1
+                        val iVal = 2.0
+                        val energy = 0.5 * inductance * iVal * iVal
+                        questionText = "An RL charging branch under \"$subtopicName\" has an inductance L = $inductance H and a current of $iVal A. Calculate the total magnetic energy (in Joules) stored in the inductor."
+                        correctRange = (energy - 0.01)..(energy + 0.01)
+                        explanationText = "Energy stored in an inductor is W_L = 0.5 * L * I^2 = 0.5 * $inductance * ($iVal)^2 = $energy J."
+                        formulaUsed = "W_L = 0.5 * L * I^2"
+                        shortcut = "Multiply half-inductance by the square of current."
+                        concepts = "Inductor magnetic storage"
+                    }
+                }
+            }
+            "nt_parameters_3phase" -> {
+                val factor = 2.0 + (index % 5)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A symmetrical, reciprocal T-network representing \"$subtopicName\" has impedance parameters Z_11 = ${10.0 * factor} Ω and Z_12 = ${5.0 * factor} Ω. Determine the value of open-loop impedance parameter Z_22."
+                        val z22Val = 10.0 * factor
+                        val correct = String.format(Locale.US, "%.1f Ω", z22Val)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f Ω", 5.0 * factor), String.format(Locale.US, "%.1f Ω", 15.0 * factor), "50.0 Ω")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Since the network is symmetrical, we must have Z_11 = Z_22 by definition. Thus, Z_22 = Z_11 = ${10.0 * factor} Ω."
+                        formulaUsed = "Z_11 = Z_22 (symmetry condition)"
+                        shortcut = "In symmetrical networks, diagonal parameter elements are always equal."
+                        concepts = "Symmetry requirements in two-ports"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following conditions correctly identify reciprocity and symmetry in two-port network parameters?"
+                        optionsList = listOf("Reciprocal: Z12 = Z21", "Symmetrical: Z11 = Z22", "Reciprocal: AD - BC = 1", "Symmetrical: A = D")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "Reciprocity is defined by Z12=Z21, Y12=Y21, and (AD-BC)=1. Symmetry is defined by Z11=Z22, Y11=Y22, and A=D."
+                        formulaUsed = "Two-port parameters matrices conditions"
+                        shortcut = "Memorize symmetry: A=D, Z11=Z22. Reciprocity: AD-BC=1, Z12=Z21."
+                        concepts = "Network reciprocity matrix properties"
+                    }
+                    QuestionType.NAT -> {
+                        val phaseVoltage = 230.0
+                        val resPhase = 10.0 + (index % 5) * 5.0
+                        val activePower = 3.0 * (phaseVoltage * phaseVoltage) / resPhase
+                        questionText = "A balanced three-phase delta-connected pure resistive load is excited by a line voltage of $phaseVoltage V under \"$subtopicName\". If each phase has a resistance of $resPhase Ω, calculate the total active power load (in Watts) absorbed by the circuit."
+                        correctRange = (activePower - 50.0)..(activePower + 50.0)
+                        explanationText = "For delta configuration, phase voltage equals line voltage = $phaseVoltage V. Power per phase = V_phase^2 / R = ($phaseVoltage)^2 / $resPhase = ${phaseVoltage * phaseVoltage / resPhase} W. Total balanced active power = 3 * P_phase = 3 * ${phaseVoltage * phaseVoltage / resPhase} = $activePower W."
+                        formulaUsed = "P_total = 3 * (V_line^2) / R"
+                        shortcut = "For delta connected loads, scale individual power phases by factor 3."
+                        concepts = "3phase power configurations"
+                    }
+                }
+            }
+            "sig_lti_convolution" -> {
+                val scale = 1.0 + (index % 5)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A continuous-time signal enters an LTI system under \"$subtopicName\" with input x(t) = $scale · u(t) and impulse response h(t) = e^{-t} u(t). Evaluate the output y(t) as t approaches infinity."
+                        val correct = String.format(Locale.US, "%.1f u(t)", scale)
+                        val incorrects = listOf("0.0 u(t)", "Infinity", String.format(Locale.US, "%.1f t", scale))
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "The transfer function is H(s) = 1/(s+1). Using final value theorem or direct integration, y(∞) is the steady-state gain times input scaling: scale * H(0) = $scale * 1.0 = $scale."
+                        formulaUsed = "y(∞) = x_0 * H(0)"
+                        shortcut = "Steady-state value is input scale factor times DC response gain."
+                        concepts = "Step responses of first order models"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following properties are correct regarding Linear Time-Invariant (LTI) systems under \"$subtopicName\"?"
+                        optionsList = listOf("An LTI system is Stable if its impulse response is absolutely integrable.", "An LTI system is Causal if its impulse response is zero for all t < 0.", "The convolution of any signal with a unit impulse δ(t) yields the signal itself.", "All LTI systems must be completely memoryless.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "BIBO stability requires absolute integrability of impulse h(t) (Option A). Causality requires h(t) = 0 for t < 0 (Option B). Unit impulse is the identity element under convolution (Option C). LTI systems can possess memory."
+                        formulaUsed = "LTI system principles"
+                        shortcut = "Impulse response completely characterizes the causal and stability states."
+                        concepts = "Causality and stability criteria"
+                    }
+                    QuestionType.NAT -> {
+                        val inputAmp = 2.0 + (index % 4)
+                        val result = inputAmp * 5.0
+                        questionText = "An LTI integration block under \"$subtopicName\" convolves an input x(t) = $inputAmp · δ(t - 3) with an impulse response h(t) = 5 · δ(t - 2). Compute the amplitude multiplier of the resulting output impulse."
+                        correctRange = (result - 0.01)..(result + 0.01)
+                        explanationText = "Convolution of scaled impulses: a·δ(t-t1) * b·δ(t-t2) = (a*b)·δ(t - (t1+t2)). Here multiplier is $inputAmp * 5 = $result."
+                        formulaUsed = "a·δ(t-t1) * b·δ(t-t2) = a*b·δ(t-t1-t2)"
+                        shortcut = "Multiply the impulse coefficient factors directly."
+                        concepts = "Shift operations in impulse convolution"
+                    }
+                }
+            }
+            "sig_sampling_rate" -> {
+                val fhz = 100.0 + (index % 5) * 50
+                val fNyqVal = 2.0 * fhz
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A continuous-time AC communication terminal representing \"$subtopicName\" transmits x(t) = cos(2π · $fhz · t). Determine the minimum Nyquist sampling rate (in Hz) to safely digitize this signal."
+                        val correct = String.format(Locale.US, "%.1f Hz", fNyqVal)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f Hz", fhz), String.format(Locale.US, "%.1f Hz", fNyqVal * 1.5), "50.0 Hz")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "According to the Nyquist theorem, perfect recovery requires sampling at a rate strictly greater than or equal to twice the maximum frequency component. f_nyquist = 2 * f_max = 2 * $fhz = $fNyqVal Hz."
+                        formulaUsed = "f_s >= 2 * f_max"
+                        shortcut = "Double the highest operating signal frequency instantly."
+                        concepts = "Shannon sampling theorems"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding Signal Transforms and Sampling inside \"$subtopicName\"?"
+                        optionsList = listOf("Aliasing occurs if the sampling frequency is strictly less than the Nyquist rate.", "The Fourier Transform of an even real signal is always purely real.", "The Laplace transform ROC must not contain any poles.", "Increasing sampling rate always shifts the analytical frequency spectra down.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Violation of Nyquist rate results in aliasing (Option A). Symmetry of Fourier transform ensures real even signals yield real transforms (Option B). By definition, the Region of Convergence (ROC) cannot contain poles (Option C). Increasing the sampling rates does not shift base frequency states."
+                        formulaUsed = "Nyquist criterion, Fourier properties"
+                        shortcut = "Remember that mathematical poles exist where infinite limits of parameters break bounds."
+                        concepts = "Laplace ROC and poles boundaries"
+                    }
+                    QuestionType.NAT -> {
+                        val constantVal = 2.0 + (index % 5)
+                        questionText = "Determine the value of the unilateral Laplace Transform of x(t) = e^{-$constantVal t} u(t) evaluated at s = 0 under \"$subtopicName\" calculations."
+                        val resLap = 1.0 / constantVal
+                        correctRange = (resLap - 0.01)..(resLap + 0.01)
+                        explanationText = "The Laplace transform is X(s) = 1 / (s + $constantVal). Evaluating this at s = 0: X(0) = 1 / $constantVal = $resLap."
+                        formulaUsed = "L{e^{-at}} = 1/(s+a)"
+                        shortcut = "Inverse of exponential decay constant factor is equivalent to DC Laplace gain."
+                        concepts = "One-sided Laplace transforms"
+                    }
+                }
+            }
+            "em_trans_equiv" -> {
+                val turnRatio = 2.0 + (index % 5)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "An ideal transformer representing \"$subtopicName\" has an armature winding with $turnRatio:1 step-down turn ratio. If 240 V is excited on the primary winding, calculate the induced secondary RMS voltage (in Volts)."
+                        val secVolts = 240.0 / turnRatio
+                        val correct = String.format(Locale.US, "%.1f V", secVolts)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f V", 240.0 * turnRatio), "120.0 V", "24.0 V")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "For ideal transform configurations: V_p / V_s = N_p / N_s = turn_ratio. V_s = V_p / turn_ratio = 240.0 / $turnRatio = $secVolts V."
+                        formulaUsed = "V_s = V_p / N_ratio"
+                        shortcut = "Divide input voltage by specified transfer turns ratio directly."
+                        concepts = "Ideal winding equations"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding transformers modeling in \"$subtopicName\"?"
+                        optionsList = listOf("Transformer efficiency is maximum at a load where core loss equals copper loss.", "Eddie current losses are minimized by using thin insulated laminations.", "Open circuit test is conducted to determine core/iron losses.", "Short circuit test is generally conducted with low voltage on high-voltage winding.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All listed properties represent classical transformer engineering models. Efficiency peak occurs under copper-loss to iron-loss balance. Laminations interrupt eddy current circulation paths. OC test yields core loss, SC test yields copper parameters on convenient sides."
+                        formulaUsed = "Transformer losses criteria"
+                        shortcut = "Equate core losses with armature copper losses for maximum energy transfer efficiency."
+                        concepts = "Losses profiles and testing configurations"
+                    }
+                    QuestionType.NAT -> {
+                        val plc = 100.0 + (index % 3) * 50.0
+                        questionText = "A single-phase distribution transformer modeling \"$subtopicName\" has core/iron losses of $plc W. Calculate the copper loss (in Watts) when the transformer is operating under conditions of maximum efficiency."
+                        correctRange = (plc - 0.1)..(plc + 0.1)
+                        explanationText = "By classical machines theorem, standard maximum efficiency occurs when variable copper loss equals the constant iron loss. Hence maximum efficiency copper loss is identical to core losses = $plc W."
+                        formulaUsed = "P_cu = P_core at η_max"
+                        shortcut = "Equate loss variables instantly."
+                        concepts = "Efficiency optimization rules"
+                    }
+                }
+            }
+            "em_dc_motors" -> {
+                val vt = 220.0
+                val ia = 10.0 + (index % 5) * 5.0
+                val ra = 0.5
+                val backEmf = vt - ia * ra
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A DC shunt motor operating under \"$subtopicName\" is connected across a $vt V supply. If the armature current is $ia A and armature resistance is $ra Ω, calculate the induced back EMF (in Volts)."
+                        val correct = String.format(Locale.US, "%.1f V", backEmf)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f V", vt + ia * ra), "200.0 V", "240.0 V")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "The back EMF of a DC motor is given by E_b = V_t - I_a * R_a = $vt - $ia * $ra = $backEmf V."
+                        formulaUsed = "E_b = V_t - I_a * R_a"
+                        shortcut = "Subtract the armature resistive voltage drop from supply voltage."
+                        concepts = "Armature back EMF loops"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding DC machines under \"$subtopicName\"?"
+                        optionsList = listOf("In a DC shunt motor, speed is relatively constant with load variations.", "A DC series motor must never be started at no load.", "The commutator in a DC machine converts internal AC voltage to external DC terminals.", "Under motor conditions, the developed back EMF is always larger than terminal voltage.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Shunt motor fields are constant, yielding stable speed (Option A). At no-load, series torque vanishes, sending speed dangerously high to limit values (Option B). Commutator functions as mechanical rectifier (Option C). Back EMF in motor is always smaller than terminal voltage because of inner voltage drops."
+                        formulaUsed = "DC Machines torque-speed curves"
+                        shortcut = "No-load running of series motors causes exponential speed runaways."
+                        concepts = "Motoring and commutation models"
+                    }
+                    QuestionType.NAT -> {
+                        val torqueFactor = 1.5 + (index % 4) * 0.5
+                        val armatureI = 20.0
+                        val electromagnetTorque = torqueFactor * armatureI
+                        questionText = "A DC motor modeling \"$subtopicName\" has an armature constant of $torqueFactor N-m/A. If the armature current draws exactly $armatureI A, calculate the developed electromagnetic torque (in N-m)."
+                        correctRange = (electromagnetTorque - 0.05)..(electromagnetTorque + 0.05)
+                        explanationText = "Armature torque is T_e = K_a_phi * I_a = $torqueFactor * $armatureI = $electromagnetTorque N-m."
+                        formulaUsed = "T_e = K_t * I_a"
+                        shortcut = "Multiply torque constant by armature current."
+                        concepts = "DC machine torque generation"
+                    }
+                }
+            }
+            "em_ac_rotary" -> {
+                val poles = 4 + (index % 3) * 2 // 4, 6, 8 poles
+                val freq = 50.0
+                val ns = (120 * freq) / poles
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Compute the synchronous speed (in rpm) of a $poles-pole AC induction motor operating on a $freq Hz system under \"$subtopicName\"."
+                        val correct = String.format(Locale.US, "%d rpm", ns.toInt())
+                        val incorrects = listOf(String.format(Locale.US, "%d rpm", (ns * 0.9).toInt()), String.format(Locale.US, "%d rpm", (ns + 300).toInt()), "1000 rpm")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Synchronous speed is defined by N_s = 120 * f / P = 120 * $freq / $poles = $ns rpm."
+                        formulaUsed = "N_s = 120 * f / P"
+                        shortcut = "Use 120 * freq / poles directly to find AC rotor speed fields."
+                        concepts = "AC rotating synchronous speed"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding AC rotating machines under \"$subtopicName\"?"
+                        optionsList = listOf("At starting, the slip of an induction motor is exactly 1.0.", "The rotor speed of a three-phase induction motor is always slightly less than the synchronous speed.", "Insering resistance into the rotor circuit of a slip-ring motor increases starting torque.", "A synchronous motor is self-starting under standard AC excitation.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Starting implies N_r = 0, so slip s = (N_s - 0)/N_s = 1.0. If N_r reaches N_s, torque is zero, so induction motors must operate with minor slip. Rotor resistance is classical starting torque extension method. Symmetrical synchronous motors require dampers to start."
+                        formulaUsed = "Induction motor slip mechanics"
+                        shortcut = "Synchronous motors are never self-starting without secondary helper field devices."
+                        concepts = "Slip dynamics and torque vectors"
+                    }
+                    QuestionType.NAT -> {
+                        val motorSlip = 0.04 + (index % 3) * 0.02
+                        val rotorFreq = motorSlip * freq
+                        questionText = "A three-phase 50 Hz induction machine under \"$subtopicName\" operates with a rotor slip of $motorSlip. Compute the rotor induced current frequency (in Hz)."
+                        correctRange = (rotorFreq - 0.01)..(rotorFreq + 0.01)
+                        explanationText = "The rotor currency frequency is f_r = s * f = $motorSlip * $freq = $rotorFreq Hz."
+                        formulaUsed = "f_r = s * f"
+                        shortcut = "Multiply slip coefficient by the system grid frequency."
+                        concepts = "Rotor slip frequencies"
+                    }
+                }
+            }
+            "em_special_steppers" -> {
+                val steps = 100.0 + (index % 5) * 50.0
+                val sa = 360.0 / steps
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A special stepper motor representing \"$subtopicName\" is designed for $steps steps per revolution. Determine its step angle resolution (in degrees)."
+                        val correct = String.format(Locale.US, "%.2f°", sa)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f°", sa * 2.0), String.format(Locale.US, "%.2f°", sa / 2.0), "1.80°")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Step angle is given by step_angle = 360° / total_steps = 360 / $steps = $sa°."
+                        formulaUsed = "Step Angle = 360° / N_steps"
+                        shortcut = "Divide 360 by total steps in one full revolution."
+                        concepts = "Stepper incremental angular strides"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following statements about special stepper and PM brushless motors are correct under \"$subtopicName\"?"
+                        optionsList = listOf("Stepper motors are typically operated in open-loop position control mode.", "Variable reluctance stepper motors do not use any permanent magnets.", "An eddy-current brushless system undergoes periodic mechanical brush wear.", "Microstepping simplifies torque control by reducing stepping bounds.")
+                        correctOptionsList = listOf(0, 1)
+                        explanationText = "Steppers run in open-loop without encoder feedback (Option A). VR steppers have simple iron teeth rotors, no PMs (Option B). Brushless motors utilize solid-state commutation, avoiding brush wear entirely. Microstepping divides current vectors for high angular resolution, not purely torque bounds."
+                        formulaUsed = "Stepper motor classifications"
+                        shortcut = "VR refers to 'Variable Reluctance' showing lack of PM presence."
+                        concepts = "Microstep resolution properties"
+                    }
+                    QuestionType.NAT -> {
+                        val revs = 2.0 + (index % 4)
+                        val totalSteps = revs * steps
+                        questionText = "Find the total number of pulse inputs required to rotate a $steps steps/revolution stepper motor by exactly $revs full revolutions under \"$subtopicName\" systems."
+                        correctRange = (totalSteps - 0.1)..(totalSteps + 0.1)
+                        explanationText = "Total steps required is given by target_steps = revolutions * steps_per_revolution = $revs * $steps = $totalSteps."
+                        formulaUsed = "Total Pulse Steps = Revs * Step_Resolution"
+                        shortcut = "Multiply revolution count directly by the steps profile resolution factor."
+                        concepts = "Discrete stepper positioning pulses"
+                    }
+                }
+            }
+            "ps_econ_dispatch" -> {
+                val base = 10 + (index % 5) * 5
+                val icCostVal = 2.0 * base
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Two generating units scheduling fuel margins under \"$subtopicName\" operate with equal incremental costs dC/dP = $base + 0.5 P (in Rs/MWh). If a unit delivers P_1 = 20 MW, determine the incremental cost (in Rs/MWh)."
+                        val price = base + 0.5 * 20.0
+                        val correct = String.format(Locale.US, "%.1f Rs/MWh", price)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f Rs/MWh", price - 5.0), String.format(Locale.US, "%.1f Rs/MWh", price * 1.2), "50.0 Rs/MWh")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Incremental fuel cost at P_1 = 20 MW is dC/dP_1 = $base + 0.5 * (20.0) = $price Rs/MWh."
+                        formulaUsed = "Incr_Cost = a + b * P"
+                        shortcut = "Substitute the power output directly into the incremental cost function."
+                        concepts = "Economic load scheduling dispatch"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding economic power generation and dispatch under \"$subtopicName\"?"
+                        optionsList = listOf("Optimal scheduling requires all active plant increments to operate at identical incremental fuel costs.", "Transmission line active losses are completely neglected in absolute equal-increment models.", "The penalty factor of a plant depends on its electrical transmission line losses.", "Spinning reserve allows instant load pickup without generator start transitions.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "Economic load dispatch requires equal incremental cost coordination (Option A). Simple equal-increment models ignore line losses (Option B). Penalty factors explicitly scale unit cost lines by transmission derivatives (Option C). Spinning reserves keep turbines hot for immediate load picks."
+                        formulaUsed = "Economic dispatch coordination equations"
+                        shortcut = "Equal incremental costs criteria represents maximum optimization."
+                        concepts = "Economic dispatch with transmission losses"
+                    }
+                    QuestionType.NAT -> {
+                        val pGen = 50.0 + (index % 5) * 10
+                        val pf = 1.0 + (index % 3) * 0.1
+                        val effIncrCost = 25.0
+                        val trueCost = effIncrCost / pf
+                        questionText = "A power plant operating under \"$subtopicName\" has a penalty factor of $pf at a generation of $pGen MW. If its coordinates require an effective incremental cost of $effIncrCost Rs/MWh, find the unit internal incremental cost (in Rs/MWh)."
+                        correctRange = (trueCost - 0.2)..(trueCost + 0.2)
+                        explanationText = "The coordinated dispatch relation is dC_i / dP_i * L_i = effective_cost, where L_i is the penalty factor. Thus internal cost dC_i / dP_i = effective_cost / L_i = $effIncrCost / $pf = $trueCost Rs/MWh."
+                        formulaUsed = "dC/dP = Effective_Cost / Penalty_Factor"
+                        shortcut = "Divide the system-wide price by the local penalty factor."
+                        concepts = "Penalty factors and transmission loss dispatch"
+                    }
+                }
+            }
+            "ps_trans_lines" -> {
+                val valueL = 1.0e-3
+                val valueC = (10.0 + (index % 5) * 5.0) * 1e-9
+                val zc = Math.sqrt(valueL / valueC)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Compute the characteristic surge impedance (in Ω) of a lossless transmission line modeling \"$subtopicName\" where parameters are L = 1.0 mH/km and C = ${10.0 + (index % 5) * 5.0} nF/km."
+                        val correct = String.format(Locale.US, "%.1f Ω", zc)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f Ω", zc * 1.5), String.format(Locale.US, "%.1f Ω", zc * 0.7), "400.0 Ω")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Surge impedance of a lossless transmission line is Z_c = √(L / C). For L = $valueL H and C = $valueC F, Z_c = √($valueL / $valueC) = $zc Ω."
+                        formulaUsed = "Z_c = √(L / C)"
+                        shortcut = "Substitute inductances and capacitances directly under the square root."
+                        concepts = "Lossless transmission line parameters"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding transmission line behaviors in \"$subtopicName\"?"
+                        optionsList = listOf("The Ferranti effect refers to voltage rises at the receiving end of lightly loaded lines.", "Surge impedance loading is completely independent of the transmission line length.", "ABCD parameters easily represent cascade groups of transmission spans directly.", "Series compensation capacitors are mainly used to decrease the overall line reactance.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "Lighthly loaded or open-circuit lines cause capacitive currents which boost receiving voltage above feed voltage (Ferranti). Z_c is purely based on L and C rates per length. Cascade sections correspond to simple ABCD matrix products. Series capacitors cancel reactive impedance to drop reactance bounds."
+                        formulaUsed = "Transmission line propagation parameters"
+                        shortcut = "Surge impedance is length-invariant. Standard series compensation cancels inductance reactance."
+                        concepts = "Transient line modeling, surge loads, corona effects"
+                    }
+                    QuestionType.NAT -> {
+                        val length = 100.0 + (index % 5) * 50
+                        val resistancePerKm = 0.1
+                        val totalSeriesR = length * resistancePerKm
+                        questionText = "A standard $length km transmission line under \"$subtopicName\" has a series loop resistance of $resistancePerKm Ω/km. Calculate the total series line resistance (in Ω) representing loop losses."
+                        correctRange = (totalSeriesR - 0.1)..(totalSeriesR + 0.1)
+                        explanationText = "Total series resistance is given by R_total = R_per_km * length = $resistancePerKm * $length = $totalSeriesR Ω."
+                        formulaUsed = "R_total = R_per_km * Line_Length"
+                        shortcut = "Multiply resistance per unit length directly by total line span."
+                        concepts = "Line parameter aggregation"
+                    }
+                }
+            }
+            "ps_flow_faults" -> {
+                val vBase = 11.0
+                val mvaBase = 100.0 + (index % 5) * 10.0
+                val impedancePu = 0.1
+                val shortCircuitCap = mvaBase / impedancePu
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Compute the short-circuit capacity (in MVA) of a power system bus representing \"$subtopicName\" where system base is $mvaBase MVA and equivalent per-unit impedance looking back is $impedancePu pu."
+                        val correct = String.format(Locale.US, "%.1f MVA", shortCircuitCap)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f MVA", shortCircuitCap * 0.1), String.format(Locale.US, "%.1f MVA", shortCircuitCap * 1.5), "500.0 MVA")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Short circuit capacity is given by S_sc = MVA_base / Z_pu = $mvaBase / $impedancePu = $shortCircuitCap MVA."
+                        formulaUsed = "S_sc = MVA_base / Z_pu"
+                        shortcut = "Divide the MVA base value directly by the per-unit impedance factor."
+                        concepts = "Short-circuit fault analysis"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following conditions represent symmetrical components classifications in \"$subtopicName\"?"
+                        optionsList = listOf("Positive sequence components always have the identical phase sequence as original phasors.", "Negative sequence components have phase sequences opposite to positive sequence.", "Zero sequence components are equal in magnitude and strictly in phase with each other.", "Symmetrical three-phase faults strictly involve zero-sequence current flow.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Self-contained positive components maintain source rotation (Option A). Negative components switch rotation sequence (Option B). Zero components represent co-phasal vectors (Option C). Balanced Symmetrical 3-phase faults don't have earth paths, meaning zero sequence current is strictly zero."
+                        formulaUsed = "Symmetrical components transformations"
+                        shortcut = "Symmetrical faults never possess any zero sequence currents."
+                        concepts = "Sequence network components"
+                    }
+                    QuestionType.NAT -> {
+                        val baseVal = 100.0
+                        val kvLine = 10.0 + (index % 4) * 10
+                        val systemBaseZ = (kvLine * kvLine) / baseVal
+                        questionText = "A power system grid under \"$subtopicName\" operates with a system base of $baseVal MVA and a line voltage of $kvLine kV. Calculate the baseline characteristic base impedance (in Ω)."
+                        correctRange = (systemBaseZ - 0.1)..(systemBaseZ + 0.1)
+                        explanationText = "Base impedance is given by Z_base = (kV_line)^2 / MVA_base = ($kvLine)^2 / $baseVal = $systemBaseZ Ω."
+                        formulaUsed = "Z_base = kV^2 / MVA"
+                        shortcut = "Square the voltage base value, then divide directly by the power base."
+                        concepts = "Per-unit system constants"
+                    }
+                }
+            }
+            "ps_prot_stability" -> {
+                val faultX = 0.1 + (index % 4) * 0.1
+                val maxLimit = 1.0 / faultX
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A power swing bus representing \"$subtopicName\" has terminal voltages V_1 = 1.0 pu and V_2 = 1.0 pu separated by an impedance reactanc of X = $faultX pu. Calculate the maximum steady-state power transfer capability (in pu)."
+                        val correct = String.format(Locale.US, "%.2f pu", maxLimit)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f pu", maxLimit * 0.8), "1.00 pu", "5.00 pu")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Maximum power transfer in steady-state stability is calculated by P_max = (V_1 * V_2) / X = (1.0 * 1.0) / $faultX = $maxLimit pu."
+                        formulaUsed = "P_max = (V_1 * V_2) / X"
+                        shortcut = "Under unity voltages, maximum power is simply the reciprocal of path reactance."
+                        concepts = "Steady-state stability criteria"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding systems protection schemes and relays in \"$subtopicName\"?"
+                        optionsList = listOf("Distance protection schemes are commonly applied on high voltage transmission lines.", "Differential relays are typically utilized to protect generators and transformers against winding faults.", "An overcurrent relay acts on thresholds exceeding specific charging amperes.", "Reactance distance relays are completely immune to arc resistance variations.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "Distance schemes assess impedance indices (Option A). Differential schemes match current entries and exits, signaling internal failures instantly (Option B). Overcurrent systems evaluate fault current surges (Option C). Reactance-based distance units operate on the reactive component of line impedance, rendering them immune to arcing resistance."
+                        formulaUsed = "Relay operating parameters constraints"
+                        shortcut = "Reactance relays measure imaginary impedance components, thereby ignoring pure real arcing resistance."
+                        concepts = "Relaying protection models"
+                    }
+                    QuestionType.NAT -> {
+                        val synchInertia = 4.0 + (index % 4)
+                        val kineticEnergy = 0.5 * synchInertia * 1.0
+                        questionText = "A synchronous turbine under \"$subtopicName\" has an inertia rating of H = $synchInertia MJ/MVA on a base of 1.0 MVA. Compute the total kinetic energy storage (in Megajoules) at synchronous speed."
+                        correctRange = (synchInertia - 0.05)..(synchInertia + 0.05)
+                        explanationText = "Kinetic energy stored at synchronous speed is E_k = H * S_base = $synchInertia * 1.0 = $synchInertia MJ."
+                        formulaUsed = "E_k = H * S_base"
+                        shortcut = "Kinetic storage matches H-constant on unit MVA bases."
+                        concepts = "Inertia characteristics of generators"
+                    }
+                }
+            }
+            "pe_device_char" -> {
+                val triggerI = 20.0 + (index % 5) * 5.0
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Under \"$subtopicName\", the holding current of a specific power SCR is measured to be $triggerI mA. Which of the following values represents the most realistic latching current for this device?"
+                        val latchI = triggerI * 2.5
+                        val correct = String.format(Locale.US, "%.1f mA", latchI)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f mA", triggerI * 0.5), String.format(Locale.US, "%.1f mA", triggerI), "5000.0 mA")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "For any practical silicon controlled rectifier (SCR), the latching current (trigger status retention threshold) is typically 2 to 3 times larger than the holding current (conduction retention threshold). A factor of 2.5 gives $triggerI * 2.5 = $latchI mA."
+                        formulaUsed = "I_latching ≈ 2.5 * I_holding"
+                        shortcut = "Multiply holding current by approximately 2.5 to find latching current."
+                        concepts = "Thyristor triggering thresholds"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding power electronic device parameters in \"$subtopicName\"?"
+                        optionsList = listOf("The holding current is the minimum anode current required to maintain thyristor conduction.", "Snubber circuits are mainly used to protect thyristors against high dv/dt transients.", "A series inductor protects thyristors against high di/dt surges.", "The gate trigger current represents the threshold to toggle the SCR to conduction.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All statements represent fundamental characteristics of power semiconductor switches. Holding current keeps SCR active (Option A). RC snubber networks limit high dv/dt voltage transients across terminals (Option B). Series inductors filter fast current surges (di/dt) (Option C). Gate excitation initiates conduction (Option D)."
+                        formulaUsed = "Power semiconductor gate-anode structures"
+                        shortcut = "Shorthand: snubber protects dv/dt; series inductor protects di/dt."
+                        concepts = "Power switch ratings and protective networks"
+                    }
+                    QuestionType.NAT -> {
+                        val loopCurrent = 10.0 + (index % 5) * 2.5
+                        val fVoltsDrop = 1.4
+                        val switchWatts = loopCurrent * fVoltsDrop
+                        questionText = "A power diode operating in steady-state conduction under \"$subtopicName\" carries a continuous DC current of $loopCurrent A with a forward voltage drop of $fVoltsDrop V. Compute the resulting switch conduction losses (in Watts)."
+                        correctRange = (switchWatts - 0.1)..(switchWatts + 0.1)
+                        explanationText = "The power loss under continuous conduction is P = I_F * V_F = $loopCurrent * $fVoltsDrop = $switchWatts W."
+                        formulaUsed = "P_loss = I * V_f"
+                        shortcut = "Directly multiply terminal current by forward junction voltage drop."
+                        concepts = "Conduction losses of switches"
+                    }
+                }
+            }
+            "pe_conv_buck_boost" -> {
+                val inputV = 24.0
+                val duty = 0.25 + (index % 5) * 0.1
+                val outputV = inputV * duty
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A standard Buck (step-down) DC-DC converter modeling \"$subtopicName\" is excited by an input voltage of $inputV V. If the duty cycle is $duty under continuous conduction mode, calculate the average output voltage (in Volts)."
+                        val correct = String.format(Locale.US, "%.2f V", outputV)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f V", inputV / duty), String.format(Locale.US, "%.2f V", inputV * (1.0 - duty)), "12.00 V")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "For a Buck converter operating in CCM, output voltage is V_o = D * V_in, where D is the duty cycle. V_o = $duty * $inputV = $outputV V."
+                        formulaUsed = "V_o = D * V_in"
+                        shortcut = "For Buck converters, multiply input voltage directly by duty cycle."
+                        concepts = "Step-down converter dynamics"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding DC-DC converter models in \"$subtopicName\"?"
+                        optionsList = listOf("A Buck converter acts exclusively as a step-down voltage system.", "A Boost converter acts exclusively as a step-up voltage system.", "A Buck-Boost converter can either step up or step down voltage based on duty cycle.", "In continuous conduction mode, the inductor current never reaches zero.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All listed statements represent correct fundamental principles. Buck converter output is V_in*D (always <= V_in). Boost output is V_in/(1-D) (always >= V_in). Buck-Boost is V_in*D/(1-D), which can scale below or above input thresholds. CCM requires inductance current to stay positive."
+                        formulaUsed = "DC-DC transfer equations"
+                        shortcut = "CCM refers to 'Continuous Conduction Mode' meaning uninterrupted energy flow in inductor."
+                        concepts = "Converter modes and topologies"
+                    }
+                    QuestionType.NAT -> {
+                        val vinB = 12.0
+                        val dB = 0.4 + (index % 3) * 0.1
+                        val voB = vinB / (1.0 - dB)
+                        questionText = "A standard Boost converter under \"$subtopicName\" is energized by an input voltage of $vinB V. If the duty cycle is set to $dB, calculate the ideal output voltage (in Volts) in CCM."
+                        correctRange = (voB - 0.1)..(voB + 0.1)
+                        explanationText = "For an ideal Boost converter, V_o = V_in / (1 - D) = $vinB / (1.0 - $dB) = $voB V."
+                        formulaUsed = "V_o = V_in / (1 - D)"
+                        shortcut = "Divide the input voltage by the complement of the duty cycle."
+                        concepts = "Step-up converter voltage relations"
+                    }
+                }
+            }
+            "pe_drives_char" -> {
+                val factor = 1.0 + (index % 5)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A converter-fed DC motor drive under \"$subtopicName\" is operated with armature voltage control. If the motor is running at a constant torque and speed is scaled by a factor of $factor, determine feed voltage scaling."
+                        val correct = String.format(Locale.US, "Linear scale: %.1f times", factor)
+                        val incorrects = listOf("Square scale", "Logarithmic scale", "Highly irregular non-linear")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "In armature-controlled DC motors, the speed is proportional to back EMF: E_b = K · ω. If torque is constant, the drop I_a * R_a is constant, making terminal voltage V scale linearly with speed variations: V ≈ K · ω."
+                        formulaUsed = "ω ∝ (V_t - I_a * R_a)"
+                        shortcut = "In the constant-torque armature speed control zone, speed is linear with voltage."
+                        concepts = "Armature speed-torque regimes"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding chopper and rectifier drives in \"$subtopicName\"?"
+                        optionsList = listOf("A Class A chopper operates in the first quadrant, providing motoring action.", "Regenerative braking in DC motor drives requires feeding energy back to the source.", "Symmetrical dual controllers allow full four-quadrant speed and torque controls.", "AC variable frequency drives (VFDs) typically adjust synchronous speed via input frequency.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All statements are correct. Motoring requires positive voltage and voltage flows. Regenerative braking loops convert kinetic deceleration to electrical grid feedback. Dual antiparallel converter configurations cover full reversible current and voltage planes (four quadrant). VFD synchronous speed scales directly with freq."
+                        formulaUsed = "Four quadrant drive models"
+                        shortcut = "Multi-quadrant operations require bilateral control of both current (torque) and voltage (speed) polarities."
+                        concepts = "Quadrants profiles and controls"
+                    }
+                    QuestionType.NAT -> {
+                        val baseE = 100.0 + (index % 5) * 20.0
+                        val multi = 1.5
+                        val targetE = baseE * multi
+                        questionText = "A DC motor drive under \"$subtopicName\" develops a back EMF of $baseE V at 1000 rpm. Calculate the back EMF (in Volts) if speed is increased to 1500 rpm with a constant magnetic flux."
+                        correctRange = (targetE - 0.2)..(targetE + 0.2)
+                        explanationText = "Back EMF is directly proportional to speed under constant magnetic flux conditions: E_b_2 = E_b_1 * (N2 / N1) = $baseE * (1500 / 1000) = $baseE * 1.5 = $targetE V."
+                        formulaUsed = "E_b ∝ Speed (N)"
+                        shortcut = "Scale basic back EMF directly by speed ratio factor (1.5)."
+                        concepts = "Motor speed projection constants"
+                    }
+                }
+            }
+            "ae_dio_bias" -> {
+                val inputDc = 5.0 + (index % 5)
+                val dioDrop = 0.7
+                val resultCurrent = (inputDc - dioDrop) / 1.0
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A silicon diode biasing circuit representing \"$subtopicName\" connects a DC source of $inputDc V in series with the forward-biased diode and a 1.0 kΩ resistor. Calculate the loop current (in mA)."
+                        val correct = String.format(Locale.US, "%.2f mA", resultCurrent)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f mA", inputDc), String.format(Locale.US, "%.2f mA", (inputDc + dioDrop) / 1.0), "0.00 mA")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Active forward-biased silicon diodes have a nominal junction drop of 0.7 V. Applying KVL, the voltage across the series resistor is V_R = V_in - V_D = $inputDc - 0.7 = ${inputDc - dioDrop} V. Current I = V_R / R = ${inputDc - dioDrop} V / 1.0 kΩ = $resultCurrent mA."
+                        formulaUsed = "I = (V_in - V_D) / R"
+                        shortcut = "Subtract 0.7 V from source voltage first before dividing by resistance."
+                        concepts = "Diode forward bias voltage drops"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding diode circuit applications in \"$subtopicName\"?"
+                        optionsList = listOf("Diode clipping circuits are typically used to limit signal amplitudes from crossing thresholds.", "Clamping circuits alter the DC level of an AC waveform without changing its shape.", "A Zener diode acts as a constant voltage regulator in its reverse breakdown region.", "An ideal diode has zero impedance when forward biased and infinite impedance when reverse biased.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All listed statements represent correct fundamental diode application principles under Material Design scopes. Clippers restrict peaks, clampers introduce DC bias level offsets, Zeners regulate via stable breakdown levels, and ideal switches are zero/infinite resistive."
+                        formulaUsed = "Diode applications and characteristics"
+                        shortcut = "Identify Zener properties: constant voltage regulation strictly in reverse breakdown configurations."
+                        concepts = "Voltage clamping and clipper configurations"
+                    }
+                    QuestionType.NAT -> {
+                        val vzValue = 5.0 + (index % 4) * 0.5
+                        questionText = "A Zener diode voltage regulator circuit under \"$subtopicName\" employs a Zener diode with a breakdown rating of $vzValue V. If the reverse bias input voltage is 10 V, calculate the regulated output load voltage (in Volts)."
+                        correctRange = (vzValue - 0.01)..(vzValue + 0.01)
+                        explanationText = "In reverse breakdown, the Zener diode maintains a constant voltage equal to its breakdown rating across its terminals. The output voltage is regulated to exactly $vzValue V."
+                        formulaUsed = "V_out = V_Z"
+                        shortcut = "Regulated output is identically equal to the Zener breakdown rating."
+                        concepts = "Zener reverse breakdown regulation"
+                    }
+                }
+            }
+            "ae_amp_feedback" -> {
+                val openGain = 200.0
+                val fbRatio = 0.01 + (index % 5) * 0.01
+                val closedGain = openGain / (1.0 + openGain * fbRatio)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Evaluate the closed-loop voltage gain of a negative feedback amplifier representing \"$subtopicName\" where open-loop gain A = $openGain and feedback factor β = $fbRatio."
+                        val correct = String.format(Locale.US, "%.2f", closedGain)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f", openGain * fbRatio), "1.00", "50.00")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Closed-loop voltage gain is A_f = A / (1 + A * β) = $openGain / (1 + $openGain * $fbRatio) = $closedGain."
+                        formulaUsed = "A_f = A / (1 + A * β)"
+                        shortcut = "Apply feedback formula with loop gain factor (1+Aβ) in denominator."
+                        concepts = "Negative feedback amplifier gain"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding negative feedback in amplifiers under \"$subtopicName\"?"
+                        optionsList = listOf("Negative feedback stabilizes the overall voltage gain against temperature fluctuations.", "Negative feedback increases the bandwidth of the amplifier.", "Negative feedback reduces non-linear harmonic distortion.", "Negative feedback increases the open-loop gain (A) of the amplifier.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "By classical feedback theory, introducing negative loops drops absolute gain but stabilizes it (Option A). Bandwidth increases by the same loop feedback factor (Option B). Non-linear distortions drop (Option C). Open loop gain A is property of inner transistor, unaffected by external feedback structures."
+                        formulaUsed = "Negative feedback characteristics"
+                        shortcut = "Negative feedback trades off open-loop gain to acquire bandwidth and stability."
+                        concepts = "Feedback trade-offs and gain margins"
+                    }
+                    QuestionType.NAT -> {
+                        val loopFactor = 1.0 + openGain * fbRatio
+                        questionText = "For the feedback amplifier under \"$subtopicName\" with open-loop gain A = $openGain and feedback factor β = $fbRatio, calculate the feedback loop feedback factor multiplier (1 + Aβ)."
+                        correctRange = (loopFactor - 0.01)..(loopFactor + 0.01)
+                        explanationText = "The feedback loop multiplier is (1 + A * β) = 1 + $openGain * $fbRatio = $loopFactor."
+                        formulaUsed = "Feedback factor multiplier = 1 + A*β"
+                        shortcut = "Multiply open-loop gain by feedback ratio and add one."
+                        concepts = "Loop gain factors"
+                    }
+                }
+            }
+            "ae_opamp_apps" -> {
+                val rfK = 10.0 + (index % 5) * 10
+                val riK = 5.0
+                val invertingGain = -rfK / riK
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Calculate the closed-loop voltage gain of an ideal inverting operational amplifier representing \"$subtopicName\" where feedback resistor R_f = $rfK kΩ and input resistor R_in = $riK kΩ."
+                        val correct = String.format(Locale.US, "%.1f", invertingGain)
+                        val incorrects = listOf(String.format(Locale.US, "%.1f", 1.0 + rfK / riK), "0.0", "-1.0")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "For ideal inverting op-amp configurations, gain is A_v = -R_f / R_in = -$rfK / $riK = $invertingGain."
+                        formulaUsed = "A_v = -R_f / R_in"
+                        shortcut = "Divide feedback resistance by input resistance and place a negative sign."
+                        concepts = "Inverting amplifier transfer functions"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following properties are correct regarding an ideal operational amplifier under \"$subtopicName\"?"
+                        optionsList = listOf("Ideal operational amplifiers possess infinite input impedance.", "Ideal operational amplifiers possess zero output impedance.", "Ideal operational amplifiers possess infinite open-loop voltage gain.", "Ideal operational amplifiers possess zero common-mode rejection ratio (CMRR).")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Ideal Op-Amps are modeled with R_in = ∞ (Option A), R_out = 0 (Option B), and A = ∞ (Option C). The ideal Common Mode Rejection Ratio (CMRR) is infinite (not zero), making Option D incorrect."
+                        formulaUsed = "Ideal Op-Amp parameters"
+                        shortcut = "Ideal parameters: R_in=∞, R_out=0, Open-loop gain=∞, CMRR=∞."
+                        concepts = "Operational amplifier characteristics"
+                    }
+                    QuestionType.NAT -> {
+                        val nonInvertingGain = 1.0 + rfK / riK
+                        questionText = "An ideal non-inverting operational amplifier circuit under \"$subtopicName\" has resistors R_f = $rfK kΩ and R_in = $riK kΩ. Calculate the closed-loop voltage gain factor."
+                        correctRange = (nonInvertingGain - 0.05)..(nonInvertingGain + 0.05)
+                        explanationText = "For ideal non-inverting op-amp configurations, gain is A_v = 1 + R_f / R_in = 1 + $rfK / $riK = $nonInvertingGain."
+                        formulaUsed = "A_v = 1 + R_f / R_in"
+                        shortcut = "In non-inverting configurations, add one to the feedback-to-input resistance ratio."
+                        concepts = "Non-inverting op-amp circuits"
+                    }
+                }
+            }
+            "de_numbers_gates" -> {
+                val decValue = 10 + (index % 15)
+                val binStr = Integer.toBinaryString(decValue)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Convert the decimal integer $decValue representing \"$subtopicName\" values to its equivalent binary representation."
+                        val correct = binStr
+                        val incorrects = listOf(Integer.toBinaryString(decValue + 2), Integer.toBinaryString(decValue - 1), "11111")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Decimal $decValue can be converted to binary using successive divisions by 2. This yields the binary sequence $binStr."
+                        formulaUsed = "Decimal to binary conversion algorithm"
+                        shortcut = "Convert base using binary powers indices."
+                        concepts = "Radix representations"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding digital logic and gates under \"$subtopicName\"?"
+                        optionsList = listOf("NAND is a universal logic gate.", "NOR is a universal logic gate.", "Any boolean function can be realized using NAND gates only.", "XOR is a universal gate.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "NAND and NOR gates can implement AND, OR, and NOT functions, making them universal gates. XOR cannot implement simple AND or OR configurations on its own without complement assistance, so it is not universal."
+                        formulaUsed = "Boolean universal structures proofs"
+                        shortcut = "Only NAND and NOR are classified as universal logic gates."
+                        concepts = "Universal logic configurations"
+                    }
+                    QuestionType.NAT -> {
+                        val totalStates = Math.pow(2.0, (2.0 + (index % 4))).toInt()
+                        questionText = "An n-bit binary counter under \"$subtopicName\" has exactly ${2 + (index % 4)} bits. Calculate the total number of distinct numerical states of this counter."
+                        correctRange = (totalStates.toDouble() - 0.1)..(totalStates.toDouble() + 0.1)
+                        explanationText = "An n-bit binary system has total_states = 2^n = 2^{${2 + (index % 4)}} = $totalStates distinct states."
+                        formulaUsed = "Total states = 2^n"
+                        shortcut = "Raise base 2 to the power of bit size."
+                        concepts = "Binary permutations"
+                    }
+                }
+            }
+            "de_comb_mux" -> {
+                val mult = 2.0 + (index % 3)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Consider a digital multiplexer under \"$subtopicName\" with $mult select lines. How many input channels can this multiplexer route?"
+                        val inputCount = Math.pow(2.0, mult).toInt()
+                        val correct = String.format(Locale.US, "%d inputs", inputCount)
+                        val incorrects = listOf(String.format(Locale.US, "%d inputs", inputCount * 2), String.format(Locale.US, "%d inputs", inputCount - 1), "3 inputs")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "A multiplexer with n select lines can route up to 2^n input channels to a single output. For n = $mult select lines, input channels = 2^$mult = $inputCount."
+                        formulaUsed = "N_inputs = 2^(N_selects)"
+                        shortcut = "Raise 2 to the power of select line count."
+                        concepts = "Multiplexer routing configurations"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following digital components represent purely combinational logic elements under \"$subtopicName\"?"
+                        optionsList = listOf("Multiplexers", "Decoders", "Full Adders", "Shift Registers")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Multiplexers, decoders, and adders are combinational systems since their output states depend strictly on instantaneous inputs. Shift registers contain flip-flop memory elements, making them sequential devices."
+                        formulaUsed = "Logic system classifications"
+                        shortcut = "If a device lacks memory elements like flip-flops or clocks, it is strictly combinational."
+                        concepts = "Combinational vs Sequential designs"
+                    }
+                    QuestionType.NAT -> {
+                        val numS = 4.0
+                        questionText = "Determine the exact number of select lines required to implement a 16-to-1 multiplexer under \"$subtopicName\" configurations."
+                        correctRange = (numS - 0.01)..(numS + 0.01)
+                        explanationText = "For 2^n = 16 input lines, select lines required is n = log2(16) = $numS."
+                        formulaUsed = "Select Lines = log2(Inputs)"
+                        shortcut = "16 is 2 raised to power 4, hence 4 select lines are required."
+                        concepts = "Sizing multiplexers"
+                    }
+                }
+            }
+            "de_seq_counters" -> {
+                val modFactor = 4 + (index % 5)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "A cascade of flip-flops represents a counter under \"$subtopicName\" with a division modulo of $modFactor. If the source input clock frequency is 24 kHz, determine the output frequency (in kHz)."
+                        val outFreq = 24.0 / modFactor
+                        val correct = String.format(Locale.US, "%.2f kHz", outFreq)
+                        val incorrects = listOf("24.00 kHz", String.format(Locale.US, "%.2f kHz", 24.0 * modFactor), "1.00 kHz")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "A modulo-N counter divides the input clock frequency by N. For input clock = 24 kHz and mod = $modFactor, output frequency = 24 / $modFactor = $outFreq kHz."
+                        formulaUsed = "f_out = f_in / N"
+                        shortcut = "Divide the input frequency directly by the modulo factor N."
+                        concepts = "Clock division frequency dividers"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding sequential logic gates and counters in \"$subtopicName\"?"
+                        optionsList = listOf("A flip-flop represents a fundamental 1-bit memory element.", "Synchronous counters trigger all flip-flops synchronously via a shared clock.", "Asynchronous counters suffer from cumulative propagation delays (skew).", "A JK flip-flop undergoes race-around conditions when inputs J and K are both 1 and enable is active.")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All statements are correct sequential design rules. Flip-flops store 1 bit. Synchronous drives distribute clock paths uniformly. Asynchronous drives route flip-flop outputs to subsequent clock slots, generating delay skews. State toggle race occurs when both inputs are energized."
+                        formulaUsed = "Sequential logic properties"
+                        shortcut = "Remember that asynchronous counters are also called ripple counters due to delay ripples."
+                        concepts = "Clock distribution and race conditions"
+                    }
+                    QuestionType.NAT -> {
+                        val ffCount = 3 + (index % 4)
+                        val synchStates = Math.pow(2.0, ffCount.toDouble())
+                        questionText = "A synchronous binary counter modeling \"$subtopicName\" is constructed using exactly $ffCount flip-flops. Calculate the total number of distinct state indexes of this counter."
+                        correctRange = (synchStates - 0.1)..(synchStates + 0.1)
+                        explanationText = "The total number of digital state indexes for synchronous counters with N flip-flops is 2^N = 2^$ffCount = $synchStates states."
+                        formulaUsed = "N_states = 2^n"
+                        shortcut = "Raise 2 to the power of flip-flop count."
+                        concepts = "Flip-flop state structures"
+                    }
+                }
+            }
+            "em_statics_equations" -> {
+                val distanceSquare = 2.0 + (index % 4)
+                val forceMultiplier = 1.0 / (distanceSquare * distanceSquare)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Under \"$subtopicName\", electrostatic Coulomb's forces are evaluated between two point charges. If distance is scaled by $distanceSquare, calculate the scaling factor of the force."
+                        val correct = String.format(Locale.US, "Decline: %.3f times", forceMultiplier)
+                        val incorrects = listOf("Increase: 2.00 times", "Decline: 1.000 times", "Linear decay")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Coulomb's Law states electrostatic force is inversely proportional to the square of distance (r): F ∝ 1 / r^2. If distance is scaled by $distanceSquare, the force is scaled by 1 / ($distanceSquare)^2 = $forceMultiplier."
+                        formulaUsed = "F ∝ 1 / r^2"
+                        shortcut = "Inverse of square distance factor holds."
+                        concepts = "Coulomb's inverse square laws"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following equations represent classical Maxwell forms in time-varying field frameworks under \"$subtopicName\"? (Select all that apply)"
+                        optionsList = listOf("curl E = -dB/dt", "curl H = J + dD/dt", "div D = ρ", "div B = 0")
+                        correctOptionsList = listOf(0, 1, 2, 3)
+                        explanationText = "All listed equations represent classical differential Maxwell forms. Faraday's law of induction (Option A), generalized Ampere's law (Option B), Gauss's electrostatic law (Option C), and Gauss's magnetostatic law representing absence of monopoles (Option D)."
+                        formulaUsed = "Maxwell's Equations"
+                        shortcut = "Memorize Maxwell standard differential representations."
+                        concepts = "Maxwell postulates, charge densities, boundary bounds"
+                    }
+                    QuestionType.NAT -> {
+                        val chargeA = 2.0 + (index % 5)
+                        val factorCalc = chargeA * 9.0
+                        questionText = "Calculate the scalar coefficient (in 10^9 N-m²/C²) representing relative electrostatic forces of charge size $chargeA C at distance 1 m under \"$subtopicName\" definitions."
+                        correctRange = (factorCalc - 0.5)..(factorCalc + 0.5)
+                        explanationText = "The force scalar is constant_k * q_1 = 9e9 * $chargeA = $factorCalc e9."
+                        formulaUsed = "F = k * q"
+                        shortcut = "Constant k represents approximately 9 billion in standard units, so scale by charge."
+                        concepts = "Permittivity coefficients"
+                    }
+                }
+            }
+            "em_wave_prop_lines" -> {
+                val zl = 100.0 + (index % 5) * 50.0
+                val z0 = 50.0
+                val gamma = (zl - z0) / (zl + z0)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Evaluate the real reflection coefficient (Γ) of a lossless transmission line modeling \"$subtopicName\" where load impedance is $zl Ω and characteristic line impedance is $z0 Ω."
+                        val correct = String.format(Locale.US, "%.3f", gamma)
+                        val incorrects = listOf("0.000", "1.000", String.format(Locale.US, "%.3f", gamma * 1.5))
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "The reflection coefficient is given by Γ = (Z_L - Z_0) / (Z_L + Z_0) = ($zl - $z0) / ($zl + $z0) = ${zl - z0} / ${zl + z0} = $gamma."
+                        formulaUsed = "Γ = (Z_L - Z_0) / (Z_L + Z_0)"
+                        shortcut = "Divide the impedance mismatch difference by the impedance sum factor directly."
+                        concepts = "Line propagation and impedance mismatch"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding wave propagation in transmission lines under \"$subtopicName\"?"
+                        optionsList = listOf("The Voltage Standing Wave Ratio (VSWR) is always greater than or equal to 1.0.", "Skin depth of a conductor decreases as frequency increases.", "Electromagnetic waves in a vacuum travel exactly at the speed of light.", "In a lossless medium, the characteristic wave impedance is purely imaginary.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "VSWR bounds range from 1.0 to infinity (Option A). Higher frequencies drive skin effect, reducing skin depth (Option B). Vacuum propagation speed is c ≈ 3e8 m/s (Option C). Lossless wave impedance is purely real (not imaginary), making Option D incorrect."
+                        formulaUsed = "Wave propagation equations"
+                        shortcut = "Impedance of lossless structures is real. VSWR baseline is 1.0 representing perfect matching."
+                        concepts = "VSWR matching, reflection, skin effect"
+                    }
+                    QuestionType.NAT -> {
+                        val vswr = (1.0 + gamma) / (1.0 - gamma)
+                        questionText = "Compute the Voltage Standing Wave Ratio (VSWR) of the transmission line configuration containing load Z_L = $zl Ω and characteristic impedance Z_0 = $z0 Ω under \"$subtopicName\" wave systems."
+                        correctRange = (vswr - 0.05)..(vswr + 0.05)
+                        explanationText = "First calculate the reflection coefficient Γ = (Z_L - Z_0) / (Z_L + Z_0) = ($zl - $z0) / ($zl + $z0) = $gamma. Then VSWR = (1 + |Γ|) / (1 - |Γ|) = (1 + $gamma) / (1 - $gamma) = $vswr."
+                        formulaUsed = "VSWR = (1 + |Γ|) / (1 - |Γ|)"
+                        shortcut = "VSWR can also be computed directly as Z_L / Z_0 if Z_L > Z_0: $zl / $z0 = $vswr."
+                        concepts = "Standing waves parameters"
+                    }
+                }
+            }
+            "mi_meters_ac_dc" -> {
+                val rm = 10.0
+                val mult = 2 + (index % 5)
+                val rsh = rm / (mult - 1)
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Under \"$subtopicName\", we want to extend the range of a PMMC ammeter with internal resistance R_m = $rm Ω by a multiplier of $mult. Calculate the required shunt resistance (R_sh) across ammeter terminals."
+                        val correct = String.format(Locale.US, "%.2f Ω", rsh)
+                        val incorrects = listOf(String.format(Locale.US, "%.2f Ω", rm), String.format(Locale.US, "%.2f Ω", rm * (mult - 1)), "1.00 Ω")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "To extend ammeter ranges: R_sh = R_m / (m - 1), where m is the scaling multiplier factor. R_sh = $rm / ($mult - 1) = $rsh Ω."
+                        formulaUsed = "R_sh = R_m / (m - 1)"
+                        shortcut = "Divide ammeter internal resistance directly by multiplier factor minus one."
+                        concepts = "Meter shunt resistance range extension"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding AC and DC electrical measuring instruments under \"$subtopicName\"?"
+                        optionsList = listOf("Permanent Magnet Moving Coil (PMMC) instruments measure average (DC) values only.", "Moving Iron (MI) instruments can measure both AC and DC root-mean-square currents.", "A Wheatstone bridge is typically utilized to measure medium resistances.", "A Schering bridge is commonly applied to evaluate high-frequency inductor values.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "PMMC registers only DC due to unidirectional torque (Option A). MI torque is proportional to current square, making it valid for both AC and DC (Option B). Wheatstone is standard for medium resistance (Option C). Schering bridges are used to measure capacitive values and dissipation factors, not inductances."
+                        formulaUsed = "Dynamic measuring systems"
+                        shortcut = "PMMC registers only DC average; MI registers general RMS values."
+                        concepts = "Bridge balances and coil indicators"
+                    }
+                    QuestionType.NAT -> {
+                        val r1Val = 100.0
+                        val r2Val = 10.0 * (1 + (index % 5))
+                        val capacityVal = 1e-6
+                        val lxVal = r1Val * r2Val * capacityVal
+                        questionText = "In a Maxwell inductance bridge representing \"$subtopicName\", balance occurs with branch resistors R1 = $r1Val Ω, R2 = $r2Val Ω, and parallel tuning capacitor C3 = 1.0 μF. Compute the balanced target inductance value L_x (in Henrys)."
+                        correctRange = (lxVal - 0.001)..(lxVal + 0.001)
+                        explanationText = "Balance criteria for Maxwell bridges specifies balanced inductance L_x = R1 * R2 * C3. L_x = $r1Val * $r2Val * $capacityVal = $lxVal H."
+                        formulaUsed = "L_x = R1 * R2 * C3"
+                        shortcut = "Multiply the balancing branch resistors directly by the tuning capacitor."
+                        concepts = "Maxwell bridge inductive balances"
+                    }
+                }
+            }
+            "mi_transducers_cro" -> {
+                val cycleNum = 2.0 + (index % 4)
+                val freqKhz = cycleNum / 1.0 // 1 ms sweep
+                val freqHz = freqKhz * 1000.0
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "An auxiliary thermocouple temperature probe representing \"$subtopicName\" exhibits linear thermo-EMF. Which of the following describes thermoelectric characteristics?"
+                        val correct = "Voltage: Seebeck threshold output"
+                        val incorrects = listOf("Current: Hall current output", "Capacitor: Dielectric charge", "Optoelectronic: LED emissions")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "Thermocouple instruments operate strictly under thermoelectric conversion, yielding Seebeck-dependent voltage outputs across temperature interfaces."
+                        formulaUsed = "Seebeck thermal conversion"
+                        shortcut = "Thermocouple registers voltage outputs directly tied to junction gradients."
+                        concepts = "Junction thermal potentials"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Which of the following assertions are correct regarding transducers and CRO measurements under \"$subtopicName\"?"
+                        optionsList = listOf("LVDT represents a passive inductive displacement transducer.", "Thermocouples operate strictly under Seebeck thermo-EMF potentials.", "A resistive strain gauge converts strain changes to resistive changes.", "A piezoelectric transducer can be applied to measure static pressures under steady steady indefinitely.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "LVDT varies mutual inductances (Option A). Thermocouple operates under active thermoelectric Seebeck loops (Option B). Strain gauges operate on structural resistance changes under strain (Option C). Piezoelectric materials allow charge leaking, making them unsuitable for pure static pressures over long times."
+                        formulaUsed = "Transducers physical actions"
+                        shortcut = "Piezoelectric transducers require dynamic physical variations, failing under static states."
+                        concepts = "Transducers models and CRO scopes"
+                    }
+                    QuestionType.NAT -> {
+                        questionText = "A CRO terminal under \"$subtopicName\" shows exactly $cycleNum cycles of a sinusoidal wave on its horizontal display scale. If the total time axis duration is exactly 1.0 millisecond, compute the wave frequency (in Hz)."
+                        correctRange = (freqHz - 10.0)..(freqHz + 10.0)
+                        explanationText = "Frequency is cycles divided by duration: f = $cycleNum cycles / 1.0 ms = $freqKhz kHz = $freqHz Hz."
+                        formulaUsed = "f = cycles / duration"
+                        shortcut = "Multiply trace cycle density directly by inverse sweep milliseconds base."
+                        concepts = "CRO time domain frequency computations"
+                    }
+                }
+            }
+            else -> {
+                // Symmetrical general electrical fallback
+                val turnsPrimaryVal = 100 * (1 + (index % 10))
+                val ratioVal = 2 + (index % 9)
+                val secTurns = turnsPrimaryVal / ratioVal
+                val vInput = 20 * ratioVal * (2 + (index % 5))
+                val vOutput = vInput.toDouble() / ratioVal
+                when (type) {
+                    QuestionType.MCQ -> {
+                        questionText = "Consider a standard power transformer representing \"$subtopicName\" which has $turnsPrimaryVal turns on the primary winding and $secTurns turns on the secondary. Calculate the step-down ratio."
+                        val correct = String.format(Locale.US, "Ratio = %d:1", ratioVal)
+                        val incorrects = listOf("Ratio = 1:1", "Ratio = 10:1", "Ratio = 100:1")
+                        optionsList = (listOf(correct) + incorrects).distinct().shuffled(rand)
+                        correctOptionsList = listOf(optionsList!!.indexOf(correct))
+                        explanationText = "The turn step-down ratio is simply N_p / N_s = $turnsPrimaryVal / $secTurns = $ratioVal."
+                        formulaUsed = "Ratio = N_p / N_s"
+                        shortcut = "Divide primary turns by secondary turns directly."
+                        concepts = "Transformer winding definitions"
+                    }
+                    QuestionType.MSQ -> {
+                        questionText = "Select all correct assertions regarding standard AC transformers under \"$subtopicName\"."
+                        optionsList = listOf("Ideal transformers conserve power such that S_primary = S_secondary.", "Transformers do not perform any frequency modification.", "Iron losses depend primarily on voltage and frequency.", "Active winding copper losses are strictly load independent.")
+                        correctOptionsList = listOf(0, 1, 2)
+                        explanationText = "Ideal devices converse total apparent power (Option A). Transformers shift current and voltage scales but preserve standard grid frequency (Option B). Core losses are invariant index with load under constant grid state (Option C). Active copper losses scale in proportion to current squared, which is highly load dependent."
+                        formulaUsed = "Elementary transformer equations"
+                        shortcut = "Copper losses scale quadratically with active loop load currents."
+                        concepts = "Losses profiles"
+                    }
+                    QuestionType.NAT -> {
+                        questionText = "A power transformer modeling step-down properties in \"$subtopicName\" has $turnsPrimaryVal turns on the primary winding and $secTurns turns on the secondary. If the primary voltage is $vInput V, calculate the secondary terminal voltage (in Volts)."
+                        correctRange = (vOutput - 0.1)..(vOutput + 0.1)
+                        explanationText = "Winding relation gives V_s = V_p * (N_s / N_p) = $vInput / $ratioVal = $vOutput V."
+                        formulaUsed = "V_s = V_p * (N_s / N_p)"
+                        shortcut = "Divide primary voltage directly by turn ratio factor."
+                        concepts = "Step down voltages models"
+                    }
+                }
             }
         }
+
+        return GateQuestion(
+            id = qId,
+            subjectId = subjectId,
+            topicId = topicId,
+            subtopicId = subtopicId,
+            year = year,
+            questionText = questionText,
+            questionType = type,
+            options = optionsList,
+            correctOptions = correctOptionsList,
+            correctNumericalRange = correctRange,
+            explanation = explanationText,
+            formulasUsed = formulaUsed,
+            shortcutTricks = shortcut,
+            relatedConcepts = concepts,
+            difficulty = difficulty
+        )
     }
 
     private fun generateReasoningQuestion(
@@ -2246,12 +3554,14 @@ object ProceduralQuestionGenerator {
         rand: Random
     ): GateQuestion {
         val qId = "proc_reasoning_${subtopicId}_$index"
+        val subtopicOffset = if (subtopicId.hashCode() == Int.MIN_VALUE) Int.MAX_VALUE else kotlin.math.abs(subtopicId.hashCode())
+        val effIdx = index + subtopicOffset
 
         return when (type) {
             QuestionType.MCQ -> {
-                if (index % 2 == 0) {
+                if (effIdx % 2 == 0) {
                     val stepsList = listOf(3, 4, 5, 6)
-                    val step = stepsList[index % stepsList.size]
+                    val step = stepsList[effIdx % stepsList.size]
                     val start = 2 + rand.nextInt(10)
                     val val1 = start
                     val val2 = val1 + step
@@ -2298,9 +3608,20 @@ object ProceduralQuestionGenerator {
                         Pair("Programmers", "Engineers"),
                         Pair("Chemists", "Scientists"),
                         Pair("Architects", "Designers"),
-                        Pair("Aeronauts", "Pilots")
+                        Pair("Aeronauts", "Pilots"),
+                        Pair("Biologists", "Researchers"),
+                        Pair("Cardiologists", "Doctors"),
+                        Pair("Attorneys", "Lawyers"),
+                        Pair("Acousticians", "Physicists"),
+                        Pair("Economists", "Analysts"),
+                        Pair("Archaeologists", "Historians"),
+                        Pair("Auditors", "Accountants"),
+                        Pair("Miners", "Technicians"),
+                        Pair("Botanists", "Academics"),
+                        Pair("Dermatologists", "Clinicians"),
+                        Pair("Statisticians", "Mathematicians")
                     )
-                    val pair = professions[index % professions.size]
+                    val pair = professions[effIdx % professions.size]
                     val p1 = pair.first
                     val p2 = pair.second
                     
@@ -2344,9 +3665,20 @@ object ProceduralQuestionGenerator {
                     Triple("Gears", "Mechanisms", "Metal"),
                     Triple("Resistors", "Components", "Passive"),
                     Triple("Capacitors", "Devices", "Linear"),
-                    Triple("Compilers", "Translators", "Software")
+                    Triple("Compilers", "Translators", "Software"),
+                    Triple("Screws", "Fasteners", "Magnetic"),
+                    Triple("Turbines", "Generators", "Pneumatic"),
+                    Triple("Diodes", "Semiconductors", "Bilateral"),
+                    Triple("Inductors", "Reactors", "Resistive"),
+                    Triple("Transistors", "Amplifiers", "Passive"),
+                    Triple("Protocols", "Standards", "Hardware"),
+                    Triple("Files", "Data-structures", "Analog"),
+                    Triple("Keyboards", "Inputs", "Wireless"),
+                    Triple("Routers", "Gateways", "Cabled"),
+                    Triple("Algorithms", "Procedures", "Static"),
+                    Triple("Sensors", "Transducers", "Actuators")
                 )
-                val sel = items[index % items.size]
+                val sel = items[effIdx % items.size]
                 val t1 = sel.first
                 val t2 = sel.second
                 val t3 = sel.third
@@ -2386,7 +3718,7 @@ object ProceduralQuestionGenerator {
                 )
             }
             QuestionType.NAT -> {
-                if (index % 2 == 0) {
+                if (effIdx % 2 == 0) {
                     val totalStudents = 20 + rand.nextInt(30)
                     val positionFromLeft = 5 + rand.nextInt(15)
                     val positionFromRight = totalStudents - positionFromLeft + 1
@@ -2417,8 +3749,8 @@ object ProceduralQuestionGenerator {
                         difficulty = difficulty
                     )
                 } else {
-                    val chars = listOf("GATE", "NPTEL", "MATH", "EEE")
-                    val str = chars[index % chars.size]
+                    val chars = listOf("GATE", "NPTEL", "MATH", "EEE", "CODE", "FLOW", "NODE", "DATA", "KERN", "LINK", "HEAP", "STAC", "LOOP", "TREE", "BYTE")
+                    val str = chars[effIdx % chars.size]
                     val sum = str.map { it.code - 64 }.sum()
                     
                     val qText = """
