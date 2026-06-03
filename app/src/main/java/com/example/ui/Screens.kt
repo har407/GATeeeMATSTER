@@ -2360,6 +2360,11 @@ fun CbtMockTestPlatformScreen(
                 TopAppBar(
                     title = { Text("CBT Scorecard Analysis", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
+                        IconButton(onClick = { viewModel.resetCbtTest() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back to Exam Terminal")
+                        }
+                    },
+                    actions = {
                         IconButton(onClick = { viewModel.launchMockTest(selectedCbtSubjectId) }) {
                             Icon(imageVector = Icons.Default.Refresh, contentDescription = "Retry")
                         }
@@ -2601,14 +2606,31 @@ fun CbtMockTestPlatformScreen(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Button(
+                        onClick = { viewModel.resetCbtTest() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .testTag("btn_return_exam_terminal"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Task, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Return to Exam Terminal", fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedButton(
                         onClick = onBack,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
+                            .testTag("btn_exit_to_dashboard"),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Return to Hub Dashboard")
+                        Icon(imageVector = Icons.Default.Home, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Exit to Hub Dashboard", fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }

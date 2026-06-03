@@ -4,7 +4,7 @@ object GateSyllabus {
 
     val subjects: List<Subject> by lazy {
         listOf(
-            createGeneralAptitude(),
+            createAptitudeForAll(),
             createEngineeringMath(),
             createNetworkTheory(),
             createSignalsAndSystems(),
@@ -690,6 +690,19 @@ object GateSyllabus {
 
     private fun createEngineeringMath(): Subject {
         val subjectId = "engineering_math"
+        val allMathQuestions = EngineeringMathematicsQuestions.questions
+
+        fun getQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allMathQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Engineering Mathematics",
@@ -701,27 +714,53 @@ object GateSyllabus {
                     name = "Linear Algebra",
                     subtopics = listOf(
                         Subtopic(
-                            id = "math_la_eig",
+                            id = "math_la_matrix_algebra",
                             topicId = "math_la",
                             subjectId = subjectId,
-                            name = "Matrices, Determinants, Rank & Eigenvalues",
+                            name = "Matrix Algebra & Systems of Equations",
                             theory = TheoryContent(
-                                title = "Eigenvalues, Rank & Systems Analysis",
-                                synopsis = "Covers fundamentals of matrix algebra, linear independent sets, matrix transformations, characteristic equations, and eigenvalues properties.",
+                                title = "Algebraic Matrix Properties & Rank Limits",
+                                synopsis = "Covers fundamentals of matrix algebra, linear independent sets, transpositions, symmetric/skew-symmetric matrices, inverses, diagonalization, and nullities.",
                                 detailedBullets = listOf(
-                                    "Determinant & Product of Eigenvalues: Det(A) is equal to the product of all eigenvalues of matrix A.",
-                                    "Trace & Sum of Eigenvalues: The sum of the main diagonal elements of A equals the sum of its eigenvalues.",
-                                    "Cayley-Hamilton Theorem: A square matrix satisfies its own characteristic equation, enabling efficient computation of matrix powers (A^n) and inverses (A^-1).",
-                                    "Rank of a Matrix: The maximum number of linearly independent row or column vectors."
+                                    "Unit/Identity matrices: Identity transformation preserving core coordinate values.",
+                                    "Rank of a Matrix: The maximum number of linearly independent row or column vectors.",
+                                    "Inverse of a Matrix: Defined for non-singular matrices where determinant is non-zero."
                                 ),
-                                keyInsight = "If a matrix is singular (Det(A) = 0), at least one of its eigenvalues is exactly zero, signaling a spatial collapse during transformation."
+                                keyInsight = "The inverse is only defined for non-singular matrices; if the determinant is zero, no unique inverse vector mapping exists."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Cayley-Hamilton Identity",
-                                    expression = "p(A) = 0",
-                                    description = "A standard matrix equation substituting matrix A into its characteristic polynomial coefficients.",
-                                    applicationTrick = "Compute A^-1 by dividing the polynomial equation by A, isolating the inverse term on one side easily."
+                                    name = "Transpose Product Rule",
+                                    expression = "(AB)ᵀ = BᵀAᵀ",
+                                    description = "Evaluates transpose properties of multiplicative matrices.",
+                                    applicationTrick = "Remember the order of multiplication reverses when transposing or inverting matrix groups."
+                                )
+                            ),
+                            pyqs = getQuestions("math_la_matrix_algebra", 0),
+                            practiceQuestions = getQuestions("math_la_matrix_algebra", 1),
+                            mockQuiz = getQuestions("math_la_matrix_algebra", 2)
+                        ),
+                        Subtopic(
+                            id = "math_la_eigenvalues",
+                            topicId = "math_la",
+                            subjectId = subjectId,
+                            name = "Eigenvalues, Eigenvectors & Cayley-Hamilton",
+                            theory = TheoryContent(
+                                title = "Linear Eigenvectors, Trace, and Cayley-Hamilton Theorem",
+                                synopsis = "Focuses on characteristic formulations, eigenvalue scaling factors, Cayley-Hamilton operations, traces, and Hermitian matrices.",
+                                detailedBullets = listOf(
+                                    "Trace relation: The sum of diagonal elements matches the sum of all eigenvalues.",
+                                    "Determinant relation: The product of all eigenvalues equals the matrix determinant.",
+                                    "Cayley-Hamilton: Every square matrix satisfies its own characteristic quadratic polynomial equation."
+                                ),
+                                keyInsight = "Cayley-Hamilton is highly efficient to calculate high polynomial exponents and matrix inverses."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Characteristic Equation",
+                                    expression = "det(A - λI) = 0",
+                                    description = "Evaluates eigenvalues of square matrix A.",
+                                    applicationTrick = "Trace(A) = Σλ_i, Det(A) = Πλ_i. Use these symmetric equations to find unknown eigenvalues instantly."
                                 )
                             ),
                             pyqs = listOf(
@@ -729,7 +768,7 @@ object GateSyllabus {
                                     id = "pyq_math_la_1",
                                     subjectId = subjectId,
                                     topicId = "math_la",
-                                    subtopicId = "math_la_eig",
+                                    subtopicId = "math_la_eigenvalues",
                                     year = 2024,
                                     questionText = "A 2x2 matrix A has eigenvalues 2 and 3. What is the determinant of the matrix A^2?",
                                     questionType = QuestionType.MCQ,
@@ -741,9 +780,9 @@ object GateSyllabus {
                                     relatedConcepts = "Determinants, Matrix functions, spectral properties",
                                     difficulty = "Easy"
                                 )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            ) + getQuestions("math_la_eigenvalues", 0),
+                            practiceQuestions = getQuestions("math_la_eigenvalues", 1),
+                            mockQuiz = getQuestions("math_la_eigenvalues", 2)
                         )
                     )
                 ),
@@ -753,27 +792,80 @@ object GateSyllabus {
                     name = "Calculus & Vector Analysis",
                     subtopics = listOf(
                         Subtopic(
-                            id = "math_calc_concepts",
+                            id = "math_calc_limits_differential",
                             topicId = "math_calc",
                             subjectId = subjectId,
-                            name = "Limits, Extremas & Vector Theorems",
+                            name = "Limits, Continuity & Single-Variable Calculus",
                             theory = TheoryContent(
-                                title = "Limits, Optimization, & Vector Calculus Fields",
-                                synopsis = "Covers differential limits (L'Hopital's), maxima-minima optimization, and vector fields integration theorems (Gradient, Divergence, Curl).",
+                                title = "Limits, Derivatives & Taylor/Maclaurin Series",
+                                synopsis = "Covers differential limits, L'Hopital's rule, continuity of single variables, derivatives, optimization, and Taylor/Maclaurin series.",
                                 detailedBullets = listOf(
-                                    "L'Hopital's Rule: Evaluates indeterminate 0/0 or inf/inf limits by taking ratio of individual derivatives: f'(x)/g'(x).",
-                                    "Maxima & Minima: Occurs where first derivative f'(c) = 0. If second derivative f''(c) < 0, it is a local maximum. If f''(c) > 0, it is a local minimum.",
-                                    "Divergence Theorem: Relates flux out of a closed surface to volume integral: Integral_S F.dS = Integral_V (Div F) dV.",
-                                    "Stokes Theorem: Relates line integral around a closed boundary loop to surface curl: Integral_C F.dr = Integral_S (Curl F).dS."
+                                    "L'Hopital's Rule: Evaluates 0/0 and inf/inf indeterminate limits by taking derivatives of the numerator and denominator.",
+                                    "Continuity: A function is continuous at a if limit exists and equals the function evaluation f(a).",
+                                    "Taylor Expansion: Represents functions as power series centered around any selected local point x = a."
                                 ),
-                                keyInsight = "The curl of any gradient field is always zero (Curl(Grad V) = 0), representing conservative path-independent physical forces."
+                                keyInsight = "Maclaurin Series represents a special case of Taylor Series where the expansion is centered exactly around x = 0."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Divergence Coefficient",
-                                    expression = "div F = dFx/dx + dFy/dy + dFz/dz",
-                                    description = "Measures local outward spatial expansion density of field vector lines.",
-                                    applicationTrick = "If divergence is exactly zero everywhere, the vector field is solenoidal (no internal sources or sinks)."
+                                    name = "Maclaurin Series of Exp",
+                                    expression = "e\u1d6a = 1 + x + x\u00b2/2! + x\u00b3/3! + ...",
+                                    description = "Evaluates the power series representation of the transcendental exponential function.",
+                                    applicationTrick = "The radius of convergence for e^x, sin x, and cos x is infinite."
+                                )
+                            ),
+                            pyqs = getQuestions("math_calc_limits_differential", 0),
+                            practiceQuestions = getQuestions("math_calc_limits_differential", 1),
+                            mockQuiz = getQuestions("math_calc_limits_differential", 2)
+                        ),
+                        Subtopic(
+                            id = "math_calc_multivariable",
+                            topicId = "math_calc",
+                            subjectId = subjectId,
+                            name = "Partial Derivations, Jacobians & Hessians",
+                            theory = TheoryContent(
+                                title = "Partial Derivatives, Coordinate Mappings & High Order optimization",
+                                synopsis = "Covers derivatives of multiple variables, composite chain configurations, Jacobian spaces, and optimization bounds defined via Hessian matrices.",
+                                detailedBullets = listOf(
+                                    "Partial Derivative: Evaluates changes along a single selected axis while keeping other variables constant.",
+                                    "Jacobian: Represents coordinates transformation scale factors when transposing multivariable spaces.",
+                                    "Hessian: Second-order partial derivative matrix used in multivariable second derivative optimization tests."
+                                ),
+                                keyInsight = "The partial derivative captures localized univariate slope trajectories on complex n-dimensional surface spaces."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Chain Rule of Composites",
+                                    expression = "df/dt = (\u2202f/\u2202x)*(dx/dt) + (\u2202f/\u2202y)*(dy/dt)",
+                                    description = "Calculates total derivatives of multi-variable composite functions.",
+                                    applicationTrick = "Trace all path dependencies in a tree structure to make sure no partial term is omitted."
+                                )
+                            ),
+                            pyqs = getQuestions("math_calc_multivariable", 0),
+                            practiceQuestions = getQuestions("math_calc_multivariable", 1),
+                            mockQuiz = getQuestions("math_calc_multivariable", 2)
+                        ),
+                        Subtopic(
+                            id = "math_calc_vector",
+                            topicId = "math_calc",
+                            subjectId = subjectId,
+                            name = "Vector Calculus & Field Theorems",
+                            theory = TheoryContent(
+                                title = "Gradients, Divergence, Curl & Vector Integration Fields",
+                                synopsis = "Addresses vector operators, directional derivative gradients, divergence density, curl rotations, and integral theorems of Gauss and Stokes.",
+                                detailedBullets = listOf(
+                                    "Gradient: Points along the steepest path of spatial scalar density elevation.",
+                                    "Solenoidal: Fields with zero divergence everywhere, indicating no internal sources or sinks of flux.",
+                                    "Irrotational: Fields with zero curl everywhere, implying conservative, path-independent potential configurations."
+                                ),
+                                keyInsight = "The curl of any gradient scalar field is always zero, representing conservative path-independent physical force areas."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Vector Divergence",
+                                    expression = "div F = \u2202Fx/\u2202x + \u2202Fy/\u2202y + \u2202Fz/\u2202z",
+                                    description = "Calculates local scalar expansion density of vector lines.",
+                                    applicationTrick = "Gauss Divergence Theorem converts a surface integral of closed vectors into a simple volumetric integral of its divergence density."
                                 )
                             ),
                             pyqs = listOf(
@@ -781,7 +873,7 @@ object GateSyllabus {
                                     id = "pyq_math_vector_1",
                                     subjectId = subjectId,
                                     topicId = "math_calc",
-                                    subtopicId = "math_calc_concepts",
+                                    subtopicId = "math_calc_vector",
                                     year = 2023,
                                     questionText = "What is the divergence of the vector field F = (x^2)*i + (y^2)*j + (z^2)*k evaluated at the spatial coordinate point (1, 2, 3)?",
                                     questionType = QuestionType.NAT,
@@ -792,9 +884,9 @@ object GateSyllabus {
                                     relatedConcepts = "Vector divergence, cartesian coordinates, field evaluation",
                                     difficulty = "Easy"
                                 )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            ) + getQuestions("math_calc_vector", 0),
+                            practiceQuestions = getQuestions("math_calc_vector", 1),
+                            mockQuiz = getQuestions("math_calc_vector", 2)
                         )
                     )
                 ),
@@ -804,30 +896,58 @@ object GateSyllabus {
                     name = "Differential Equations",
                     subtopics = listOf(
                         Subtopic(
-                            id = "math_de_sol",
+                            id = "math_de_first_order",
                             topicId = "math_de",
                             subjectId = subjectId,
-                            name = "First & Higher Order ODEs",
+                            name = "First Order Ordinary Differential Equations",
                             theory = TheoryContent(
-                                title = "Ordinary Differential Equations, I.F. & States",
-                                synopsis = "Addresses linear and non-linear differential formulations used to outline physical transients, circuit currents, and boundary states.",
+                                title = "First-Order Classification, Integrating Factors & Variable Separability",
+                                synopsis = "Addresses linear and non-linear first-order ordinary differential equations, integrating factors, exact differentials, and variables separable formulations.",
                                 detailedBullets = listOf(
-                                    "Integrating Factor (I.F.): Used to make first-order linear equations exact. For dy/dx + P*y = Q, the I.F. = exp(Integral P dx).",
-                                    "Second Order Constant Coefficient ODEs: Solved by separating into Complementary Function (CF, transient part) and Particular Integral (PI, steady forced output)."
+                                    "Integrating Factor (I.F.): Multiplier to convert a non-exact equations into exact integrable structures.",
+                                    "Variables Separable: Rewriting equations to group all terms of variable x with dx and variable y with dy.",
+                                    "Bernoulli Equations: Standard non-linear ODE form reducible to linear equations via variable substitutions."
                                 ),
-                                keyInsight = "The CF represents the natural internal decay modes governed by the physical system characteristics, while the PI models the external energy forcing profile."
+                                keyInsight = "The integrating factor of standard first-order linear ODE (y' + Py = Q) is computed as IF = exp(\u222bP dx)."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "First-Order I.F. Solver",
-                                    expression = "y * I.F. = ∫ (Q * I.F.) dx + C",
-                                    description = "Integrates first-order exact systems directly.",
-                                    applicationTrick = "The left-hand side is always the product of the dependent variable and the integrating factor."
+                                    name = "First-Order Linear Solution",
+                                    expression = "y * I.F. = \u222b (Q * I.F.) dx + C",
+                                    description = "Direct solution format utilizing the integrating factor.",
+                                    applicationTrick = "Ensure the coefficient of dy/dx is exactly 1 before evaluating the integrating factor."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("math_de_first_order", 0),
+                            practiceQuestions = getQuestions("math_de_first_order", 1),
+                            mockQuiz = getQuestions("math_de_first_order", 2)
+                        ),
+                        Subtopic(
+                            id = "math_de_higher_order",
+                            topicId = "math_de",
+                            subjectId = subjectId,
+                            name = "Higher Order ODEs & Linear Systems",
+                            theory = TheoryContent(
+                                title = "Constant Coefficient Higher-Order Linear ODEs & Wronskian",
+                                synopsis = "Deals with auxiliary algebraic equations, transient Complementary Functions, Particular Integrals, and the Wronskian linear independence test.",
+                                detailedBullets = listOf(
+                                    "Auxiliary Formulation: Maps linear derivative operators to algebraic variables, finding characteristic roots.",
+                                    "Wronskian Test: Evaluates determinant of solutions and their derivatives to inspect linear independence coefficients.",
+                                    "Transient response: Represented by the complementary function, modeling functional decays of physical setups."
+                                ),
+                                keyInsight = "Roots of constant-coefficient auxiliary equations determine if behavior is exponential, decaying, or oscillatory."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Repeated Auxiliary Roots CF",
+                                    expression = "y_cf = (C\u2081 + C\u2082*x) * e^(m*x)",
+                                    description = "Forms complementary functions under duplicated roots.",
+                                    applicationTrick = "Multiply successive duplicated terms by progressive powers of x to preserve linear independence."
+                                )
+                            ),
+                            pyqs = getQuestions("math_de_higher_order", 0),
+                            practiceQuestions = getQuestions("math_de_higher_order", 1),
+                            mockQuiz = getQuestions("math_de_higher_order", 2)
                         )
                     )
                 ),
@@ -837,26 +957,53 @@ object GateSyllabus {
                     name = "Complex Variables",
                     subtopics = listOf(
                         Subtopic(
-                            id = "math_complex_residue",
+                            id = "math_complex_algebra_analytic",
                             topicId = "math_complex",
                             subjectId = subjectId,
-                            name = "Analytic Functions & Cauchy Integration",
+                            name = "Complex Algebra & Analytic Functions",
                             theory = TheoryContent(
-                                title = "Cauchy-Riemann, Analyticity, & Residue Theorems",
-                                synopsis = "Studies continuous complex functions, derivatives, path contours calculations, and residues at isolated simple poles.",
+                                title = "Imaginary Algebra, Polar Conversions & Cauchy-Riemann equations",
+                                synopsis = "Studies continuous complex values, magnitude modulations, polar shapes, complex conjugates, and Cauchy-Riemann constraints.",
                                 detailedBullets = listOf(
-                                    "Cauchy-Riemann Equations: u_x = v_y and u_y = -v_x are necessary and sufficient for complex analyticity.",
-                                    "Isolated Poles: Points where a function fails to remain analytic (denominators approach zero).",
-                                    "Cauchy's Residue Theorem: Contour integral of f(z)dz = 2 * pi * i * (Sum of residues at poles lying strictly inside closed path boundary C)."
+                                    "Cauchy-Riemann Equations: u_x = v_y and u_y = -v_x are necessary conditions for differentiability.",
+                                    "Conjugates: Obtained by flipping the sign of the imaginary coefficient to find polar and modulus configurations.",
+                                    "Analyticity: Implies functional differentiability throughout complete open complex coordinate regions."
                                 ),
-                                keyInsight = "Poles lying strictly outside the closed boundary loop do not contribute to integration results."
+                                keyInsight = "Cauchy-Riemann equations can be checked to ensure if a complex vector field matches source-free physical configurations."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Cauchy Residue Theorem Relation",
-                                    expression = "∮_C f(z) dz = 2 * π * j * ∑ Residues",
-                                    description = "Evaluates contour integrals via localized functional residues.",
-                                    applicationTrick = "For simple poles at z = a, computes residue as: lim_{z -> a} [ (z - a) * f(z) ]."
+                                    name = "Euler's Formula Relation",
+                                    expression = "e^(j\u03b8) = cos \u03b8 + j sin \u03b8",
+                                    description = "Relates imaginary complex exponents with real trigonometric projections.",
+                                    applicationTrick = "Evaluate polar parameters: |z| = r, and the principal angle is Arg(z) = atan2(y, x)."
+                                )
+                            ),
+                            pyqs = getQuestions("math_complex_algebra_analytic", 0),
+                            practiceQuestions = getQuestions("math_complex_algebra_analytic", 1),
+                            mockQuiz = getQuestions("math_complex_algebra_analytic", 2)
+                        ),
+                        Subtopic(
+                            id = "math_complex_cauchy_residue",
+                            topicId = "math_complex",
+                            subjectId = subjectId,
+                            name = "Cauchy's Integration & Residue Theorems",
+                            theory = TheoryContent(
+                                title = "Contour Integrations, Isolated poles & Residue calculations",
+                                synopsis = "Studies path integrals around complex curves, evaluating residues at isolated poles, zeroes, and essential singularities.",
+                                detailedBullets = listOf(
+                                    "Zeroes and Poles: Points where functions evaluate to zero or approach local infinities.",
+                                    "Poles and Residues: The coefficient of the (z-a)^-1 Laurent series expansion term represents the residue.",
+                                    "Cauchy Integration: Maps cyclic integrals to simple functions of interior loop residue totals."
+                                ),
+                                keyInsight = "Poles residing strictly outside the circular integration path contour boundary do not contribute residue values."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Cauchy's Residue Integration Theorem",
+                                    expression = "\u222e_C f(z) dz = 2 * \u03c0 * j * \u2211 Residues",
+                                    description = "Computes contour integrals via residues inside the contour loop C.",
+                                    applicationTrick = "For simple poles at z = a, Residue = lim_{z->a} [ (z - a) * f(z) ]."
                                 )
                             ),
                             pyqs = listOf(
@@ -864,11 +1011,11 @@ object GateSyllabus {
                                     id = "pyq_math_complex_1",
                                     subjectId = subjectId,
                                     topicId = "math_complex",
-                                    subtopicId = "math_complex_residue",
+                                    subtopicId = "math_complex_cauchy_residue",
                                     year = 2021,
-                                    questionText = "Evaluate the contour integral I = ∮_C [ 1 / (z^2 - 1) ] dz, along the circular contour C defined as |z| = 1.5, mapped counter-clockwise.",
+                                    questionText = "Evaluate the contour integral I = \u222e_C [ 1 / (z^2 - 1) ] dz, along the circular contour C defined as |z| = 1.5, mapped counter-clockwise.",
                                     questionType = QuestionType.MCQ,
-                                    options = listOf("0", "π * j", "2 * π * j", "0.5 * π * j"),
+                                    options = listOf("0", "\u03c0 * j", "2 * \u03c0 * j", "0.5 * \u03c0 * j"),
                                     correctOptions = listOf(0),
                                     explanation = "Integrand f(z) = 1 / [(z-1)(z+1)] has simple poles at z = 1 and z = -1.\nBoth poles lie inside the circular boundary C of radius 1.5.\nResidue at z = 1: lim_{z->1} [ (z-1) / ((z-1)(z+1)) ] = 1/2 = 0.5.\nResidue at z = -1: lim_{z->-1} [ (z+1) / ((z-1)(z+1)) ] = -1/2 = -0.5.\nSum of Residues = 0.5 + (-0.5) = 0.\nI = 2 * pi * j * (Sum of residues) = 2 * pi * j * (0) = 0.",
                                     formulasUsed = "Res_f(a) = lim_{z->a} (z-a)f(z), Integral = 2*pi*j*Sum(Res)",
@@ -876,9 +1023,9 @@ object GateSyllabus {
                                     relatedConcepts = "Contours integration, isolated residues",
                                     difficulty = "Medium"
                                 )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            ) + getQuestions("math_complex_cauchy_residue", 0),
+                            practiceQuestions = getQuestions("math_complex_cauchy_residue", 1),
+                            mockQuiz = getQuestions("math_complex_cauchy_residue", 2)
                         )
                     )
                 ),
@@ -888,31 +1035,58 @@ object GateSyllabus {
                     name = "Probability & Statistics",
                     subtopics = listOf(
                         Subtopic(
-                            id = "math_prob_bayes",
+                            id = "math_probability_basics",
                             topicId = "math_probability",
                             subjectId = subjectId,
-                            name = "Probability, Bayes & Distributions",
+                            name = "Probability Theory & Bayes Theorem",
                             theory = TheoryContent(
-                                title = "Conditional Probability & Bayes Identity",
-                                synopsis = "Evaluates probability distributions, mean values, variance coefficients, and posterior probabilities based on updated evidence criteria.",
+                                title = "Sample Spaces, Conditional Probability & Bayes Updates",
+                                synopsis = "Highlights basic sample spaces, axioms of probability, independent/mutually-exclusive events, conditional probabilities, and Bayes' Theorem updates.",
                                 detailedBullets = listOf(
-                                    "Bayes Theorem: Fits posterior calculations symmetrically P(A|B) = [P(B|A) * P(A)] / P(B).",
-                                    "Mean & Expected Value: E[X] = Sum of (x * P(x)) for discrete variables.",
-                                    "Normal Distribution: Bell-shaped density function dominated by central mean and standard deviation limits."
+                                    "Axioms: All individual probabilities are strictly bounded within the range [0, 1]. Sum of all sample space outcomes is exactly 1.",
+                                    "Independent Events: Multiplication rule P(A \u2229 B) = P(A) * P(B).",
+                                    "Conditional Probability: Probability of event A occurring given B has already occurred: P(A|B) = P(A \u2229 B) / P(B)."
                                 ),
-                                keyInsight = "Bayes Theorem serves as a dynamic feedback loop to adjust prior probabilities as new test data or parameters emerge."
+                                keyInsight = "Bayes Theorem acts as a mathematical bridge to update prior probabilities dynamically as updated test results arrive."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Bayes Probability Formula",
-                                    expression = "P(A|B) = [ P(B|A) * P(A) ] / [ P(B|A)*P(A) + P(B|A')*P(A') ]",
-                                    description = "Evaluates posterior probability given observed evidence parameter.",
-                                    applicationTrick = "The denominator acts as the total probability of event B across all mutually exclusive scenarios."
+                                    name = "Bayes Theorem Relation",
+                                    expression = "P(A|B) = P(B|A)*P(A) / P(B)",
+                                    description = "Evaluates posterior probability using likelihood parameters.",
+                                    applicationTrick = "Denominator P(B) represents the total probability of event B across all mutually exclusive partitions."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("math_probability_basics", 0),
+                            practiceQuestions = getQuestions("math_probability_basics", 1),
+                            mockQuiz = getQuestions("math_probability_basics", 2)
+                        ),
+                        Subtopic(
+                            id = "math_probability_distributions",
+                            topicId = "math_probability",
+                            subjectId = subjectId,
+                            name = "Random Variables & Probability Distributions",
+                            theory = TheoryContent(
+                                title = "Expected Values, PDF, CDF & Common distribution models",
+                                synopsis = "Covers discrete and continuous random variables, expectations, variance properties, standard deviations, Binomial, Poisson, and Normal distributions.",
+                                detailedBullets = listOf(
+                                    "Expected value: The center of mass of distribution. E[X] = \u2211 x * P(x) for discrete systems.",
+                                    "Variance: Measures spread around the mean. Var(X) = E[X\u00b2] - (E[X])\u00b2.",
+                                    "Normal/Gaussian Distribution: Standard symmetric bell-shaped model described fully by its mean and variance."
+                                ),
+                                keyInsight = "For standard normal distributions, the mean is exactly 0 and the variance is exactly 1."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Poisson Distribution Probability",
+                                    expression = "P(X = k) = (\u03bb^k * e^-\u03bb) / k!",
+                                    description = "Calculates the probability of k occurrences within a fixed interval given mean rate \u03bb.",
+                                    applicationTrick = "For Poisson variables, both the mean and the variance are exactly equal to \u03bb."
+                                )
+                            ),
+                            pyqs = getQuestions("math_probability_distributions", 0),
+                            practiceQuestions = getQuestions("math_probability_distributions", 1),
+                            mockQuiz = getQuestions("math_probability_distributions", 2)
                         )
                     )
                 ),
@@ -922,31 +1096,58 @@ object GateSyllabus {
                     name = "Numerical Methods",
                     subtopics = listOf(
                         Subtopic(
-                            id = "math_num_integration",
+                            id = "math_numerical_root_finding",
                             topicId = "math_numerical",
                             subjectId = subjectId,
-                            name = "Numerical Integration & Root Finding",
+                            name = "Non-linear Equations & Root-Finding Methods",
                             theory = TheoryContent(
-                                title = "Root Convergence, Trapezoidal & Simpson's Integrals",
-                                synopsis = "Deals with numerical approximations of roots, integration, and interpolations.",
+                                title = "Root Convergence, Bracketing & Slopes approximation",
+                                synopsis = "Examines root-finding iterative mechanics on non-linear equations including Bisection, Regula-Falsi, Secant, and high-speed Newton-Raphson methods.",
                                 detailedBullets = listOf(
-                                    "Newton-Raphson Iteration: x_{n+1} = x_n - f(x_n)/f'(x_n). Provides quadratic local convergence.",
-                                    "Trapezoidal Rule: Approximates integral via linear intervals: Integral = (h/2) * [ (y0 + yn) + 2*(y1 + y2 + ... + y_{n-1}) ].",
-                                    "Simpson's 1/3 Rule: Fits quadratic intervals, requiring an even number of interval slices: Integral = (h/3) * [ (y0 + yn) + 4*(Odd y) + 2*(Even y) ]."
+                                    "Bisection Method: Safe bracketing method needing initial endpoints with sign changes; converges slowly but guaranteed.",
+                                    "Secant Method: Approximates local tangent lines via double initial secants, removing derivative requirements.",
+                                    "Newton-Raphson: Quadratic local convergence speed, utilizing local tangent derivatives."
                                 ),
-                                keyInsight = "Trapezoidal rule is exact for linear polynomials (order 1), whereas Simpson's 1/3 rule is exact for polynomials of degree up to 3."
+                                keyInsight = "If the derivative f'(x) equals zero or values hover close to local extremas, Newton-Raphson diverges."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Newton-Raphson Step",
-                                    expression = "x_new = x_old - f(x_old) / f'(x_old)",
-                                    description = "Calculates successive root approximations using local derivative slopes.",
-                                    applicationTrick = "If f'(x) is close to zero near the root, Newton-Raphson will experience slow convergence or divergence."
+                                    name = "Newton-Raphson Iteration Step",
+                                    expression = "x_{n+1} = x_{n} - f(x_{n}) / f'(x_{n})",
+                                    description = "Finds sequential local approximations of non-linear functions.",
+                                    applicationTrick = "The error convergence of the Newton-Raphson method is quadratic (order 2)."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("math_numerical_root_finding", 0),
+                            practiceQuestions = getQuestions("math_numerical_root_finding", 1),
+                            mockQuiz = getQuestions("math_numerical_root_finding", 2)
+                        ),
+                        Subtopic(
+                            id = "math_numerical_integration",
+                            topicId = "math_numerical",
+                            subjectId = subjectId,
+                            name = "Numerical Integration & Interpolation",
+                            theory = TheoryContent(
+                                title = "Approximate Integrations, Interpolations & Polynomial fitting",
+                                synopsis = "Highlights numerical estimation of definite integration using Trapezoidal, Simpson's 1/3 rules, Lagrange interpolating polynomials, and boundary differences.",
+                                detailedBullets = listOf(
+                                    "Trapezoidal Rule: Approximates area under a curve using linear trapezoids; error is proportional to h\u00b2.",
+                                    "Simpson's 1/3 Rule: Fits quadratic functions; requires even interval subsets and has error proportional to h\u2074.",
+                                    "Lagrange Interpolation: Fits unique polynomials seamlessly passing through arbitrary scattered data coordinate points."
+                                ),
+                                keyInsight = "Simpson's 1/3 rule is exact for polynomials up to degree 3, despite fitting quadratic slices."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Trapezoidal Definite Integration Rule",
+                                    expression = "\u222b f(x) dx \u2248 (h/2) * [ (y0 + yn) + 2*(y1 + ... + y_{n-1}) ]",
+                                    description = "Evaluates definite area under continuous tabular coordinates.",
+                                    applicationTrick = "h represents the width of the interval: h = (b - a) / n."
+                                )
+                            ),
+                            pyqs = getQuestions("math_numerical_integration", 0),
+                            practiceQuestions = getQuestions("math_numerical_integration", 1),
+                            mockQuiz = getQuestions("math_numerical_integration", 2)
                         )
                     )
                 )
@@ -2393,6 +2594,19 @@ object GateSyllabus {
 
     private fun createDigitalElectronics(): Subject {
         val subjectId = "digital_electronics"
+        val allDeQuestions = DigitalElectronicsQuestions.questions
+
+        fun getDeQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allDeQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Digital Electronics",
@@ -2404,37 +2618,58 @@ object GateSyllabus {
                     name = "Number Systems & Gates",
                     subtopics = listOf(
                         Subtopic(
-                            id = "de_numbers_gates",
+                            id = "de_number_systems",
                             topicId = "de_bases_gates",
                             subjectId = subjectId,
-                            name = "Bases, Boolean Algebra & K-Maps",
+                            name = "Number Systems & Codes",
                             theory = TheoryContent(
-                                title = "Number System Representations & Logic Simplification",
-                                synopsis = "Covers binary/octal/hex conversions, Boolean algebra rules, De Morgan's laws, and K-Map logic simplification.",
+                                title = "Radix Representation, Complements & Logic Codes",
+                                synopsis = "Addresses radix numeric representations (binary, octal, decimal, hex), standard sign-magnitude representations, 1's and 2's complements, BCD codes, excess-3, and single-transition Gray code.",
                                 detailedBullets = listOf(
-                                    "Universal Gates: NAND and NOR can synthesize any arbitrary Boolean logic function.",
-                                    "De Morgan's Laws: (A + B)' = A' * B' and (A * B)' = A' + B'.",
-                                    "Karnaugh Maps (K-Maps): Symmetrically groups adjacent '1' cells to minimize boolean equations."
+                                    "Decimal-Binary conversion: Successive division/multiplication by 2 yields discrete system digits.",
+                                    "Complements: r's and (r-1)'s complements allow subtraction through simple adder hardware.",
+                                    "Gray Code: A unit-distance non-weighted code primarily utilized in encoders to minimize transition hazards."
                                 ),
-                                keyInsight = "K-Map groupings must always be powers of 2 (1, 2, 4, 8, 16) to eliminate redundant terms successfully."
+                                keyInsight = "Successive numbers in Gray code differ by exactly one binary bit, dramatically reducing multi-bit synchronization issues in dynamic sensing."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "De Morgan's Laws",
-                                    expression = "NOT(A AND B) = NOT A OR NOT B, NOT(A OR B) = NOT A AND NOT B",
-                                    description = "Provides mathematical logic equivalence to invert product or sum groupings cleanly.",
-                                    applicationTrick = "Break the line and change the sign (e.g., from + to · or from · to +) when resolving compliments."
-                                ),
-                                FormulaItem(
-                                    name = "Boole's Absorption & Consensus Theorem",
-                                    expression = "A + A * B = A, A * B + NOT A * C + B * C = A * B + NOT A * C",
-                                    description = "Allows absorption and deletion of redundant term groups in complex Boolean equations.",
-                                    applicationTrick = "The variable that appears with and without complement (A and NOT A) in separate terms can absorb the third term containing their partners."
+                                    name = "2's Complement",
+                                    expression = "2's Complement = 1's Complement + 1",
+                                    description = "Evaluates signed integer representations.",
+                                    applicationTrick = "Leave the least significant zeros and the trailing first '1' unchanged; invert all other preceding bits to save time."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getDeQuestions("de_number_systems", 0),
+                            practiceQuestions = getDeQuestions("de_number_systems", 1),
+                            mockQuiz = getDeQuestions("de_number_systems", 2)
+                        ),
+                        Subtopic(
+                            id = "de_boolean_gates",
+                            topicId = "de_bases_gates",
+                            subjectId = subjectId,
+                            name = "Boolean Algebra & Logic Gates",
+                            theory = TheoryContent(
+                                title = "Boolean Minimization & Universal Gates",
+                                synopsis = "Covers fundamental Boolean identity theorems, consensus logic, absorption laws, De Morgan's mathematical conversions, and universal NAND/NOR logic networks.",
+                                detailedBullets = listOf(
+                                    "De Morgan's Theorems: Converts products to sums and vice versa under global logical negation.",
+                                    "Consensus Theorem: AB + A'C + BC simplifies to AB + A'C, eliminating redundant adjacent transitions.",
+                                    "Universal Logic: Universal NAND and NOR gates can implement complete boolean spaces singly."
+                                ),
+                                keyInsight = "A NAND or NOR gate can function as a simple inverter by tying its inputs together or to active logic levels."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "De Morgan's Law of Products",
+                                    expression = "(A * B)' = A' + B'",
+                                    description = "Converts double negative products to simple negated additions.",
+                                    applicationTrick = "'Break the negation bar, change the operator sign' to convert Boolean structures effortlessly."
+                                )
+                            ),
+                            pyqs = getDeQuestions("de_boolean_gates", 0),
+                            practiceQuestions = getDeQuestions("de_boolean_gates", 1),
+                            mockQuiz = getDeQuestions("de_boolean_gates", 2)
                         )
                     )
                 ),
@@ -2444,30 +2679,58 @@ object GateSyllabus {
                     name = "Combinational Circuits",
                     subtopics = listOf(
                         Subtopic(
-                            id = "de_comb_mux",
+                            id = "de_combinational",
                             topicId = "de_combinational",
                             subjectId = subjectId,
-                            name = "Multiplexers, Decoders & Adders",
+                            name = "Multiplexers, Decoders & Arithmetic Logic",
                             theory = TheoryContent(
-                                title = "Data Selectors & Arithmetic Circuits",
-                                synopsis = "Addresses multiplexer (MUX) operations, decoders, encoders, and hardware adders/subtractors.",
+                                title = "Arithmetic Systems & Data Selectors",
+                                synopsis = "Focuses on Karnaugh Maps (K-maps), SOP/POS representations, half/full adders and subtractors, decoders/encoders, and multiplexers (MUX) functioning as universal synthesizers.",
                                 detailedBullets = listOf(
-                                    "Multiplexer (MUX): Acts as a data selector. A 2^n-to-1 MUX uses n control lines to route a selected input to the output.",
-                                    "Universal Synthesizer: A 2^n-to-1 MUX can realize any Boolean function of n+1 variables."
+                                    "K-Map Optimization: Groups prime implicants in powers of 2 to yield minimal minimal literal SOP/POS statements.",
+                                    "Adders: Ripple carry adders propagate carry lines sequentially, whereas Carry Look-Ahead systems predict secondary lines.",
+                                    "Multiplexers: Act as multi-channel data selectors. An 2^n:1 MUX functions as a universal boolean generator."
                                 ),
-                                keyInsight = "A 2-to-1 MUX can implement any 2-variable Boolean function directly without any external logic gates."
+                                keyInsight = "An n-to-2^n decoder with active-low outputs yields minterms of input variables directly, which can form any logic sum using external logic."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "2-to-1 MUX Output Expression",
-                                    expression = "Y = S' * I_0 + S * I_1",
-                                    description = "Evaluates multiplexer output based on selection line S.",
-                                    applicationTrick = "By tieing I_0 and I_1 to various logic states (0, 1, or variables), a 2-to-1 MUX can implement AND, OR, and XOR gates."
+                                    name = "Full Adder Carry Equation",
+                                    expression = "C_out = A*B + C_in*(A ⊕ B)",
+                                    description = "Evaluates ripple carry logic transitions.",
+                                    applicationTrick = "In look-ahead adders, write as G_i + P_i * C_i where G_i = A*B (generate) and P_i = A+B (propagate)."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getDeQuestions("de_combinational", 0),
+                            practiceQuestions = getDeQuestions("de_combinational", 1),
+                            mockQuiz = getDeQuestions("de_combinational", 2)
+                        ),
+                        Subtopic(
+                            id = "de_data_converters",
+                            topicId = "de_combinational",
+                            subjectId = subjectId,
+                            name = "Data Converters (ADC & DAC)",
+                            theory = TheoryContent(
+                                title = "Analog-to-Digital & Digital-to-Analog Converters",
+                                synopsis = "Covers R-2R ladders, weighted resistor DACs, flash ADCs, successive approximation ADCs, dual-slope integrations, resolution, and quantization margins.",
+                                detailedBullets = listOf(
+                                    "Resolution: Defined as step-size V_ref / (2^n - 1) representing minimal analog levels.",
+                                    "Flash ADC: Employs (2^n - 1) simultaneous comparators to yield high speed conversions within one clock cycle.",
+                                    "Successive Approximation (SAR): Employs a binary search ladder via a internal feedback DAC over exactly n clock cycles."
+                                ),
+                                keyInsight = "Dual-slope ADC offers superior noise immunity because it integrates inputs over configured cycles, cancelling out harmonic high frequency lines."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "DAC Output Voltage",
+                                    expression = "V_out = V_ref * (Digital_Value / 2^n)",
+                                    description = "Calculates converted analog voltages from binary values.",
+                                    applicationTrick = "Treat resolution carefully when computing outputs for full-scale versus standard code conversions."
+                                )
+                            ),
+                            pyqs = getDeQuestions("de_data_converters", 0),
+                            practiceQuestions = getDeQuestions("de_data_converters", 1),
+                            mockQuiz = getDeQuestions("de_data_converters", 2)
                         )
                     )
                 ),
@@ -2477,37 +2740,58 @@ object GateSyllabus {
                     name = "Sequential Circuits",
                     subtopics = listOf(
                         Subtopic(
-                            id = "de_seq_counters",
+                            id = "de_sequential",
                             topicId = "de_sequential",
                             subjectId = subjectId,
-                            name = "Flip-Flops, Counters & Registers",
+                            name = "Flip-Flops, Counters & State Machines",
                             theory = TheoryContent(
-                                title = "State Memory, State Tables & Counters",
-                                synopsis = "Covers synchronous latches, flip-flops (SR, JK, D, T), excitation tables, shift registers, and synchronous/asynchronous counter design.",
+                                title = "State Memories, Counters & Finite State Machines",
+                                synopsis = "Addresses latches, edge-triggered flip-flops, excitation/characteristic equations, ripple/synchronous counters, shift registers, and Moore/Mealy FSM controllers.",
                                 detailedBullets = listOf(
-                                    "Flip-Flops: State memory elements that transfer data on clock edges (edge-triggered).",
-                                    "D Flip-Flop characteristic: Q_next = D. T Flip-Flop characteristic: Q_next = T XOR Q_present.",
-                                    "JK Flip-Flop: Eliminates the invalid state of SR flip-flops by toggling when J = K = 1."
+                                    "Race-Around: Prevents safe toggling in JK flip-flops when active state overlaps clock high pulse; solved via Master-Slave FFs.",
+                                    "Binary Counters: N flip-flops sequence through MOD-2^N states. Decoders clear states to build arbitrary MOD boundaries.",
+                                    "FSM Models: Mealy outputs depend on inputs and current states; Moore outputs depend strictly on the current state."
                                 ),
-                                keyInsight = "To build a modulo-N down/up counter, you require at least Ceil(log2 N) flip-flop items."
+                                keyInsight = "Mealy machines react immediately to input changes in an asynchronous manner, while Moore machines synchronize fully with active clock edges."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Flip-Flop Characteristic Equations",
-                                    expression = "SR: Q_next = S + R_bar * Q, JK: Q_next = J * Q_bar + K_bar * Q, D: Q_next = D, T: Q_next = T ⊕ Q",
-                                    description = "Predictive mathematical models of state updates for major memory latch configurations on clock triggering.",
-                                    applicationTrick = "Use JK flip flop for toggle state: setting J = K = 1 always yields Q_next = Q_bar."
-                                ),
-                                FormulaItem(
-                                    name = "Counter State Boundary Condition",
-                                    expression = "MOD <= 2^N",
-                                    description = "Specifies that N flip-flops can represent up to 2^N unique binary state sequences.",
-                                    applicationTrick = "To build a MOD-10 counter, you need a minimum of 4 flip-flops (since 2^3 = 8 < 10 <= 16 = 2^4)."
+                                    name = "JK Flip-Flop Characteristic",
+                                    expression = "Q_next = J*Q'_present + K'*Q_present",
+                                    description = "Computes the next state of a JK flip flop.",
+                                    applicationTrick = "Setting J=1, K=1 causes the state to toggle (invert) on the active transition edge."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getDeQuestions("de_sequential", 0),
+                            practiceQuestions = getDeQuestions("de_sequential", 1),
+                            mockQuiz = getDeQuestions("de_sequential", 2)
+                        ),
+                        Subtopic(
+                            id = "de_logic_families_memory",
+                            topicId = "de_sequential",
+                            subjectId = subjectId,
+                            name = "Logic Families & Semiconductor Memory",
+                            theory = TheoryContent(
+                                title = "TTL/CMOS/ECL Logic & Semiconductor RAM/ROM",
+                                synopsis = "Compares digital gate logic technologies (TTL, CMOS, ECL), fan-out boundaries, setup/hold timings, metastabilities, static/dynamic RAM cells, and non-volatile ROM memories.",
+                                detailedBullets = listOf(
+                                    "CMOS Logic: Negligible static power dissipation due to complementary NMOS/PMOS configurations.",
+                                    "ECL (Emitter Coupled Logic): Avoids transistor saturation, offering the absolute fastest switching speeds.",
+                                    "SRAM vs DRAM: SRAM employs bistable latch circuits for storage; DRAM uses charge capacitors requiring periodic refreshing."
+                                ),
+                                keyInsight = "Violating setup or hold times at a flip-flop's input boundary results in metastability, where the output hovers indefinitely between 0 and 1."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Active Delay Limit",
+                                    expression = "T_period >= T_co + T_comb + T_setup",
+                                    description = "Estimates the minimum clock period to prevent setup violations.",
+                                    applicationTrick = "Minimize combination logic depth (T_comb) to scale system clocks to higher frequencies."
+                                )
+                            ),
+                            pyqs = getDeQuestions("de_logic_families_memory", 0),
+                            practiceQuestions = getDeQuestions("de_logic_families_memory", 1),
+                            mockQuiz = getDeQuestions("de_logic_families_memory", 2)
                         )
                     )
                 )
@@ -2517,77 +2801,253 @@ object GateSyllabus {
 
     private fun createElectromagneticTheory(): Subject {
         val subjectId = "electromagnetic_theory"
+        val allEmfQuestions = ElectromagneticFieldsQuestions.questions
+
+        fun getEmfQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allEmfQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Electromagnetic Fields",
             iconName = "explore",
             topics = listOf(
                 Topic(
-                    id = "em_statics_maxwell",
+                    id = "em_statics",
                     subjectId = subjectId,
-                    name = "Electrostatics & Maxwell",
+                    name = "Electrostatics & Magnetostatics",
                     subtopics = listOf(
                         Subtopic(
-                            id = "em_statics_equations",
-                            topicId = "em_statics_maxwell",
+                            id = "em_electrostatics",
+                            topicId = "em_statics",
                             subjectId = subjectId,
-                            name = "Electro-Magnetostatics & Maxwell Equations",
+                            name = "Electrostatics, Coulomb's Law & Capacitance",
                             theory = TheoryContent(
-                                title = "Electric/Magnetic Fields & Faraday/Ampere Laws",
-                                synopsis = "Unifies electrostatic Coulomb fields, magnetostatic Ampere loops, and time-varying Maxwell equations.",
+                                title = "Electrostatics Fields & Capacitors",
+                                synopsis = "Investigates charges at rest, force fields, voltage gradients, and electrical storage parameters.",
                                 detailedBullets = listOf(
-                                    "Gauss's Law (Electrostatics): Div(D) = rho_v. Relates charge density to electric flux displacement.",
-                                    "Gauss's Law (Magnetostatics): Div(B) = 0. Confirms that isolated magnetic monopoles do not exist.",
-                                    "Faraday's Law: Curl(E) = -dB/dt. A time-varying magnetic field induces a circulating electric field.",
-                                    "Ampere-Maxwell Law: Curl(H) = J + dD/dt. Relates magnetic field intensity to conduction and displacement currents."
+                                    "Coulomb's Law: Force between point charges varies inversely with the square of the distance separator.",
+                                    "Electric Potential: Defined as work per unit charge, negative gradient of potential yields electric field intensity.",
+                                    "Capacitance: Proportional to the plate cross-sectional area and plate permittivity, and inversely to gap separation distance.",
+                                    "Boundary Conditions: Tangential electric field component is always continuous across dielectric interfaces."
                                 ),
-                                keyInsight = "Maxwell's introduction of the displacement current term (dD/dt) restored mathematical consistency to Ampere's Law for time-varying fields."
+                                keyInsight = "Adding standard dielectric material between capacitor plates increases field storage capacity relative to the material's dielectric constant."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Gauss's Divergence Law",
-                                    expression = "div D_vector = ρ_v",
-                                    description = "Differential form of electrostatic Gauss law.",
-                                    applicationTrick = "Integrate divergence over the volume to find the total enclosed charge."
+                                    name = "Electric Field Intensity due to Point Charge",
+                                    expression = "E = Q / (4 * pi * ε * r²)",
+                                    description = "Evaluates electrostatic field strength at a radial distance from a point charge.",
+                                    applicationTrick = "Symmetric spherical systems simplify integration under Gauss's law."
+                                ),
+                                FormulaItem(
+                                    name = "Energy in Capacitance",
+                                    expression = "W_E = ½ * C * V²",
+                                    description = "Tracks work stored inside electrostatic fields between capacitor plates.",
+                                    applicationTrick = "Alternatively expressed as ½ * Q * V or Q² / (2 * C)."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getEmfQuestions("em_electrostatics", 0),
+                            practiceQuestions = getEmfQuestions("em_electrostatics", 1),
+                            mockQuiz = getEmfQuestions("em_electrostatics", 2)
+                        ),
+                        Subtopic(
+                            id = "em_magnetostatics",
+                            topicId = "em_statics",
+                            subjectId = subjectId,
+                            name = "Magnetostatics, Ampere's Law & Inductance",
+                            theory = TheoryContent(
+                                title = "Magnetostatic Fields & Induced Fluxes",
+                                synopsis = "Examines magnetic potentials, currents in filaments, Ampere circuital paths, and inductance attributes.",
+                                detailedBullets = listOf(
+                                    "Biot-Savart Law: Determines differential flux density vector proportional to current line vectors.",
+                                    "Ampere's Law: Boundary integrals of H equal the net enclosed conduction current passing through the surface loop.",
+                                    "Inductance: Represents direct flux linkage per driving excitation current unit stored inside the core.",
+                                    "Boundary Conditions: Normal density components are continuous, but tangential H changes based on sheet current density."
+                                ),
+                                keyInsight = "Reluctance serves as the magnetic path analog to electrical resistance, restricting circulating fluxes through the circuit core."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Ampere's Circuital Integral",
+                                    expression = "∮ H · dl = I_enclosed",
+                                    description = "Differential and integral relationship matching magnetic intensity loops to driving currents.",
+                                    applicationTrick = "Highly useful for symmetric current systems like coaxial Cables or infinitely long wires."
+                                ),
+                                FormulaItem(
+                                    name = "Energy inside Inductance",
+                                    expression = "W_H = ½ * L * I²",
+                                    description = "Computes work stored within magnetic fields created inside coil conductors.",
+                                    applicationTrick = "Relates stored power directly to coil current and self-inductance constants."
+                                )
+                            ),
+                            pyqs = getEmfQuestions("em_magnetostatics", 0),
+                            practiceQuestions = getEmfQuestions("em_magnetostatics", 1),
+                            mockQuiz = getEmfQuestions("em_magnetostatics", 2)
                         )
                     )
                 ),
                 Topic(
-                    id = "em_wave_transmission",
+                    id = "em_maxwell",
                     subjectId = subjectId,
-                    name = "Waves & Transmission",
+                    name = "Maxwell's Equations",
                     subtopics = listOf(
                         Subtopic(
-                            id = "em_wave_prop_lines",
-                            topicId = "em_wave_transmission",
+                            id = "em_maxwell_equations",
+                            topicId = "em_maxwell",
                             subjectId = subjectId,
-                            name = "Wave propagation, skin depth & lines",
+                            name = "Maxwell's Equations & Displacement Current",
                             theory = TheoryContent(
-                                title = "TEM Wave Propagations & Attenuations",
-                                synopsis = "Addresses transverse electromagnetic wave equations (TEM), wave impedance, medium losses, skin depth, and transmission lines.",
+                                title = "Unification under Maxwell's Equations",
+                                synopsis = "Analyzes modern time-varying fields, displacement current, Faraday's discovery, and charge conservation laws.",
                                 detailedBullets = listOf(
-                                    "TEM Wave: Electric and magnetic fields are mutually perpendicular to each other and orthogonal to the direction of wave propagation.",
-                                    "Wave Impedance: In free space, it is approx 377 Ohms (120*pi).",
-                                    "Skin Depth (delta): The distance a wave travels into a lossy conductor where its field amplitude attenuates to 1/e ≈ 37% of its initial surface value."
+                                    "Displacement Current: Added mathematically by Maxwell as dD/dt to fulfill the continuity of charge requirements under time-harmonic conditions.",
+                                    "Faraday's Law: Identifies that changing magnetic flux induces negative rotational circulating voltage rings.",
+                                    "∇·B = 0: Disproves isolated magnetic monocenters or charge points, verifying all magnetic fields exist purely as loops.",
+                                    "∇·D = ρv: Reflects absolute electrostatic divergence matching the local volumic source distribution density."
                                 ),
-                                keyInsight = "Skin depth is inversely proportional to the square root of frequency, forcing high-frequency currents to flow strictly along the outer shell of conductors."
+                                keyInsight = "The curl of the electric field intensity equals the negative time derivative of the magnetic flux density, indicating complete mutual coupling."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Intrinsic Impedance of Free Space",
-                                    expression = "η_0 = sqrt(μ_0 / ε_0) ≈ 377 Ω",
-                                    description = "The ratio of electric to magnetic field strength amplitudes in free space.",
-                                    applicationTrick = "Can be written as exactly 120 * pi Ohms."
+                                    name = "Faraday's Differential Equation",
+                                    expression = "∇ × E = -∂B / ∂t",
+                                    description = "Differential form linking electric field curls directly to rate of change of magnetic vectors.",
+                                    applicationTrick = "Zero induced emf fields are observed if magnetic systems remain strictly static with time."
+                                ),
+                                FormulaItem(
+                                    name = "Displacement Current Density",
+                                    expression = "J_d = ∂D / ∂t",
+                                    description = "Formulated by Maxwell to generalize Ampere's law for capacitors and time-harmonic designs.",
+                                    applicationTrick = "Allows wave propagation through free-space vacuums without requiring physical charge paths."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getEmfQuestions("em_maxwell_equations", 0),
+                            practiceQuestions = getEmfQuestions("em_maxwell_equations", 1),
+                            mockQuiz = getEmfQuestions("em_maxwell_equations", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "em_waves",
+                    subjectId = subjectId,
+                    name = "Waves & Propagation",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "em_waves_propagation",
+                            topicId = "em_waves",
+                            subjectId = subjectId,
+                            name = "EM Wave Propagation, Poynting Vector & Skin Depth",
+                            theory = TheoryContent(
+                                title = "Electromagnetic Uniform Plane Waves",
+                                synopsis = "Addresses transverse electromagnetic propagation, wave velocities, skin damping, and power vectors.",
+                                detailedBullets = listOf(
+                                    "TEM wave properties: Electric and magnetic vectors are orthogonal to each other and perpendicular to wave flow vectors.",
+                                    "Intrinsic Impedance: Ratio of E to H field, which measures exactly 377 Ohms (120 * pi) inside free-space vacuums.",
+                                    "Poynting Statement: Vector product E x H represents the instantaneous direction and intensity of power flow density per unit area.",
+                                    "Skin Depth (δ): Depicts penetration distance into conductors where wave amplitude decays to 36.8% of its boundary value."
+                                ),
+                                keyInsight = "Skin depth decreases rapidly as frequency increases, forcing high-frequency currents to run purely along outer wire layers."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Wavelength and Velocity Relation",
+                                    expression = "v = f * λ",
+                                    description = "Relates propagation speed directly to wave frequency and wave cycles.",
+                                    applicationTrick = "Velocity is fixed to 3 * 10^8 m/s in free space."
+                                ),
+                                FormulaItem(
+                                    name = "Poynting Energy Vector",
+                                    expression = "S = E × H",
+                                    description = "Represents overall direction and volumic power transport flow density of passing waves.",
+                                    applicationTrick = "Unit of Poynting vector is Watts per square meter (W/m²)."
+                                )
+                            ),
+                            pyqs = getEmfQuestions("em_waves_propagation", 0),
+                            practiceQuestions = getEmfQuestions("em_waves_propagation", 1),
+                            mockQuiz = getEmfQuestions("em_waves_propagation", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "em_transmission",
+                    subjectId = subjectId,
+                    name = "Lines & Waveguides",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "em_transmission_lines",
+                            topicId = "em_transmission",
+                            subjectId = subjectId,
+                            name = "Transmission Line Equations, VSWR & Impedance Matching",
+                            theory = TheoryContent(
+                                title = "Distributed Parameter Lines & Standing Waves",
+                                synopsis = "Examines characteristic impedances, voltage standing wave ratios (VSWR), and impedance matching transformations.",
+                                detailedBullets = listOf(
+                                    "Characteristic Impedance (Z0): Value of wave impedance along infinite lines, matching sqrt(L/C) for lossless systems.",
+                                    "Voltage Standing Wave Ratio (VSWR): Relates peak to trough signal cycles, showing exactly 1 for ideal matching structures.",
+                                    "Reflection Coefficient (Γ): Matches incident to bounced voltage signals, depending directly on mismatched loads: (ZL - Z0)/(ZL + Z0).",
+                                    "Quarter-Wave Matcher: Transforms impedances using Zin = Z0² / ZL, utilizing exactly quarter-wavelength line lines."
+                                ),
+                                keyInsight = "Perfect line matching yields zero reflection coefficients, delivering maximum possible power flow straight to the load terminal."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Reflection Coefficient",
+                                    expression = "Γ = (Z_L - Z_0) / (Z_L + Z_0)",
+                                    description = "Evaluates mismatch levels at lines boundaries.",
+                                    applicationTrick = "Values range strictly from -1 (shorts) to +1 (open circuits)."
+                                ),
+                                FormulaItem(
+                                    name = "VSWR Calculation",
+                                    expression = "VSWR = (1 + |Γ|) / (1 - |Γ|)",
+                                    description = "Provides ratio of maximum to minimum voltage envelope amplitude along mismatched lines.",
+                                    applicationTrick = "Matches perfectly to 1 when Γ is zero, and reaches infinity for open/short systems."
+                                )
+                            ),
+                            pyqs = getEmfQuestions("em_transmission_lines", 0),
+                            practiceQuestions = getEmfQuestions("em_transmission_lines", 1),
+                            mockQuiz = getEmfQuestions("em_transmission_lines", 2)
+                        ),
+                        Subtopic(
+                            id = "em_waveguides_radiation",
+                            topicId = "em_transmission",
+                            subjectId = subjectId,
+                            name = "Waveguides, Cutoff Frequencies & Antennas",
+                            theory = TheoryContent(
+                                title = "Guided Fields, Rectangular Guides & Antennas",
+                                synopsis = "Addresses hollow pipe guides, dominant modes, cutoff frequency conditions, and accelerating charge radiation energy.",
+                                detailedBullets = listOf(
+                                    "Hollow Waveguides: Coaxial cables support TEM, but hollow single-conductors strictly restrict TEM, supporting only TE or TM modes.",
+                                    "Dominant Mode: Mode with the Absolute Lowest Cutoff Frequency. In rectangular pipes, this is the TE10 mode.",
+                                    "Cutoff Frequency: Boundary frequency threshold below which wave propagation drops to exponentially decaying evanescent fields.",
+                                    "Radiation Principle: Antennas radiate electromagnetic waves in response to accelerating charges along current elements."
+                                ),
+                                keyInsight = "TEM systems cannot survive inside single closed pipe guides because they require two isolated metallic boundaries to support static transverse gradients."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Cutoff Frequency of Rectangular Guide",
+                                    expression = "f_c = (c / 2) * sqrt((m/a)² + (n/b)²)",
+                                    description = "Determines boundary propagation cutoffs based on cross-section guide widths 'a' and heights 'b'.",
+                                    applicationTrick = "TE10 dominant mode cutoff expression simplifies to c / (2 * a)."
+                                ),
+                                FormulaItem(
+                                    name = "Waveguide Mode Conditions",
+                                    expression = "TE Mode: E_z = 0, H_z ≠ 0; TM Mode: H_z = 0, E_z ≠ 0",
+                                    description = "Classifies boundary field projections along propagation lines.",
+                                    applicationTrick = "Enforces zero longitudinal gradients for respective fields."
+                                )
+                            ),
+                            pyqs = getEmfQuestions("em_waveguides_radiation", 0),
+                            practiceQuestions = getEmfQuestions("em_waveguides_radiation", 1),
+                            mockQuiz = getEmfQuestions("em_waveguides_radiation", 2)
                         )
                     )
                 )
@@ -2597,6 +3057,19 @@ object GateSyllabus {
 
     private fun createMeasurements(): Subject {
         val subjectId = "measurements"
+        val allMiQuestions = MeasurementsQuestions.questions
+
+        fun getMiQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allMiQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Measurements & Instrumentation",
@@ -2608,32 +3081,85 @@ object GateSyllabus {
                     name = "Measuring Meters & Bridges",
                     subtopics = listOf(
                         Subtopic(
-                            id = "mi_meters_ac_dc",
+                            id = "mi_fundamentals_errors",
                             topicId = "mi_meters_bridges",
                             subjectId = subjectId,
-                            name = "PMMC, Moving Iron, Wheatstone & AC Bridges",
+                            name = "Measurement Fundamentals & Error Analysis",
                             theory = TheoryContent(
-                                title = "DC/AC Measuring Instruments & Impedance Bridges",
-                                synopsis = "Covers PMMC and MI instruments behaviors, alongside bridge networks used to find unknown resistances, inductances, and capacitances.",
+                                title = "Fundamentals of Measurements & Error Analysis",
+                                synopsis = "Examines system accuracies, repeatability limits, static characteristics, and systematic versus random uncertainties.",
                                 detailedBullets = listOf(
-                                    "PMMC (Permanent Magnet Moving Coil): Responds strictly to DC or average current values. Features linear scale.",
-                                    "Moving Iron (MI) Meters: Deflecting torque is proportional to the square of current. Responds to composite system RMS values (both AC and DC).",
-                                    "Wheatstone Bridge: Evaluates medium resistances at DC balance: R1*R4 = R2*R3.",
-                                    "AC Bridges: Balance requires both magnitude and phase matching: Z1*Z4 = Z2*Z3. Maxwell/Anderson bridges for inductances, Schering bridge for capacitance."
+                                    "Accuracy vs. Precision: Accuracy focuses on conforming to true standards, whereas Precision tracks self-consistency.",
+                                    "Error Mitigation: Systematic bias is corrected via calibration, but random anomalies require statistical averaging.",
+                                    "Dynamic Performance: Speed of response, fidelity and delay are keys to tracking rapid continuous waves."
                                 ),
-                                keyInsight = "At bridge balance, zero current flows through the central detector branch, indicating equal potential at both detector terminal nodes."
+                                keyInsight = "By averaging multiple identical measurements, random noise elements drop following the square root of observation size."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Bridge Balance matching state",
-                                    expression = "Z1 * Z4 = Z2 * Z3",
-                                    description = "Evaluates balancing condition of opposite passive branches.",
-                                    applicationTrick = "Separate the complex balance equation into real and imaginary parts to solve for resistance and reactance parameters independently."
+                                    name = "Absolute Error",
+                                    expression = "E_a = Y_measured - X_true",
+                                    description = "Evaluates difference between measured and true physical quantities.",
+                                    applicationTrick = "Treat absolute errors carefully when propagating values through operations."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getMiQuestions("mi_fundamentals_errors", 0),
+                            practiceQuestions = getMiQuestions("mi_fundamentals_errors", 1),
+                            mockQuiz = getMiQuestions("mi_fundamentals_errors", 2)
+                        ),
+                        Subtopic(
+                            id = "mi_analog_meters",
+                            topicId = "mi_meters_bridges",
+                            subjectId = subjectId,
+                            name = "Analog Electromechanical Meters",
+                            theory = TheoryContent(
+                                title = "Analog PMMC, MI & Instrument Transformers",
+                                synopsis = "Explores electromechanical coil deflections, magnetic moving-irons, high current scaling, and power parameters.",
+                                detailedBullets = listOf(
+                                    "PMMC deflection: Permanent magnets produce flux; driving currents interact to move coils linearly: T_d = N*B*A*I.",
+                                    "Moving Iron: Magnetic forces distort iron pieces, proportional to the square of current, allowing AC/DC RMS capture.",
+                                    "Transformers: Secondary lines of Current Transformers (CT) must be shorted to prevent fatal magnetic saturations."
+                                ),
+                                keyInsight = "The secondary of any current transformer should never be open-circuited because heavy back-EMF values will saturating the core and burn the insulation."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "PMMC Deflection Torque",
+                                    expression = "T_d = B * A * I * N",
+                                    description = "The basic torque equation driving linear PMMC movements.",
+                                    applicationTrick = "Since deflecting torque balances spring tension, pointer displacement varies directly with direct current input."
+                                )
+                            ),
+                            pyqs = getMiQuestions("mi_analog_meters", 0),
+                            practiceQuestions = getMiQuestions("mi_analog_meters", 1),
+                            mockQuiz = getMiQuestions("mi_analog_meters", 2)
+                        ),
+                        Subtopic(
+                            id = "mi_bridges",
+                            topicId = "mi_meters_bridges",
+                            subjectId = subjectId,
+                            name = "DC & AC Bridge Networks",
+                            theory = TheoryContent(
+                                title = "Resistive & Reactive Impedance Bridges",
+                                synopsis = "Covers standard null-detecting bridges used to capture resistance, high-Q inductance, and dielectric capacitance.",
+                                detailedBullets = listOf(
+                                    "DC bridges: Wheatstone evaluates medium levels, whereas Kelvin double bridges cancel lead wire resistances.",
+                                    "Inductance Bridges: Maxwell is efficient for medium quality coils, while Hay bridges suit high-Q inductors.",
+                                    "Capacitance & Loss: Schering bridge measures losses of clean dielectric systems via phase shift angles."
+                                ),
+                                keyInsight = "AC bridge balancing requires both phase angles and magnitude to balance and cancel detector current."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "General AC Bridge Balance",
+                                    expression = "Z1 * Z4 = Z2 * Z3",
+                                    description = "Balance matching condition of opposite branches.",
+                                    applicationTrick = "Separate into real and imaginary parts to resolve the parameters independently."
+                                )
+                            ),
+                            pyqs = getMiQuestions("mi_bridges", 0),
+                            practiceQuestions = getMiQuestions("mi_bridges", 1),
+                            mockQuiz = getMiQuestions("mi_bridges", 2)
                         )
                     )
                 ),
@@ -2643,31 +3169,697 @@ object GateSyllabus {
                     name = "Sensors & Digital Systems",
                     subtopics = listOf(
                         Subtopic(
-                            id = "mi_transducers_cro",
+                            id = "mi_transducers_temp",
                             topicId = "mi_sensors_digital",
                             subjectId = subjectId,
-                            name = "LVDT, Strain Gauges, CRO & DSO Meters",
+                            name = "Transducers & Temperature Sensors",
                             theory = TheoryContent(
-                                title = "Industrial Transducers & Oscilloscopes",
-                                synopsis = "Details electromechanical sensors (LVDT, Strain Gauge) and digital measurement tools (CRO, DSO).",
+                                title = "Electromechanical Transducers & Temperature Probes",
+                                synopsis = "Principles of strain deformation grid factors, displacement coupling transformers, and standard thermal variables.",
                                 detailedBullets = listOf(
-                                    "Strain Gauge: Measures mechanical strain based on resistance variations under physical stress.",
-                                    "LVDT (Linear Variable Differential Transformer): An inductive transducer yielding a linear voltage response relative to displacement.",
-                                    "CRO (Cathode Ray Oscilloscope): Lissajous patterns are used to evaluate phase differences and frequency ratios between two signal channels."
+                                    "Strain Gauges: Converts structural stretch to proportional grid resistance changes: dR/R = G_F * strain.",
+                                    "LVDT displacement: Concentric secondary coils track core movements, producing phase-sensitive voltages.",
+                                    "Temperature Sensors: RTD platinum resistance rises with heat, while thermistors drop, and thermocouples yield voltages."
                                 ),
-                                keyInsight = "An LVDT outputs exactly zero potential at its central magnetic symmetry null position."
+                                keyInsight = "An active transducer generates its own output voltage or current without requiring external bias potential."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
                                     name = "Strain Gauge Factor",
-                                    expression = "G_F = (dR / R) / strain",
-                                    description = "Relates change in resistance to physical strain deformation.",
-                                    applicationTrick = "Can also be written as: G_F = 1 + 2 * Poisson_ratio + piezoresistive_factor."
+                                    expression = "G_F = (dR/R) / Strain",
+                                    description = "Deduces proportional resistance shift per unit deformation.",
+                                    applicationTrick = "Typically G_F ≈ 2 for standard copper grids."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getMiQuestions("mi_transducers_temp", 0),
+                            practiceQuestions = getMiQuestions("mi_transducers_temp", 1),
+                            mockQuiz = getMiQuestions("mi_transducers_temp", 2)
+                        ),
+                        Subtopic(
+                            id = "mi_digital_oscilloscope",
+                            topicId = "mi_sensors_digital",
+                            subjectId = subjectId,
+                            name = "Digital Instruments & Oscilloscopes",
+                            theory = TheoryContent(
+                                title = "Cathode Ray Tubes, Storage & Frequency Counters",
+                                synopsis = "Deals with analog CRT deflection plates, digitized memory samples, voltmeter scales, and gating cycles.",
+                                detailedBullets = listOf(
+                                    "CRT deflection: Electric fields accelerate focus beams vertically while sweep sawteeth move horizontally.",
+                                    "Lissajous: Inputting two sinusoidal channels builds symmetric curves, confirming frequency ratios and phases.",
+                                    "Frequency Counters: High precision reference crystals count logic pulses during configured gateway durations."
+                                ),
+                                keyInsight = "A DSO stores continuous signals into static digital memory, preventing dynamic decay observed on CRO tubes."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Lissajous Peak Frequency Ratio",
+                                    expression = "fy / fx = Nx / Ny",
+                                    description = "Connects horizontal and vertical intersections to channel frequencies.",
+                                    applicationTrick = "Count the tangential peaks along each axis to calculate unknown ratios."
+                                )
+                            ),
+                            pyqs = getMiQuestions("mi_digital_oscilloscope", 0),
+                            practiceQuestions = getMiQuestions("mi_digital_oscilloscope", 1),
+                            mockQuiz = getMiQuestions("mi_digital_oscilloscope", 2)
+                        ),
+                        Subtopic(
+                            id = "mi_circuits_conditioning",
+                            topicId = "mi_sensors_digital",
+                            subjectId = subjectId,
+                            name = "Data Acquisition, Signal Conditioning & Conversions",
+                            theory = TheoryContent(
+                                title = "Signal Conditioning, Amplifiers & Data Converters",
+                                synopsis = "Covers high-CMRR differential instrumentation buffers, Nyquist filtering, and analog/digital conversions.",
+                                detailedBullets = listOf(
+                                    "Instrumentation Amplifiers: Connects three op-amps as a high impedance buffer to reject common noise.",
+                                    "ADC Converters: Successive approximation is resource-efficient, whereas Flash grids prioritize absolute high speed.",
+                                    "Nyquist rate: To prevent aliasing overlap distortion, sample frequencies must exceed twice the band width limit."
+                                ),
+                                keyInsight = "High CMRR is mandatory in instrumentation blocks to cancel out heavy identical noise voltages."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Instrumentation Amplifier CMRR",
+                                    expression = "CMRR = Ad / Ac",
+                                    description = "Evaluates common mode rejection performance.",
+                                    applicationTrick = "Represent in dB using 20 * log10(Ad / Ac) for comparisons."
+                                )
+                            ),
+                            pyqs = getMiQuestions("mi_circuits_conditioning", 0),
+                            practiceQuestions = getMiQuestions("mi_circuits_conditioning", 1),
+                            mockQuiz = getMiQuestions("mi_circuits_conditioning", 2)
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    private fun createAptitudeForAll(): Subject {
+        val subjectId = "aptitude_for_all"
+        val allAfaQuestions = AptitudeForAllQuestions.questions
+
+        fun getAfaQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allAfaQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
+        return Subject(
+            id = subjectId,
+            name = "Aptitude for all",
+            iconName = "psychology",
+            topics = listOf(
+                Topic(
+                    id = "afa_aptitude",
+                    subjectId = subjectId,
+                    name = "Quantitative Aptitude",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "afa_time_work",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Time & Work & Cisterns",
+                            theory = TheoryContent(
+                                title = "Work Rates, Pipe Flow and Labor Effort",
+                                synopsis = "Covers linear work completion, inverse days-to-worker proportions, pipe inflows, leak depletion rates, and cistern capacities.",
+                                detailedBullets = listOf(
+                                    "Time & Work: Solve using reciprocal rate systems where Person A's rate 1/D1 and Person B's rate 1/D2 add together linearly to 1/D_total.",
+                                    "Pipes & Cisterns: Inflow pipes act as positive work rates, while leakage or outflow paths represent negative rates.",
+                                    "Alternating schedules: Sequence discrete time turns and calculate fractional job progress periodically."
+                                ),
+                                keyInsight = "When workers have varying efficiencies, their rates must be scaled relatively before addition."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Worker Work Rate Proportion",
+                                    expression = "M1 * D1 * H1 = M2 * D2 * H2",
+                                    description = "Evaluates relationship between workers, days, and active daily hours worked.",
+                                    applicationTrick = "When intermediate workers leave or join, solve parts of the job as fractional rates."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_time_work", 0),
+                            practiceQuestions = getAfaQuestions("afa_time_work", 1),
+                            mockQuiz = getAfaQuestions("afa_time_work", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_pct_profit",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Percentages, Profit & Loss",
+                            theory = TheoryContent(
+                                title = "Percentages, Cost margins and Taxes",
+                                synopsis = "Addresses base multipliers, gain percentages, loss offsets, discounted price lines, marked premiums, and sales taxes.",
+                                detailedBullets = listOf(
+                                    "Percentage change: Calculated as net deviation divided by original value, scaled by 100.",
+                                    "Profit Margin: Net gain expressed as SP - CP, while percentage gain is always computed relative to the base Purchase Cost (CP).",
+                                    "Discount: Offsets are directly deducted from Marked Price (MP) to produce the Selling Price (SP)."
+                                ),
+                                keyInsight = "Successive discounts of X% and Y% are not additive; they apply sequentially as a product multiplier."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Profit Margin Percent",
+                                    expression = "Gain % = ((SP - CP) / CP) * 100",
+                                    description = "Measures profit efficiency relative to cost base.",
+                                    applicationTrick = "For rapid computing, treat percentage multipliers as continuous decimals (e.g. 20% gain = 1.2 * CP)."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_pct_profit", 0),
+                            practiceQuestions = getAfaQuestions("afa_pct_profit", 1),
+                            mockQuiz = getAfaQuestions("afa_pct_profit", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_interest",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Simple & Compound Interest",
+                            theory = TheoryContent(
+                                title = "Growth and Sinking Funds",
+                                synopsis = "Principles of linear interest accumulates, exponential compounding intervals, and present value true discounts.",
+                                detailedBullets = listOf(
+                                    "Simple Interest: Remains constant each year since it only charges the primary principal amount.",
+                                    "Compound Interest: Grows exponentially because interest earned in prior cycles is added to the principal base.",
+                                    "True Discount: Represents the difference between the face value of a future bill and its present worth."
+                                ),
+                                keyInsight = "Under compounding, the effective annual yield increases as compounding intervals become more frequent."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Compound Accumulation Formula",
+                                    expression = "A = P * (1 + R/100)^n",
+                                    description = "Evaluates compound accumulation over n periods.",
+                                    applicationTrick = "For compounding more than once a year, scale R down and scale n up by the interval factor."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_interest", 0),
+                            practiceQuestions = getAfaQuestions("afa_interest", 1),
+                            mockQuiz = getAfaQuestions("afa_interest", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_avg_mixtures",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Averages, Mixtures & Partnerships",
+                            theory = TheoryContent(
+                                title = "Weighted Averages, Concentration and Shares",
+                                synopsis = "Addresses mean value combinations, allegations, mixture dilutions, investment partnerships, and profit sharing.",
+                                detailedBullets = listOf(
+                                    "Averages: Sum of all discrete units divided by total count of those units.",
+                                    "Alligation: Relates the ratio of quantities to the price differences of cheap and dear ingredients.",
+                                    "Partnerships: Profit shares are distributed directly proportional to the product of capital invested and period of investment."
+                                ),
+                                keyInsight = "Alligation lines provide a rapid graphical methodology to swap weighted average weights easily."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Alligation Ratio",
+                                    expression = "(Qty of Cheap / Qty of Dear) = (Dear Price - Mean Price) / (Mean Price - Cheap Price)",
+                                    description = "Establishes mixture proportion of ingredients to hit target mean pricing.",
+                                    applicationTrick = "Leverage this rule to quickly balance salt concentrations in fluid mixtures."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_avg_mixtures", 0),
+                            practiceQuestions = getAfaQuestions("afa_avg_mixtures", 1),
+                            mockQuiz = getAfaQuestions("afa_avg_mixtures", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_ratio_ages",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Ratio, Proportion & Ages",
+                            theory = TheoryContent(
+                                title = "Relative Proportions and Temporal Ages",
+                                synopsis = "Core numeric proportions, duplicate ratios, fourth proportionals, scale changes, and historic age shifts.",
+                                detailedBullets = listOf(
+                                    "Ratios: Represent relative magnitude, easily compared when scaled to a common factor variable x.",
+                                    "Proportions: Equalities of fractions where product of extremes equals product of means.",
+                                    "Temporal Ages: Difference in age between two people remains constant across any point in time."
+                                ),
+                                keyInsight = "Always set up a common variable factor 'x' for ratios to set up solvable algebraic systems."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Ratio Common Factor",
+                                    expression = "A : B -> Ax and Bx",
+                                    description = "Constructs linear equations from proportional statements.",
+                                    applicationTrick = "Age difference is constant, so (Father_age + Y) - (Son_age + Y) = Constant."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_ratio_ages", 0),
+                            practiceQuestions = getAfaQuestions("afa_ratio_ages", 1),
+                            mockQuiz = getAfaQuestions("afa_ratio_ages", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_speed_distance",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Speed, Time & Distance",
+                            theory = TheoryContent(
+                                title = "Kinematics, Relative Speeds and Water Currents",
+                                synopsis = "Kinematic speed changes, average velocity for splits, train passings, and swimming relative to stream flow.",
+                                detailedBullets = listOf(
+                                    "Relative Speed: Addition of speeds when moving in opposite directions; subtraction of speeds when chasing.",
+                                    "Average Speed split: When covering equal distances, given by the harmonic mean of the individual speeds.",
+                                    "River Currents: Downstream speed equals boat speed plus stream speed; upstream is boat speed minus stream speed."
+                                ),
+                                keyInsight = "When a train passes a bridge or platform, the total distance is the sum of train length and bridge length."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Harmonic Average Speed",
+                                    expression = "Avg Speed = 2 * S1 * S2 / (S1 + S2)",
+                                    description = "Computes average speed for two equal-distance segments.",
+                                    applicationTrick = "Never calculate the arithmetic average of speeds unless time intervals are identical."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_speed_distance", 0),
+                            practiceQuestions = getAfaQuestions("afa_speed_distance", 1),
+                            mockQuiz = getAfaQuestions("afa_speed_distance", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_num_systems",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Number Systems & Progressions",
+                            theory = TheoryContent(
+                                title = "Numeric Integers, Factors and Series Sums",
+                                synopsis = "Integrate prime properties, common divisors, divisibility checks, unit digit repetitions, and series sums.",
+                                detailedBullets = listOf(
+                                    "Primes: Integers strictly greater than 1 that only possess 1 and themselves as natural factors.",
+                                    "HCF & LCM: Highest common factor and least common multiple of a set of integers.",
+                                    "Arithmetic Series: Linear step changes where terms are summed by averaging first and last elements."
+                                ),
+                                keyInsight = "Unit digits of exponents repeat periodically after a cycle length of exactly 4."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "HCF & LCM Relation",
+                                    expression = "HCF(a, b) * LCM(a, b) = a * b",
+                                    description = "Deduces product equivalencies of positive numbers.",
+                                    applicationTrick = "Quickly find HCF of fractions as (HCF of Numerators) / (LCM of Denominators)."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_num_systems", 0),
+                            practiceQuestions = getAfaQuestions("afa_num_systems", 1),
+                            mockQuiz = getAfaQuestions("afa_num_systems", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_algebra_logs",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Basic Algebra & Logarithms",
+                            theory = TheoryContent(
+                                title = "Algebraic Expressions, Roots and Growth logs",
+                                synopsis = "Variables solving, quadratic roots coefficients, logarithmic bases, and cost optimizations.",
+                                detailedBullets = listOf(
+                                    "Quadratic Equation: Ax^2 + Bx + C = 0 roots are real if discriminant is non-negative.",
+                                    "Logarithmic Laws: Multiplication inside log expands to addition of individual term logs.",
+                                    "Optimization: Derivatives determine high and low inflection thresholds in dynamic cost equations."
+                                ),
+                                keyInsight = "The base of logarithms must belong to positive real numbers excluded of 1."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Logarithm Base Change",
+                                    expression = "log_a(x) = ln(x) / ln(a)",
+                                    description = "Converts logarithmic expressions to natural base logarithms.",
+                                    applicationTrick = "Useful to cancel out complex composite quotient logarithms sequentially."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_algebra_logs", 0),
+                            practiceQuestions = getAfaQuestions("afa_algebra_logs", 1),
+                            mockQuiz = getAfaQuestions("afa_algebra_logs", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_prob_combinations",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Probability & Permutations",
+                            theory = TheoryContent(
+                                title = "Chance Events, Orderings and Groupings",
+                                synopsis = "Examines likelihood limits, combinations, permutations, coin state counts, and deck outcomes.",
+                                detailedBullets = listOf(
+                                    "Permutations: Used when order of elements matters (e.g. arranging people in line).",
+                                    "Combinations: Used when only selection is needed, irrespective of ordering sequence.",
+                                    "Probability: Quantifies probability as favorable sample states divided by absolute universe states."
+                                ),
+                                keyInsight = "The probability of at least one target occurrence is simpler to find as 1 minus zero occurrences."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Combination Formula",
+                                    expression = "nCr = n! / (r! * (n-r)!)",
+                                    description = "Counts possible ways to pick r elements from n entities without ordering.",
+                                    applicationTrick = "Always simplify factorials beforehand to prevent memory overflows."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_prob_combinations", 0),
+                            practiceQuestions = getAfaQuestions("afa_prob_combinations", 1),
+                            mockQuiz = getAfaQuestions("afa_prob_combinations", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_set_data",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Set Theory, Venn Diagrams & Statistics",
+                            theory = TheoryContent(
+                                title = "Set Relationships, Venn diagrams and Data splits",
+                                synopsis = "Set intersections, inclusion Venn regions, statistical averages, medians, modes, and variances.",
+                                detailedBullets = listOf(
+                                    "Venn Systems: Graphical groupings representing intersections, unions, and exclusive categories.",
+                                    "Measures of Central Tendency: Mean (average), Median (middle value), and Mode (most frequent term).",
+                                    "Variance: Calculates distance deviations from the average mean."
+                                ),
+                                keyInsight = "The sum of all percentage proportions inside a pie chart must equal exactly 360 degrees of circle angle."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Inclusion Exclusion Formula",
+                                    expression = "n(A u B) = n(A) + n(B) - n(A n B)",
+                                    description = "Evaluates overlaps between two logical sets.",
+                                    applicationTrick = "Establish exclusive groups (A only, B only, Both) first on Venn maps."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_set_data", 0),
+                            practiceQuestions = getAfaQuestions("afa_set_data", 1),
+                            mockQuiz = getAfaQuestions("afa_set_data", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_geometry",
+                            topicId = "afa_aptitude",
+                            subjectId = subjectId,
+                            name = "Geometry & Mensuration",
+                            theory = TheoryContent(
+                                title = "Planar Lines, Dimensions and Volume bounds",
+                                synopsis = "Covers rectangular areas, spherical volumes, cylinder sizes, circles, and perimeter boundaries.",
+                                detailedBullets = listOf(
+                                    "Perimeter: Evaluates sum of external boundary lines around closed geometries.",
+                                    "Mensuration: Calculates three-dimensional volume boundaries and surface areas.",
+                                    "Cylinders and Cones: Connects volume metrics between cylinder shapes and identical cone dimensions."
+                                ),
+                                keyInsight = "Scaling coordinates or lengths by k scales the perimeter by k, the area by k^2, and volume by k^3."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Circle Area",
+                                    expression = "Area = pi * r^2",
+                                    description = "Computes circle area given radius variable r.",
+                                    applicationTrick = "If radius is scaled, area is modified proportional to the square of scale shift factor."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_geometry", 0),
+                            practiceQuestions = getAfaQuestions("afa_geometry", 1),
+                            mockQuiz = getAfaQuestions("afa_geometry", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "afa_logical",
+                    subjectId = subjectId,
+                    name = "Logical Reasoning",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "afa_blood_relations",
+                            topicId = "afa_logical",
+                            subjectId = subjectId,
+                            name = "Blood Relations",
+                            theory = TheoryContent(
+                                title = "Kinship Links and Family Trees",
+                                synopsis = "Analysis of relative links, maternal structures, generation gaps, and coding relationships.",
+                                detailedBullets = listOf(
+                                    "Kinship tracking: Formulate step-by-step linkages of family branches with explicit notations.",
+                                    "Generation levels: Set up vertical hierarchies representing grandparents, parents, self, and children.",
+                                    "Coded relationships: Deduce relational terms based on mathematical symbolic operators (e.g. A + B)."
+                                ),
+                                keyInsight = "Do not assume the gender of a person strictly based on name labels alone; look for pronoun qualifiers."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Generation Delta",
+                                    expression = "Delta = grandparent (+2), parent (+1), sibling (0), child (-1)",
+                                    description = "Assigns numerical steps to navigate parentage trees.",
+                                    applicationTrick = "Construct family graphs with gender tags (+ for male, - for female) to prevent confusion."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_blood_relations", 0),
+                            practiceQuestions = getAfaQuestions("afa_blood_relations", 1),
+                            mockQuiz = getAfaQuestions("afa_blood_relations", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_directions",
+                            topicId = "afa_logical",
+                            subjectId = subjectId,
+                            name = "Directions & Compass tracking",
+                            theory = TheoryContent(
+                                title = "Compass Points, Bearing moves and Distances",
+                                synopsis = "Cardinal directions, step displacements, compass bearing shifts, and distance computations.",
+                                detailedBullets = listOf(
+                                    "Cardinal Directions: Coordinate plane representing North (up), South (down), East (right), and West (left).",
+                                    "Displacements: Net diagonal distance from start position is found with the Pythagoras theorem.",
+                                    "Compass Turns: Clockwise and counterclockwise angular turns relative to initial bearing directions."
+                                ),
+                                keyInsight = "Shadow shifts depend on sun coordinates: morning sun casts shadows directly West."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Pythagorean Displacement",
+                                    expression = "Displacement = √(X^2 + Y^2)",
+                                    description = "Finds direct distance between starting and ending points.",
+                                    applicationTrick = "Map movements onto standard cartesians with origin representing the starting location."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_directions", 0),
+                            practiceQuestions = getAfaQuestions("afa_directions", 1),
+                            mockQuiz = getAfaQuestions("afa_directions", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_ranking",
+                            topicId = "afa_logical",
+                            subjectId = subjectId,
+                            name = "Ranking & Positions",
+                            theory = TheoryContent(
+                                title = "Ordered Lists, Positions and Rank Swaps",
+                                synopsis = "Addresses positional counts inside queues, left/right order indices, and comparative rankings.",
+                                detailedBullets = listOf(
+                                    "Ordered positions: Evaluates total entities in series given positioning indexes.",
+                                    "Rank exchanges: Swapping indexes allows determining the overall group capacity mathematically.",
+                                    "Comparisons: Ordering heights or sizes based on relative inequalities (e.g. A > B)."
+                                ),
+                                keyInsight = "When indexing someone from both sides, the index overlap requires subtracting 1 to avoid double counting."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Rank-Position Counter",
+                                    expression = "Total = Position_left + Position_right - 1",
+                                    description = "Connects positioning indexes to total size.",
+                                    applicationTrick = "Double check whether the question demands inclusive or exclusive indices."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_ranking", 0),
+                            practiceQuestions = getAfaQuestions("afa_ranking", 1),
+                            mockQuiz = getAfaQuestions("afa_ranking", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_coding_series",
+                            topicId = "afa_logical",
+                            subjectId = subjectId,
+                            name = "Series & Coding-Decoding",
+                            theory = TheoryContent(
+                                title = "Pattern Recognition, Shift codes and Series",
+                                synopsis = "Number series patterns, word coding shifts, alphabet series, and index codes.",
+                                detailedBullets = listOf(
+                                    "Coding: Decoding cipher words by recognizing shift patterns in spelling letters (+1, -2, etc.).",
+                                    "Number Series: Finding patterns in differences, square progressions, or Fibonacci sequences.",
+                                    "Alphanumeric coding: Grouping letters and counting indices together to find sequence gaps."
+                                ),
+                                keyInsight = "Memorizing letter positions from 1 to 26 makes decoding shift questions significantly faster."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "EJOTY Rule",
+                                    expression = "E=5, J=10, O=15, T=20, Y=25",
+                                    description = "Establishes alphabetical index landmarks.",
+                                    applicationTrick = "Use these letters as mental anchors to rapidly locate other alphabets."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_coding_series", 0),
+                            practiceQuestions = getAfaQuestions("afa_coding_series", 1),
+                            mockQuiz = getAfaQuestions("afa_coding_series", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_clocks_calendars",
+                            topicId = "afa_logical",
+                            subjectId = subjectId,
+                            name = "Clocks & Calendars",
+                            theory = TheoryContent(
+                                title = "Temporal Periodics, Hand angles and Leap counts",
+                                synopsis = "Clock hand angles, minute/hour speed differentials, leap years, and calendar cycles.",
+                                detailedBullets = listOf(
+                                    "Clock Rates: Minute hand travels at 6° per minute; hour hand sweeps at 0.5° per minute.",
+                                    "Calendar cycles: Ordinary years contain 1 odd day, while leap years contain 2 odd days.",
+                                    "Leap Years: Years divisible by 4, except for century years which must be divisible by 400."
+                                ),
+                                keyInsight = "A clock's hands overlap or point in opposite directions periodically due to speed differences."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Clock Face Angle",
+                                    expression = "Angle = |30 * H - 5.5 * M|",
+                                    description = "Evaluates hand angle separation given hours H and minutes M.",
+                                    applicationTrick = "For reflex angles, subtract the computed angle directly from 360 degrees."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_clocks_calendars", 0),
+                            practiceQuestions = getAfaQuestions("afa_clocks_calendars", 1),
+                            mockQuiz = getAfaQuestions("afa_clocks_calendars", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_analogies_syllogisms",
+                            topicId = "afa_logical",
+                            subjectId = subjectId,
+                            name = "Analogies & Syllogisms",
+                            theory = TheoryContent(
+                                title = "Relational Maps, Venn statements and logical limits",
+                                synopsis = "Deductive verbal syllogisms, classification groupings, verbal analogies, and logical conclusions.",
+                                detailedBullets = listOf(
+                                    "Syllogisms: Use Venn diagram overlap rules to test statement validity.",
+                                    "Analogies: Map the relationship between a reference pair onto a target pair.",
+                                    "Classification: Identify outliers or odd terms that do not share the group's common pattern."
+                                ),
+                                keyInsight = "Logical statements are directional: 'All A are B' does not guarantee 'All B are A'."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Syllogistic Rules",
+                                    expression = "All p are q -> (circle of p inside q)",
+                                    description = "Builds graphical models representing logical statements.",
+                                    applicationTrick = "Consider and draw all possible overlapping configurations before drawing conclusions."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_analogies_syllogisms", 0),
+                            practiceQuestions = getAfaQuestions("afa_analogies_syllogisms", 1),
+                            mockQuiz = getAfaQuestions("afa_analogies_syllogisms", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "afa_verbal",
+                    subjectId = subjectId,
+                    name = "Verbal Ability",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "afa_syn_ant",
+                            topicId = "afa_verbal",
+                            subjectId = subjectId,
+                            name = "Synonyms & Antonyms",
+                            theory = TheoryContent(
+                                title = "Lexical Nuances and Word Polarity",
+                                synopsis = "Vocabulary synonyms, antonym structures, base prefixes, and contextual word meanings.",
+                                detailedBullets = listOf(
+                                    "Synonyms: Select words with closest contextual meaning under grammatical equivalents.",
+                                    "Antonyms: Identify oppositional terms while preserving verb tenses and parts of speech.",
+                                    "Roots: Recognize word stems and affixes to quickly identify overall word meanings."
+                                ),
+                                keyInsight = "Word polarities are often revealed by looking at prefixes like 'un-', 'dis-', or 'im-'."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Contextual Fit Rule",
+                                    expression = "Verify if substituting the synonym keeps the sentence's meaning constant.",
+                                    description = "Validates choice by textual replacement.",
+                                    applicationTrick = "Read the surrounding sentences to understand the exact tone and nuance of the word."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_syn_ant", 0),
+                            practiceQuestions = getAfaQuestions("afa_syn_ant", 1),
+                            mockQuiz = getAfaQuestions("afa_syn_ant", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_vocab_grammar",
+                            topicId = "afa_verbal",
+                            subjectId = subjectId,
+                            name = "Vocabulary & Grammar",
+                            theory = TheoryContent(
+                                title = "Syntactic Grammar, Spelling and Word use",
+                                synopsis = "Spelling rules, passive/active voice transformations, definite articles, and singular/plural prepositions.",
+                                detailedBullets = listOf(
+                                    "Spelling: Rules of vowel combinations (e.g. 'i before e except after c').",
+                                    "Grammar: Maintain subject-verb agreement across singular and plural sentences.",
+                                    "Articles: Precede singular nouns with indefinite qualifiers based on phonetic pronunciation sound."
+                                ),
+                                keyInsight = "Choose 'an' before silent-h words when they produce vowel sounds (e.g. 'an honest man')."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Article Selection Rule",
+                                    expression = "Consonant Sound -> 'A', Vowel Sound -> 'An'",
+                                    description = "Evaluates pronunciation phonetics for proper article pairing.",
+                                    applicationTrick = "Analyze pronunciation sound rather than relying strictly on the starting letter."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_vocab_grammar", 0),
+                            practiceQuestions = getAfaQuestions("afa_vocab_grammar", 1),
+                            mockQuiz = getAfaQuestions("afa_vocab_grammar", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_sent_completion",
+                            topicId = "afa_verbal",
+                            subjectId = subjectId,
+                            name = "Sentence Completion",
+                            theory = TheoryContent(
+                                title = "Structural Fillers and Word Alignment",
+                                synopsis = "Contextual blank fits, parts-of-speech alignments, sentence structure, and transitional conjunctions.",
+                                detailedBullets = listOf(
+                                    "Sentence Completion: Select fitting words based on contextual tone and surrounding sentences.",
+                                    "Conjunction Clues: Contrast transitions demands opposite polarity terms in sentence setups.",
+                                    "Subject Alignment: Keep verb forms aligned with compound nouns or pronouns."
+                                ),
+                                keyInsight = "Conjunctions like 'neither... nor' take singular verbs if the subject nearest to the verb is singular."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Conjunction Clue Rule",
+                                    expression = "Transitions like 'however', 'although' imply semantic contrast.",
+                                    description = "Guides blank completion selections across sentences.",
+                                    applicationTrick = "Verify polarities of both blanks inside two-blank sentence problems."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_sent_completion", 0),
+                            practiceQuestions = getAfaQuestions("afa_sent_completion", 1),
+                            mockQuiz = getAfaQuestions("afa_sent_completion", 2)
+                        ),
+                        Subtopic(
+                            id = "afa_comprehension_reasoning",
+                            topicId = "afa_verbal",
+                            subjectId = subjectId,
+                            name = "Comprehension & Critical Reasoning",
+                            theory = TheoryContent(
+                                title = "Narrative Comprehension and Argument Logic",
+                                synopsis = "Addressing passage analysis, implicit assumptions, author tone, and sentence sequencing.",
+                                detailedBullets = listOf(
+                                    "Comprehension: Locate core arguments and stated facts directly within reading passages.",
+                                    "Critical Reasoning: Spot logical fallacies, implicit assumptions, and variables that weaken arguments.",
+                                    "Author Tone: Identify primary tones of authors based on lexical style (e.g. sarcastic, objective)."
+                                ),
+                                keyInsight = "Use negation testing: if negating the assumption collapses the argument, it is correct."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Assumptions Rule",
+                                    expression = "Assumption must be true for the argument to hold.",
+                                    description = "Determines validity of implicit assumptions.",
+                                    applicationTrick = "Negate the proposed assumption; check if it logically disproves the core conclusion."
+                                )
+                            ),
+                            pyqs = getAfaQuestions("afa_comprehension_reasoning", 0),
+                            practiceQuestions = getAfaQuestions("afa_comprehension_reasoning", 1),
+                            mockQuiz = getAfaQuestions("afa_comprehension_reasoning", 2)
                         )
                     )
                 )

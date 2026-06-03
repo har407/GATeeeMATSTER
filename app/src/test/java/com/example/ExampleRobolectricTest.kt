@@ -35,11 +35,11 @@ class ExampleRobolectricTest {
       // 3. Verify we are on general dashboard now that we are pre-authenticated
       composeTestRule.onNodeWithTag("welcome_streak_hud").assertExists()
 
-      // 4. Click on general_aptitude subject card (fits onscreen due to w1000dp-h2000dp)
-      composeTestRule.onNodeWithTag("subject_card_general_aptitude").performClick()
+      // 4. Click on engineering_math subject card (fits onscreen due to w1000dp-h2000dp)
+      composeTestRule.onNodeWithTag("subject_card_engineering_math").performClick()
 
       // 5. Click on the first subtopic row
-      composeTestRule.onNodeWithTag("subtopic_row_apt_verb_grammar_usage").performClick()
+      composeTestRule.onNodeWithTag("subtopic_row_math_la_matrix_algebra").performClick()
 
       // 6. Click on Practice Questions Tab (index 2)
       composeTestRule.onNodeWithTag("tab_button_2").performClick()

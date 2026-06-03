@@ -391,6 +391,16 @@ class GateViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- CBT Mock Test System Platform ---
+    fun resetCbtTest() {
+        _cbtQuestions.value = emptyList()
+        _cbtUserAnswers.value = emptyMap()
+        _cbtFinalScore.value = null
+        _cbtTimerSeconds.value = 5400
+        _isCbtRunning.value = false
+        _cbtSelectedSubjectId.value = null
+        _cbtSubjectScores.value = emptyList()
+    }
+
     fun selectCbtSubject(subjectId: String?) {
         _cbtSelectedSubjectId.value = subjectId
     }
