@@ -5,7 +5,6 @@ object GateSyllabus {
     val subjects: List<Subject> by lazy {
         listOf(
             createGeneralAptitude(),
-            createReasoning(),
             createEngineeringMath(),
             createNetworkTheory(),
             createSignalsAndSystems(),
@@ -689,79 +688,6 @@ object GateSyllabus {
         }
     }
 
-    private fun createReasoning(): Subject {
-        val subjectId = "reasoning"
-        return Subject(
-            id = subjectId,
-            name = "Reasoning",
-            iconName = "psychology",
-            topics = listOf(
-                Topic(
-                    id = "re_logical",
-                    subjectId = subjectId,
-                    name = "Logical Reasoning",
-                    subtopics = listOf(
-                        Subtopic(
-                            id = "re_log_analysis",
-                            topicId = "re_logical",
-                            subjectId = subjectId,
-                            name = "Syllogisms & Analytical Series",
-                            theory = TheoryContent(
-                                title = "Deductions, Number Series, & Syllogism Analysis",
-                                synopsis = "Addresses categorical logic assertions (Syllogisms), pattern recognition sequences, and deductive argument mappings.",
-                                detailedBullets = listOf(
-                                    "Venn Diagram Method: Standard tool to evaluate categorical syllogisms (e.g., All A are B, Some B are C).",
-                                    "Premise Verification: A conclusion is only logically valid if it is true in every possible representing Venn diagram layout.",
-                                    "Series progress: Find first-order differences, and then second-order differences. Most complex mathematical series resolve instantly under second-order subtraction."
-                                ),
-                                keyInsight = "Do not rely on real-world factual correctness of statements. Analyze validity strictly based on the relational rules stated in the given premises."
-                            ),
-                            formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Intersection & Subset Formulation",
-                                    expression = "All A are B <=> A ⊂ B, Some A are B <=> A ∩ B ≠ ∅",
-                                    description = "Sets up subset, intersection, and disjoint definitions for categorical syllogism evaluations.",
-                                    applicationTrick = "Draw both the minimal overlap diagram and maximum subset overlap diagrams to trace absolute logical truths."
-                                ),
-                                FormulaItem(
-                                    name = "Number Series Progression Step",
-                                    expression = "D_1(n) = T(n+1) - T(n), D_2(n) = D_1(n+1) - D_1(n)",
-                                    description = "Evaluates difference mappings of sequence items to discover quadratic or geometric patterns.",
-                                    applicationTrick = "If first differences are in AP, second differences are constant, highlighting a quadratic T(n) equation."
-                                )
-                            ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_re_syll_1",
-                                    subjectId = subjectId,
-                                    topicId = "re_logical",
-                                    subtopicId = "re_log_analysis",
-                                    year = 2022,
-                                    questionText = "Consider the following premises:\n1. All electrical machines are quiet.\n2. Some quiet devices are expensive.\nWhich of the following conclusions logically follows from these premises?\n(Select the most appropriate option)",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf(
-                                        "All electrical machines are expensive.",
-                                        "Some electrical machines are expensive.",
-                                        "No electrical machines are expensive.",
-                                        "None of the above conclusions logically follow from the premises."
-                                    ),
-                                    correctOptions = listOf(3),
-                                    explanation = "Let E = Set of all electrical machines, Q = Set of quiet devices, and X = Set of expensive devices.\nPremise 1: E is a subset of Q.\nPremise 2: Q intersects X (there is a non-empty overlap between Q and X).\nThis does not guarantee that E intersects X. It is possible for E and X to be completely disjoint while satisfying both premises. Thus, none of the specific conclusions (All E are X, Some E are X, or No E are X) logically follow as absolute certainties.",
-                                    formulasUsed = "Set Intersections and Inclusion boundaries",
-                                    shortcutTricks = "Draw a Venn diagram where E is entirely inside Q, and X overlaps with Q but has zero overlap with E. This valid representation instantly disproves the first three choices.",
-                                    relatedConcepts = "Categorical Syllogisms, Venn Diagrams",
-                                    difficulty = "Medium"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
-                        )
-                    )
-                )
-            )
-        )
-    }
-
     private fun createEngineeringMath(): Subject {
         val subjectId = "engineering_math"
         return Subject(
@@ -1030,10 +956,23 @@ object GateSyllabus {
 
     private fun createNetworkTheory(): Subject {
         val subjectId = "network_theory"
+        val allNtQuestions = NetworkTheoryQuestions.questions
+
+        fun getQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allNtQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Network Theory",
-            iconName = "share",
+            iconName = "settings_ethernet",
             topics = listOf(
                 Topic(
                     id = "nt_laws",
@@ -1067,17 +1006,11 @@ object GateSyllabus {
                                     expression = "Σ V_around_loop = 0 (or Σ V_rise = Σ V_drop)",
                                     description = "Algebraic sum of all electrical potential differences across elements around any closed loop is zero.",
                                     applicationTrick = "Follow a consistent clockwise or counterclockwise loop direction, aligning signs with entry terminals (+ to - represents drop)."
-                                ),
-                                FormulaItem(
-                                    name = "Ohm's Law & Dissipated Power",
-                                    expression = "V = I * R, P = V * I = I^2 * R = V^2 / R",
-                                    description = "Voltage drop matches current scaled by resistance. Governs simple linear active resistor lines.",
-                                    applicationTrick = "Use V^2/R for parallel connections where voltage is shared, and I^2*R for series connections where current is shared."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("nt_laws_basics", 0),
+                            practiceQuestions = getQuestions("nt_laws_basics", 1),
+                            mockQuiz = getQuestions("nt_laws_basics", 2)
                         )
                     )
                 ),
@@ -1090,17 +1023,17 @@ object GateSyllabus {
                             id = "nt_theorems_active",
                             topicId = "nt_theorems",
                             subjectId = subjectId,
-                            name = "Thevenin, Norton & Maximum Power Trans",
+                            name = "Thevenin, Norton, Superposition & Maximum Power",
                             theory = TheoryContent(
                                 title = "Equivalizing Complex Active Linear Networks",
                                 synopsis = "Thevenin and Norton theorems model active circuits using a single source and a series/parallel equivalent impedance representing terminal behaviors.",
                                 detailedBullets = listOf(
                                     "Thevenin Voltage V_th: The open-circuit potential across target load terminals.",
                                     "Norton Current I_n: The short-circuit current across terminals.",
-                                    "Equivalent Resistance R_th: Measured internally with all independent sources deactivated (voltages short-circuited, currents open-circuited).",
-                                    "Maximum Power Transfer Theorem: Accomplished when load resistance matching R_L = R_th, yielding exactly 50% power transfer efficiency."
+                                    "Equivalent Resistance R_th: Measured internally with all independent sources deactivated.",
+                                    "Maximum Power Transfer Theorem: Accomplished when load impedance is the complex conjugate of the source impedance."
                                 ),
-                                keyInsight = "When dependent sources are present, R_th must be found by deactivating independent sources and applying an external test source (e.g., 1V or 1A) at the terminals: R_th = 1 / I_test."
+                                keyInsight = "When dependent sources are present, R_th must be found by deactivating independent sources and applying an external test source (e.g., 1V or 1A) at the terminals."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
@@ -1110,77 +1043,9 @@ object GateSyllabus {
                                     applicationTrick = "Calculate short-circuit current and open-circuit voltage to find R_th = V_th / I_n instantly."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_nt_theorems_1",
-                                    subjectId = subjectId,
-                                    topicId = "nt_theorems",
-                                    subtopicId = "nt_theorems_active",
-                                    year = 2022,
-                                    questionText = "A linear electrical network has an open-circuit voltage of 24 V at its terminals and a source series resistance of 6 Ohms. What is the current flowing in Amperes through a load resistance of 12 Ohms connected across these terminals?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf("1.33 A", "1.50 A", "2.00 A", "4.00 A"),
-                                    correctOptions = listOf(0),
-                                    explanation = "According to Thevenin's theorem, we represent the network as a series circuit:\nI = V_th / (R_th + R_L).\nGiven V_th = 24 V, R_th = 6 Ohms, and R_L = 12 Ohms:\nI = 24 / (6 + 12) = 24 / 18 = 4 / 3 = 1.33 A.",
-                                    formulasUsed = "I = V_th / (R_th + R_L)",
-                                    shortcutTricks = "Total circuit resistance is R_th + R_L = 18 Ohms. Compute 24V / 18 Ohms = 1.33A directly.",
-                                    relatedConcepts = "Thevenin equivalent circuits, loading calculations",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
-                        )
-                    )
-                ),
-                Topic(
-                    id = "nt_ac",
-                    subjectId = subjectId,
-                    name = "AC Circuits & Resonance",
-                    subtopics = listOf(
-                        Subtopic(
-                            id = "nt_ac_resonance",
-                            topicId = "nt_ac",
-                            subjectId = subjectId,
-                            name = "Resonance, Phasors & Complex Power",
-                            theory = TheoryContent(
-                                title = "AC Alternating Current Steady-State and Tuning Filters",
-                                synopsis = "Addresses phasor domains, reactive power, power factor corrections, and frequency alignments at resonance.",
-                                detailedBullets = listOf(
-                                    "Resonance Frequency: The frequency where capacitive and inductive reactances fully cancel out, causing the circuit to behave as a pure resistor.",
-                                    "Series Resonance: Minimum impedance (Z = R) and maximum current. Voltage amplification occurs across inductive/capacitive elements.",
-                                    "Parallel Resonance: Maximum impedance (Z = R) and minimum line current. Rebehaves as a bandstop selector.",
-                                    "Power Factor: Cos(theta) is active real power divided by apparent power."
-                                ),
-                                keyInsight = "At resonance, the network input power factor is exactly unity (power factor = 1.0), meaning voltage and current waveforms are perfectly in phase."
-                            ),
-                            formulaSheet = listOf(
-                                FormulaItem(
-                                    name = "Resonating Matching Formula",
-                                    expression = "f_0 = 1 / (2 * π * sqrt(L * C))",
-                                    description = "Calculates the exact undamped natural resonance frequency.",
-                                    applicationTrick = "For series circuits with given series L and C, evaluate 1/sqrt(LC) and divide by 2*pi."
-                                )
-                            ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_nt_ac_1",
-                                    subjectId = subjectId,
-                                    topicId = "nt_ac",
-                                    subtopicId = "nt_ac_resonance",
-                                    year = 2023,
-                                    questionText = "For an RLC series circuit with R = 10 Ohms, L = 10 mH, and C = 10 μF, find the resonant frequency in Hertz.",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 503.2..503.3,
-                                    explanation = "Using the resonant frequency formula:\nf_0 = 1 / [ 2 * pi * sqrt(L * C) ]\nL * C = 10 * 10^-3 * 10 * 10^-6 = 10^-7.\nsqrt(L * C) = sqrt(10^-7) = 3.162277 * 10^-4.\nf_0 = 1 / [ 2 * pi * (3.162277 * 10^-4) ] = 1 / (1.9869 * 10^-3) = 503.29 Hz.",
-                                    formulasUsed = "f_0 = 1 / (2 * pi * sqrt(L * C))",
-                                    shortcutTricks = "Recognize 1 / sqrt(LC) = 3162.27 rad/sec. Divide this by 2*pi directly to find f_0 = 503.29 Hz.",
-                                    relatedConcepts = "Series resonance, undamped filter tuning",
-                                    difficulty = "Medium"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("nt_theorems_active", 0),
+                            practiceQuestions = getQuestions("nt_theorems_active", 1),
+                            mockQuiz = getQuestions("nt_theorems_active", 2)
                         )
                     )
                 ),
@@ -1193,7 +1058,7 @@ object GateSyllabus {
                             id = "nt_trans_response",
                             topicId = "nt_transients",
                             subjectId = subjectId,
-                            name = "RL, RC & RLC Transient Response",
+                            name = "First & Second Order Transient Response",
                             theory = TheoryContent(
                                 title = "State Transitions & Circuit Energy Dynamics",
                                 synopsis = "Evaluates circuit currents and voltage transitions when switching operations alter network configurations.",
@@ -1202,54 +1067,156 @@ object GateSyllabus {
                                     "Capacitor voltage continuity: v_C(0+) = v_C(0-). Direct rate changes require infinite currents.",
                                     "Switching action at t=0: Uncharged capacitors act as short circuits, and unenergized inductors act as open circuits."
                                 ),
-                                keyInsight = "A first-order transient decays to 36.8% (1/e) of its initial displacement step at exactly t = one time constant (one tau)."
+                                keyInsight = "A first-order transient decays to 36.8% (1/e) of its initial displacement step at exactly t = one time constant."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
                                     name = "First Order Response Formula",
                                     expression = "x(t) = x(∞) + [ x(0+) - x(∞) ] * e^(-t/τ)",
-                                    description = "Evaluates transient parameters (capacitor voltage or inductor current) at any time t.",
-                                    applicationTrick = "To find the time constant (tau), compute the equivalent resistance seen by the energy storage element: RL series tau = L/R; RC series tau = R*C."
+                                    description = "Evaluates transient parameters at any time t.",
+                                    applicationTrick = "RL series tau = L/R; RC series tau = R*C."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("nt_trans_response", 0),
+                            practiceQuestions = getQuestions("nt_trans_response", 1),
+                            mockQuiz = getQuestions("nt_trans_response", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "nt_ac_steady",
+                    subjectId = subjectId,
+                    name = "AC Steady-State Analysis",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "nt_ac_steady_state",
+                            topicId = "nt_ac_steady",
+                            subjectId = subjectId,
+                            name = "Phasors, Sinusoidal Steady-State & Complex Power",
+                            theory = TheoryContent(
+                                title = "AC Sinusoidal Steady-State Response",
+                                synopsis = "Deals with phase relations, impedance and admittance, real, reactive, and apparent power in AC networks.",
+                                detailedBullets = listOf(
+                                    "Phasor Representation: Transforming sinusoidal voltages and currents from time-domain to complex frequency domain.",
+                                    "Active/Real Power (P): Dissipated entirely by resistive components, measured in Watts.",
+                                    "Reactive Power (Q): Alternates storage in magnetic/electric fields, measured in VAR.",
+                                    "Apparent Power (S): The total complex power vector, measured in VA."
+                                ),
+                                keyInsight = "The complex power is represented as S = V * I*, where I* is the complex conjugate of the phasor current."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Complex Power Equation",
+                                    expression = "S = P + jQ = V_rms * I_rms*",
+                                    description = "Expresses total power as a combination of real active power and imaginary reactive power.",
+                                    applicationTrick = "Always use the complex conjugate of current to ensure lagging current produces inductive (positive) reactive power."
+                                )
+                            ),
+                            pyqs = getQuestions("nt_ac_steady_state", 0),
+                            practiceQuestions = getQuestions("nt_ac_steady_state", 1),
+                            mockQuiz = getQuestions("nt_ac_steady_state", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "nt_resonance_coupled",
+                    subjectId = subjectId,
+                    name = "Resonance & Coupled Circuits",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "nt_resonance_coupled_circuits",
+                            topicId = "nt_resonance_coupled",
+                            subjectId = subjectId,
+                            name = "Series & Parallel Resonance, Magnetic Coupling",
+                            theory = TheoryContent(
+                                title = "Resonance & Magnetically Coupled Networks",
+                                synopsis = "Details resonance parameters like selectivity, bandwidth, and dot-convention configurations for mutually coupled coils.",
+                                detailedBullets = listOf(
+                                    "Resonant Frequency: Canceling capacitive/inductive reactances, resulting in unity power factor.",
+                                    "Bandwidth: The range of frequencies over which the power is at least 50% of its maximum value.",
+                                    "Mutual Inductance: Polarity represented via dots defining positive/negative flux linkages."
+                                ),
+                                keyInsight = "At parallel resonance, input impedance is maximized (Z = R) and current is minimized, acting as a band-rejection mechanism."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Resonant Frequency",
+                                    expression = "f_0 = 1 / (2 * π * sqrt(L * C))",
+                                    description = "Formulation for natural undamped resonance in series/parallel LC networks.",
+                                    applicationTrick = "Quality factor Q acts as the voltage magnification index inside series RLC resonance."
+                                )
+                            ),
+                            pyqs = getQuestions("nt_resonance_coupled_circuits", 0),
+                            practiceQuestions = getQuestions("nt_resonance_coupled_circuits", 1),
+                            mockQuiz = getQuestions("nt_resonance_coupled_circuits", 2)
                         )
                     )
                 ),
                 Topic(
                     id = "nt_twoport",
                     subjectId = subjectId,
-                    name = "Two-Port Networks & 3-Phase",
+                    name = "Two-Port Networks",
                     subtopics = listOf(
                         Subtopic(
-                            id = "nt_parameters_3phase",
+                            id = "nt_parameters_twoport",
                             topicId = "nt_twoport",
                             subjectId = subjectId,
-                            name = "ABCD, Z, Y Elements & Star-Delta",
+                            name = "Z, Y, ABCD & Hybrid Parameters",
                             theory = TheoryContent(
-                                title = "Two-Port Parameter Networks & 3-Phase Systems",
-                                synopsis = "Details Z (impedance), Y (admittance), ABCD (transmission) matrix parameters alongside three-phase balanced active real/reactive calculations.",
+                                title = "Two-Port Matrix Characterizations",
+                                synopsis = "Employs open-circuit, short-circuit, transmission, and hybrid matrices to characterize network parameters.",
                                 detailedBullets = listOf(
-                                    "Z-parameters: Express voltages as linear combinations of currents (open circuit conditions).",
-                                    "Y-parameters: Express currents as linear combinations of voltages (short circuit conditions).",
-                                    "ABCD-parameters: Express input parameters (V1, I1) in terms of output parameters (V2, -I2), used extensively in transmission lines modeling.",
-                                    "Three-Phase Systems: In a balanced star configuration, V_line = sqrt(3) * V_phase. In a delta configuration, I_line = sqrt(3) * I_phase."
+                                    "Z-parameters: Relate terminal voltages to currents under open-circuit conditions.",
+                                    "Y-parameters: Relate terminal currents to voltages under short-circuit conditions.",
+                                    "ABCD-parameters: Model cascaded connection networks by expressing ports transmission variables."
                                 ),
-                                keyInsight = "For symmetric networks: Z11 = Z22, AD - BC = 1. For reciprocal networks: Z12 = Z21, Y12 = Y21, AD - BC = 1."
+                                keyInsight = "Reciprocal networks must verify Z12=Z21, Y12=Y21, h12=-h21, and AD-BC=1. Symmetric networks require Z11=Z22, Y11=Y22, h11*h22-h12*h21=1, and A=D."
                             ),
                             formulaSheet = listOf(
                                 FormulaItem(
-                                    name = "Balanced Three-Phase Power",
-                                    expression = "P = sqrt(3) * V_line * I_line * cos(θ)",
-                                    description = "Calculates total active real power delivered to a balanced 3-phase load.",
-                                    applicationTrick = "theta represents the phase impedance angle, which is the angle between phase voltage and phase current, NOT line values."
+                                    name = "Z & Y Conversions",
+                                    expression = "[Y] = [Z]^-1",
+                                    description = "Expresses admittance matrices as the exact inverse of impedance matrices.",
+                                    applicationTrick = "Ensure the determinant of [Z] is non-zero before trying to directly compute [Y] parameters."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("nt_parameters_twoport", 0),
+                            practiceQuestions = getQuestions("nt_parameters_twoport", 1),
+                            mockQuiz = getQuestions("nt_parameters_twoport", 2)
+                        )
+                    )
+                ),
+                Topic(
+                    id = "nt_graph",
+                    subjectId = subjectId,
+                    name = "Network Graph Theory",
+                    subtopics = listOf(
+                        Subtopic(
+                            id = "nt_graph_theory",
+                            topicId = "nt_graph",
+                            subjectId = subjectId,
+                            name = "Trees, Tiesets, Cutsets & Incidence Matrix",
+                            theory = TheoryContent(
+                                title = "Topological Network Characterization",
+                                synopsis = "Formulates incidence matrices, fundamental tie-set loops, cut-set matrices, and twigs relative to tree properties.",
+                                detailedBullets = listOf(
+                                    "Tree: A connected subgraph containing all nodes of the graph but no loops.",
+                                    "Twigs: Tree branches. In a graph of N nodes, number of twigs = N - 1.",
+                                    "Links: Branches belonging to the co-tree, forming fundamental tie-set loops."
+                                ),
+                                keyInsight = "The total number of independent KVL equations matches the number of link elements: B - N + 1."
+                            ),
+                            formulaSheet = listOf(
+                                FormulaItem(
+                                    name = "Fundamental loops formula",
+                                    expression = "Loops = B - N + 1",
+                                    description = "Gives the total number of independent loops or link configurations.",
+                                    applicationTrick = "For planar networks, this is exactly equal to the number of individual mesh compartments."
+                                )
+                            ),
+                            pyqs = getQuestions("nt_graph_theory", 0),
+                            practiceQuestions = getQuestions("nt_graph_theory", 1),
+                            mockQuiz = getQuestions("nt_graph_theory", 2)
                         )
                     )
                 )
@@ -1259,6 +1226,19 @@ object GateSyllabus {
 
     private fun createSignalsAndSystems(): Subject {
         val subjectId = "signals_systems"
+        val allSigQuestions = SignalsAndSystemsQuestions.questions
+
+        fun getSigQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allSigQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Signals and Systems",
@@ -1292,9 +1272,9 @@ object GateSyllabus {
                                     applicationTrick = "Convoluting a signal x(t) with a time-shifted impulse delta(t - t0) simply shifts x(t) to x(t - t0) directly."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getSigQuestions("sig_lti_convolution", 0),
+                            practiceQuestions = getSigQuestions("sig_lti_convolution", 1),
+                            mockQuiz = getSigQuestions("sig_lti_convolution", 2)
                         )
                     )
                 ),
@@ -1326,26 +1306,9 @@ object GateSyllabus {
                                     applicationTrick = "Identify the highest individual frequency component inside composite formulations (e.g. sum of cosine waves) to determine the absolute f_max."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_sig_sampling_1",
-                                    subjectId = subjectId,
-                                    topicId = "sig_transforms",
-                                    subtopicId = "sig_sampling_rate",
-                                    year = 2022,
-                                    questionText = "What is the Nyquist rate in Hertz for the continuous signal x(t) = cos(2000 * π * t) + sin(4000 * π * t)?",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf("2000 Hz", "4000 Hz", "6000 Hz", "8000 Hz"),
-                                    correctOptions = listOf(1),
-                                    explanation = "Let the composite components represent f1 and f2:\nComponent 1: cos(2000 * pi * t) => omega1 = 2000 * pi => 2 * pi * f1 = 2000 * pi => f1 = 1000 Hz.\nComponent 2: sin(4000 * pi * t) => omega2 = 4000 * pi => 2 * pi * f2 = 4000 * pi => f2 = 2000 Hz.\nThe maximum frequency component present in the signal is f_max = Max(f1, f2) = 2000 Hz.\nUsing the Nyquist Rate formula:\nNyquist rate f_s = 2 * f_max = 2 * 2000 = 4000 Hz.",
-                                    formulasUsed = "omega = 2*pi*f, f_s = 2 * f_max",
-                                    shortcutTricks = "Identify the highest angular frequency: 4000*pi rad/sec. Divide this directly by pi to get the Nyquist rate in Hz: 4000*pi / pi = 4000 Hz.",
-                                    relatedConcepts = "Sampling Theorem, Nyquist rate calculations",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getSigQuestions("sig_sampling_rate", 0),
+                            practiceQuestions = getSigQuestions("sig_sampling_rate", 1),
+                            mockQuiz = getSigQuestions("sig_sampling_rate", 2)
                         )
                     )
                 )
@@ -1985,6 +1948,19 @@ object GateSyllabus {
 
     private fun createPowerSystems(): Subject {
         val subjectId = "power_systems"
+        val allPsQuestions = PowerSystemsQuestions.questions
+
+        fun getQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allPsQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Power Systems",
@@ -2018,9 +1994,9 @@ object GateSyllabus {
                                     applicationTrick = "Solve the incremental linear equations simultaneously under constraint Sum(P_i) = P_demand."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("ps_econ_dispatch", 0),
+                            practiceQuestions = getQuestions("ps_econ_dispatch", 1),
+                            mockQuiz = getQuestions("ps_econ_dispatch", 2)
                         )
                     )
                 ),
@@ -2052,26 +2028,9 @@ object GateSyllabus {
                                     applicationTrick = "GMR use r' = 0.7788 r, while GMD uses symmetric physical span calculations."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_ps_lines_1",
-                                    subjectId = subjectId,
-                                    topicId = "ps_transmission",
-                                    subtopicId = "ps_trans_lines",
-                                    year = 2022,
-                                    questionText = "The internal self Geometric Mean Radius (GMR) of a solid cylinder conductor of radius r used in overhead inductance calculations is:",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf("0.5 r", "0.707 r", "0.7788 r", "1.0 r"),
-                                    correctOptions = listOf(2),
-                                    explanation = "To account for internal flux linkage, the actual radius is mathematically scaled by e^(-1/4). self GMR = r' = r * e^(-0.25) ≈ 0.7788 r.",
-                                    formulasUsed = "GMR = r * e^(-1/4)",
-                                    shortcutTricks = "Standard adjustment coefficient for solid cylindrical conductors is exactly 0.7788.",
-                                    relatedConcepts = "GMR and GMD modeling",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("ps_trans_lines", 0),
+                            practiceQuestions = getQuestions("ps_trans_lines", 1),
+                            mockQuiz = getQuestions("ps_trans_lines", 2)
                         )
                     )
                 ),
@@ -2104,9 +2063,9 @@ object GateSyllabus {
                                     applicationTrick = "If the system neutral is ungrounded, Z0 becomes infinite, reducing the LG fault current to zero."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("ps_flow_faults", 0),
+                            practiceQuestions = getQuestions("ps_flow_faults", 1),
+                            mockQuiz = getQuestions("ps_flow_faults", 2)
                         )
                     )
                 ),
@@ -2138,9 +2097,9 @@ object GateSyllabus {
                                     applicationTrick = "M is the angular momentum, which can be expressed in terms of the inertia constant H."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getQuestions("ps_prot_stability", 0),
+                            practiceQuestions = getQuestions("ps_prot_stability", 1),
+                            mockQuiz = getQuestions("ps_prot_stability", 2)
                         )
                     )
                 )
@@ -2150,6 +2109,19 @@ object GateSyllabus {
 
     private fun createPowerElectronics(): Subject {
         val subjectId = "power_electronics"
+        val allPeQuestions = PowerElectronicsQuestions.questions
+
+        fun getPeQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allPeQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Power Electronics",
@@ -2189,9 +2161,9 @@ object GateSyllabus {
                                     applicationTrick = "High frequencies cause switching loss to dominate, making MOSFET superior to SCR for high frequency operation."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getPeQuestions("pe_device_char", 0),
+                            practiceQuestions = getPeQuestions("pe_device_char", 1),
+                            mockQuiz = getPeQuestions("pe_device_char", 2)
                         )
                     )
                 ),
@@ -2229,25 +2201,9 @@ object GateSyllabus {
                                     applicationTrick = "As D approaches 1, output voltage theoretically approaches infinity, limited by inductor internal resistance."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_pe_buck_1",
-                                    subjectId = subjectId,
-                                    topicId = "pe_converters",
-                                    subtopicId = "pe_conv_buck_boost",
-                                    year = 2023,
-                                    questionText = "A step-down (buck) DC-DC converter is fed from an input voltage of 50 V and operates at a duty cycle of 0.4 under continuous conduction mode. Identify the average output voltage in Volts.",
-                                    questionType = QuestionType.NAT,
-                                    correctNumericalRange = 20.0..20.0,
-                                    explanation = "Average output voltage for a buck converter operating in continuous conduction mode is:\nV_out = D * V_in\nGiven D = 0.4 and V_in = 50 V:\nV_out = 0.4 * 50 = 20 V.",
-                                    formulasUsed = "V_out = D * V_in",
-                                    shortcutTricks = "Direct scaling: 40% of the input voltage (50) is 20 V, resolved instantly.",
-                                    relatedConcepts = "Buck dc-dc switching converter",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getPeQuestions("pe_conv_buck_boost", 0),
+                            practiceQuestions = getPeQuestions("pe_conv_buck_boost", 1),
+                            mockQuiz = getPeQuestions("pe_conv_buck_boost", 2)
                         )
                     )
                 ),
@@ -2279,9 +2235,9 @@ object GateSyllabus {
                                     applicationTrick = "This is the line-to-line RMS voltage. Phase RMS voltage is sqrt(2)*V_dc/3."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getPeQuestions("pe_drives_char", 0),
+                            practiceQuestions = getPeQuestions("pe_drives_char", 1),
+                            mockQuiz = getPeQuestions("pe_drives_char", 2)
                         )
                     )
                 )
@@ -2291,6 +2247,19 @@ object GateSyllabus {
 
     private fun createAnalogElectronics(): Subject {
         val subjectId = "analog_electronics"
+        val allAeQuestions = AnalogElectronicsQuestions.questions
+
+        fun getAeQuestions(subId: String, part: Int): List<GateQuestion> {
+            val sq = allAeQuestions.filter { it.subtopicId == subId }
+            if (sq.isEmpty()) return emptyList()
+            val chunk = (sq.size + 2) / 3
+            return when (part) {
+                0 -> sq.take(chunk)
+                1 -> sq.drop(chunk).take(chunk)
+                else -> sq.drop(chunk * 2)
+            }
+        }
+
         return Subject(
             id = subjectId,
             name = "Analog Electronics",
@@ -2337,9 +2306,9 @@ object GateSyllabus {
                                     applicationTrick = "For saturation detection, check if V_CE is less than V_CE_sat (typically around 0.2V)."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getAeQuestions("ae_dio_bias", 0),
+                            practiceQuestions = getAeQuestions("ae_dio_bias", 1),
+                            mockQuiz = getAeQuestions("ae_dio_bias", 2)
                         )
                     )
                 ),
@@ -2371,9 +2340,9 @@ object GateSyllabus {
                                     applicationTrick = "For negative feedback, the denominator is 1 + A*beta. If A*beta is much larger than 1, the closed-loop gain is approximately 1/beta."
                                 )
                             ),
-                            pyqs = emptyList(),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getAeQuestions("ae_amp_feedback", 0),
+                            practiceQuestions = getAeQuestions("ae_amp_feedback", 1),
+                            mockQuiz = getAeQuestions("ae_amp_feedback", 2)
                         )
                     )
                 ),
@@ -2412,26 +2381,9 @@ object GateSyllabus {
                                     applicationTrick = "Each of the three RC stages introduces a 60-degree phase shift, totaling 180 degrees. The inverting op-amp provides the remaining 180 degrees."
                                 )
                             ),
-                            pyqs = listOf(
-                                GateQuestion(
-                                    id = "pyq_ae_opamp_1",
-                                    subjectId = subjectId,
-                                    topicId = "ae_opamps",
-                                    subtopicId = "ae_opamp_apps",
-                                    year = 2022,
-                                    questionText = "An inverting amplifier configuration is designed with an ideal op-amp, an input resistance R1 = 5 kOhms, and feedback resistance Rf = 25 kOhms. Calculate the closed-loop voltage gain.",
-                                    questionType = QuestionType.MCQ,
-                                    options = listOf("-5", "5", "-6", "6"),
-                                    correctOptions = listOf(0),
-                                    explanation = "According to the ideal op-amp inverting amplifier formula:\nA_v = -R_f / R1.\nGiven Rf = 25 kOhms and R1 = 5 kOhms:\nA_v = -25 / 5 = -5.",
-                                    formulasUsed = "A_v = -Rf / R1",
-                                    shortcutTricks = "The ratio of Rf to R1 is 25 / 5 = 5. Since it is inverting, add a negative sign: -5. Option at index 0 is correct.",
-                                    relatedConcepts = "Operational amplifiers, negative feedback scaling",
-                                    difficulty = "Easy"
-                                )
-                            ),
-                            practiceQuestions = emptyList(),
-                            mockQuiz = emptyList()
+                            pyqs = getAeQuestions("ae_opamp_apps", 0),
+                            practiceQuestions = getAeQuestions("ae_opamp_apps", 1),
+                            mockQuiz = getAeQuestions("ae_opamp_apps", 2)
                         )
                     )
                 )
